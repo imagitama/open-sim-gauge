@@ -7,7 +7,7 @@ public static class PathHelper
     {
 #if DEBUG
         var dir = AppContext.BaseDirectory;
-        var projectDir = Path.GetFullPath(Path.Combine(dir, @"../../../../"));
+        var projectDir = Path.GetFullPath(Path.Combine(dir, @"../../../"));
         return projectDir;
 #else
         return AppContext.BaseDirectory;

@@ -10,22 +10,6 @@
       <HintPath>libs/Microsoft.FlightSimulator.SimConnect.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <!-- <Target Name="CopyConfigForRunOrDebug"
-          AfterTargets="Build"
-          Condition="'$(Configuration)' == 'Debug' OR '$(RunCommand)' != ''">
-    <Message Text="Copying config.json to $(OutputPath)config.json" Importance="high" />
-    <Copy SourceFiles="config.json"
-          DestinationFiles="$(OutputPath)config.json"
-          SkipUnchangedFiles="true" />
-  </Target> -->
-  <Target Name="CopyDefaultConfigForRelease"
-          AfterTargets="Build">
-    <Message Text="Copying default-config.json to $(DistFolder)config.json" Importance="high" />
-    <Copy
-      SourceFiles="default-config.json"
-      DestinationFiles="$(DistFolder)config.json"
-      SkipUnchangedFiles="true" />
-  </Target>
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>

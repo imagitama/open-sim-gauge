@@ -1,6 +1,6 @@
 {
   "debug": false,
-  "source": "SimConnect",
+  "source": "emulator",
   "server": {
     // "port": 1234
   },
