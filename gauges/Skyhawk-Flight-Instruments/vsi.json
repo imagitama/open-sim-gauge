@@ -1,0 +1,53 @@
+{
+  "name": "vsi",
+  "width": 500,
+  "height": 500,
+  "origin": [
+    250,
+    250
+  ],
+  "layers": [
+    {
+      "name": "vsi_needle",
+      "position": [
+        250,
+        250
+      ],
+      "image": "svg/vario_hand.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "rotate": 90,
+      "transform": {
+        "rotate": {
+          "from": -254,
+          "to": 74,
+          "min": -2000,
+          "max": 2000,
+          "var": [
+            "VERTICAL SPEED",
+            "feet"
+          ],
+          "multiply": 60
+        }
+      }
+    },
+    {
+      "name": "bg",
+      "position": [
+        250,
+        250
+      ],
+      "image": "svg/vario_markings.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ]
+    }
+  ]
+}

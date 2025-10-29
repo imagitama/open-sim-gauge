@@ -1,0 +1,126 @@
+{
+  "name": "attitude_indicator",
+  "width": 500,
+  "height": 500,
+  "origin": [
+    250,
+    250
+  ],
+  "clip": {
+    "image": "../circle-clip.svg",
+    "width": 400,
+    "height": 400,
+    "origin": [
+      200,
+      200
+    ],
+    "position": [
+      250,
+      250
+    ]
+  },
+  "layers": [
+    {
+      "name": "crosshair",
+      "image": "svg/attitude_foreground_1.svg",
+      "position": [
+        250,
+        250
+      ],
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ]
+    },
+    {
+      "name": "horizon_roll_2",
+      "position": [
+        250,
+        250
+      ],
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "image": "svg/attitude_roll_2.svg",
+      "transform": {
+        "rotate": {
+          "var": [
+            "PLANE BANK DEGREES",
+            "degrees"
+          ]
+        }
+      }
+    },
+    {
+      "name": "horizon_pitch_lines",
+      "position": [
+        250,
+        250
+      ],
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "image": "svg/attitude_pitch.svg",
+      "transform": {
+        "rotate": {
+          "var": [
+            "PLANE BANK DEGREES",
+            "degrees"
+          ]
+        },
+        "translateY": {
+          "from": -300,
+          "to": 300,
+          "min": -90,
+          "max": 90,
+          "var": [
+            "PLANE PITCH DEGREES",
+            "degrees"
+          ],
+          "invert": true
+        }
+      }
+    },
+    {
+      "name": "horizon_background",
+      "position": [
+        250,
+        250
+      ],
+      "width": 1200,
+      "height": 1200,
+      "origin": [
+        600,
+        600
+      ],
+      "image": "svg/attitude_roll_1.svg",
+      "transform": {
+        "rotate": {
+          "var": [
+            "PLANE BANK DEGREES",
+            "degrees"
+          ]
+        },
+        "translateY": {
+          "from": -300,
+          "to": 300,
+          "min": -90,
+          "max": 90,
+          "var": [
+            "PLANE PITCH DEGREES",
+            "degrees"
+          ],
+          "invert": true
+        }
+      }
+    }
+  ]
+}

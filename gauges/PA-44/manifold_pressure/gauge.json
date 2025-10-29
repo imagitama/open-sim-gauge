@@ -1,0 +1,44 @@
+{
+    "name": "pa44_manifold_pressure",
+    "width": 600,
+    "height": 600,
+    "layers": [
+        {
+            "name": "needle_R",
+            "image": "needle_R.svg",
+            "transform": {
+                "rotate": {
+                    "min": 10,
+                    "max": 35,
+                    "from": -90, // TODO: allow go below 0
+                    "to": 90,
+                    "var": [
+                        "ENG MANIFOLD PRESSURE:2",
+                        "inHg"
+                    ]
+                }
+            }
+        },
+        {
+            "debug": true,
+            "name": "needle_L",
+            "image": "needle_L.svg",
+            "transform": {
+                "rotate": {
+                    "min": 10,
+                    "max": 35,
+                    "from": -90, // TODO: allow go below 0
+                    "to": 90,
+                    "var": [
+                        "ENG MANIFOLD PRESSURE:1",
+                        "inHg"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "bg",
+            "image": "bg.svg"
+        }
+    ]
+}

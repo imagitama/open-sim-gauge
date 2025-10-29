@@ -1,0 +1,70 @@
+{
+  "name": "rpm_twin",
+  "width": 500,
+  "height": 500,
+  "layers": [
+    {
+      "position": [
+        250,
+        250
+      ],
+      "image": "needle_R.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "transform": {
+        "rotate": {
+          "var": [
+            "GENERAL ENG RPM:2",
+            "rpm"
+          ],
+          "from": -175,
+          "to": 125,
+          "min": 0,
+          "max": 3000
+        }
+      }
+    },
+    {
+      "position": [
+        250,
+        250
+      ],
+      "image": "needle_L.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "transform": {
+        "rotate": {
+          "var": [
+            "GENERAL ENG RPM:1",
+            "rpm"
+          ],
+          "from": -175,
+          "to": 125,
+          "min": 0,
+          "max": 3000
+        }
+      }
+    },
+    {
+      "position": [
+        250,
+        250
+      ],
+      "image": "bg.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ]
+    }
+  ]
+}

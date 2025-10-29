@@ -1,0 +1,92 @@
+{
+  "name": "airspeed_indicator",
+  "width": 500,
+  "height": 500,
+  "origin": [
+    250,
+    250
+  ],
+  "layers": [
+    {
+      "debug": false,
+      "name": "needle",
+      "position": [
+        250,
+        250
+      ],
+      "image": "svg/airspeed_hand.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "transform": {
+        "rotate": {
+          "from": -33.25,
+          "to": 313,
+          "min": 0,
+          "max": 200,
+          "var": [
+            "AIRSPEED INDICATED",
+            "knot",
+            {
+              "calibration": [
+                {
+                  "value": 0,
+                  "degrees": 0
+                },
+                {
+                  "value": 40,
+                  "degrees": 36
+                },
+                {
+                  "value": 60,
+                  "degrees": 72
+                },
+                {
+                  "value": 80,
+                  "degrees": 110
+                },
+                {
+                  "value": 100,
+                  "degrees": 146
+                },
+                {
+                  "value": 120,
+                  "degrees": 190
+                },
+                {
+                  "value": 140,
+                  "degrees": 230
+                },
+                {
+                  "value": 160,
+                  "degrees": 270
+                },
+                {
+                  "value": 200,
+                  "degrees": 313
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "bg",
+      "position": [
+        250,
+        250
+      ],
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "image": "svg/airspeed_markings.svg"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "heading_indicator",
+  "width": 500,
+  "height": 500,
+  "origin": [
+    250,
+    250
+  ],
+  "layers": [
+    {
+      "name": "aircraft_symbol",
+      "position": [
+        250,
+        250
+      ],
+      "image": "svg/heading_markings.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ]
+    },
+    {
+      "name": "compass_card",
+      "position": [
+        250,
+        250
+      ],
+      "image": "svg/heading_yaw.svg",
+      "width": 600,
+      "height": 600,
+      "origin": [
+        300,
+        300
+      ],
+      "transform": {
+        "rotate": {
+          "invert": true,
+          "var": [
+            "PLANE HEADING DEGREES TRUE",
+            "degrees"
+          ]
+        }
+      }
+    }
+  ]
+}

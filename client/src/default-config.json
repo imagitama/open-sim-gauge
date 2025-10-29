@@ -1,0 +1,146 @@
+{
+  "debug": false,
+  "server": {
+    "ipAddress": "127.0.0.1"
+  },
+  "panels": [
+    {
+      "name": "Skyhawk Six Pack",
+      "fullscreen": false,
+      "position": [
+        0,
+        100
+      ],
+      "width": 1024,
+      "height": 768,
+      "screen": 0,
+      "background": [
+        25,
+        25,
+        25
+      ],
+      "gauges": [
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/airspeed_indicator.json",
+          "position": [
+            150,
+            150
+          ],
+          "scale": 0.5,
+          "skip": false
+        },
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/attitude_indicator.json",
+          "position": [
+            425,
+            150
+          ],
+          "scale": 0.5,
+          "skip": false
+        },
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/altimeter.json",
+          "position": [
+            700,
+            150
+          ],
+          "scale": 0.5,
+          "skip": false
+        },
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/turn_coordinator.json",
+          "position": [
+            150,
+            425
+          ],
+          "scale": 0.5,
+          "skip": false
+        },
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/heading_indicator.json",
+          "position": [
+            425,
+            425
+          ],
+          "scale": 0.5,
+          "skip": false
+        },
+        {
+          "path": "gauges/Skyhawk-Flight-Instruments/vsi.json",
+          "position": [
+            700,
+            425
+          ],
+          "scale": 0.5,
+          "skip": false
+        }
+      ]
+    },
+    {
+      "name": "Piper Seminole Engine Panel",
+      "fullscreen": false,
+      "position": [
+        1024,
+        0
+      ],
+      "width": 1024,
+      "height": 768,
+      "screen": 0,
+      "background": [
+        35,
+        35,
+        35
+      ],
+      "gauges": [
+        {
+          "path": "gauges/PA-44/rpm/gauge.json",
+          "position": [
+            50,
+            400
+          ],
+          "scale": 0.4
+        }
+      ]
+    },
+    {
+      "skip": true,
+      "name": "My C172 layout",
+      "aircraft_TODO": [
+        "C172SP AS1000"
+      ],
+      "width": 1000,
+      "height": 750,
+      "gauges": [
+        {
+          "name": "airspeed_indicator",
+          "position": [
+            150,
+            150
+          ],
+          "scale": 0.5
+        }
+      ]
+    },
+    {
+      "skip": true,
+      "name": "My twin-engine layout",
+      "engines_TODO": 2,
+      "width": 1000,
+      "height": 750,
+      "position": [
+        0,
+        0
+      ],
+      "gauges": [
+        {
+          "name": "rpm_twin",
+          "position": [
+            50,
+            50
+          ],
+          "scale": 0.5
+        }
+      ]
+    }
+  ]
+}
