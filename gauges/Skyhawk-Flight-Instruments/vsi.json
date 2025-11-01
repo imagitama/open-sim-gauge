@@ -1,25 +1,11 @@
 {
   "name": "vsi",
-  "width": 500,
-  "height": 500,
-  "origin": [
-    250,
-    250
-  ],
+  "width": 400,
+  "height": 400,
   "layers": [
     {
       "name": "vsi_needle",
-      "position": [
-        250,
-        250
-      ],
       "image": "svg/vario_hand.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ],
       "rotate": 90,
       "transform": {
         "rotate": {
@@ -37,17 +23,7 @@
     },
     {
       "name": "bg",
-      "position": [
-        250,
-        250
-      ],
-      "image": "svg/vario_markings.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ]
+      "image": "svg/vario_markings.svg"
     }
   ]
 }

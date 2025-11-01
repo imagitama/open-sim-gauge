@@ -54,11 +54,7 @@ namespace OpenGaugeServer
             // }
         }
 
-        public void Listen(Config config) {}
-
-        public void Connect()
-        {
-            IsConnected = true;
+        public void Listen(Config config) {
             _cts = new CancellationTokenSource();
 
             _simVars.Clear();
@@ -106,11 +102,8 @@ namespace OpenGaugeServer
             _simVars["KOHLSMAN SETTING HG:1"] = unit => 29.92;
             _simVars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
             _simVars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
-            
-            Task.Run(async () =>
-            {
-                Console.WriteLine("[EMULATOR] Sending fake data");
 
+            Task.Run(async () => {
                 while (!_cts.Token.IsCancellationRequested)
                 {
                     UpdatePlaneAltitude();
@@ -124,6 +117,16 @@ namespace OpenGaugeServer
                     UpdateTurnIndicatorRate();
                     UpdateManifoldPressure();
 
+                    await Task.Delay(10);
+                }
+            }, _cts.Token);
+            
+            Task.Run(async () =>
+            {
+                Console.WriteLine($"[EMULATOR] Sending fake data at rate {(int)config.Rate}ms");
+
+                while (!_cts.Token.IsCancellationRequested)
+                {
                     foreach (var info in callbacks)
                     {
                         var value = GetVarValue(info.name, info.unit);
@@ -151,9 +154,14 @@ namespace OpenGaugeServer
                         }
                     }
 
-                    await Task.Delay(10);
+                    await Task.Delay((int)config.Rate);
                 }
             }, _cts.Token);
+        }
+
+        public void Connect()
+        {
+            IsConnected = true;
         }
 
         private object? GetVarValue(string name, string? unit)
@@ -279,19 +287,19 @@ namespace OpenGaugeServer
 
         public void UpdatePlaneHeading()
         {
-            _planeHeadingTime += 0.005; // controls how fast the oscillation happens
-            _heading = 180 + Math.Sin(_planeHeadingTime) * 90; // oscillates between 90° and 270°
+            _planeHeadingTime += 0.005;
+            _heading = 180 + Math.Sin(_planeHeadingTime) * 90; // oscillates between 90->270
         }
 
-        private double _turnBallDegrees = 0;  // roll/slip angle
-        private double _turnBallPosition = 0;    // -127 to 127
+        private double _turnBallDegrees = 0; // roll/slip angle
+        private double _turnBallPosition = 0; // -1 to 1
         private double _turnBallTime = 0;
 
         public void UpdateTurnCoordinatorBall()
         {
             _turnBallTime += 0.005;
             _turnBallDegrees = Math.Sin(_turnBallTime) * 10; // ±10 degrees slip/skid
-            _turnBallPosition = Math.Sin(_turnBallTime) * 127; // ±127 position range
+            _turnBallPosition = Math.Sin(_turnBallTime);     // ±1 position range
         }
 
         private double _airspeedKnots = 0;
@@ -300,9 +308,8 @@ namespace OpenGaugeServer
         private double _maxSpeed = 0;
         private double _cycleDuration = 0;
 
-        public void UpdateAirspeed(double deltaTime = 1.0 / 60.0) // assume ~60 FPS by default
+        public void UpdateAirspeed(double deltaTime = 1.0 / 60.0) // 60 fps
         {
-            // If we're starting or finished a full oscillation, pick a new random range + duration
             if (_cycleDuration <= 0 || _airspeedPhase >= 2 * Math.PI)
             {
                 _minSpeed = 40 + _rand.NextDouble() * 20;   // 40–80 kt
@@ -311,11 +318,9 @@ namespace OpenGaugeServer
                 _airspeedPhase = 0;
             }
 
-            // Advance phase based on elapsed time and desired duration
             double speed = (2 * Math.PI) / _cycleDuration; // radians per second
             _airspeedPhase += speed * deltaTime;
 
-            // Compute smooth oscillation between min and max
             double wave = (Math.Sin(_airspeedPhase) + 1) / 2; // 0–1 range
             _airspeedKnots = _minSpeed + (_maxSpeed - _minSpeed) * wave;
         }
@@ -339,24 +344,22 @@ namespace OpenGaugeServer
 
         public void UpdateManifoldPressure()
         {
-            _manifoldTime1 += 0.008;   // slightly different rates for realism
-            _manifoldTime2 += 0.0095;
+            _manifoldTime1 += 0.001;
+            _manifoldTime2 += 0.0012;
 
-            double min1 = 10;
-            double max1 = 35;
-            double min2 = 10;
-            double max2 = 35;
+            double min = 10;
+            double max = 35;
 
             double wave1 = Math.Sin(_manifoldTime1);
-            double wave2 = Math.Sin(_manifoldTime2 + 0.3); // small phase offset
+            double wave2 = Math.Sin(_manifoldTime2 + 0.3);
 
-            // midpoint + half range * wave pattern
-            _manifoldPressure1 = (max1 + min1) / 2 + (max1 - min1) / 2 * wave1;
-            _manifoldPressure2 = (max2 + min2) / 2 + (max2 - min2) / 2 * wave2;
+            double noise1 = (_rand.NextDouble() - 0.5) * 0.1;
+            double noise2 = (_rand.NextDouble() - 0.5) * 0.1;
 
-            // add light noise for realism
-            _manifoldPressure1 += _rand.NextDouble() * 0.5 - 0.25;
-            _manifoldPressure2 += _rand.NextDouble() * 0.5 - 0.25;
+            _manifoldPressure1 = 0.98 * _manifoldPressure1 +
+                                0.02 * ((max + min) / 2 + (max - min) / 2 * wave1 + noise1);
+            _manifoldPressure2 = 0.98 * _manifoldPressure2 +
+                                0.02 * ((max + min) / 2 + (max - min) / 2 * wave2 + noise2);
         }
     }
 }

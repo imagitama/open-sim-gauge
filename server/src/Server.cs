@@ -20,20 +20,13 @@ namespace OpenGaugeServer
 
         public bool IsRunning = false;
 
-        public Server(string? _ipAddress, int? _port)
+        public Server(string _ipAddress, int _port)
         {
-            IPAddress resolvedAddress;
+            var resolvedIpAddress = IPAddress.Parse(_ipAddress);
 
-            if (string.IsNullOrWhiteSpace(_ipAddress))
-                resolvedAddress = IPAddress.Any;
-            else
-                resolvedAddress = IPAddress.Parse(_ipAddress);
+            Console.WriteLine($"Starting server on {resolvedIpAddress}:{_port}");
 
-            var port = _port ?? 1234;
-
-            Console.WriteLine($"Starting server on {resolvedAddress}:{port}");
-
-            _listener = new TcpListener(resolvedAddress, port);
+            _listener = new TcpListener(resolvedIpAddress, _port);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

@@ -1,39 +1,15 @@
 {
   "name": "turn_coordinator",
-  "width": 500,
-  "height": 500,
-  "origin": [
-    250,
-    250
-  ],
+  "width": 400,
+  "height": 400,
   "layers": [
     {
       "name": "bg",
-      "position": [
-        250,
-        250
-      ],
-      "image": "svg/turn_markings_2.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ]
+      "image": "svg/turn_markings_2.svg"
     },
     {
       "name": "tc_airplane",
-      "position": [
-        250,
-        250
-      ],
       "image": "svg/turn_airplane.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ],
       "transform": {
         "rotate": {
           "var": [
@@ -49,18 +25,8 @@
     },
     {
       "name": "ball",
-      "position": [
-        250,
-        250
-      ],
       "image": "svg/turn_ball.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ],
-      "translateY": -5,
+      "translateY": -3,
       "transform": {
         "path": {
           "image": "svg/turn_ball_path.svg",
@@ -76,31 +42,11 @@
     {
       "skip": true,
       "name": "ball_path",
-      "position": [
-        250,
-        250
-      ],
-      "image": "svg/turn_ball_path.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ]
+      "image": "svg/turn_ball_path.svg"
     },
     {
       "name": "bg",
-      "position": [
-        250,
-        250
-      ],
-      "image": "svg/turn_markings_1.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ]
+      "image": "svg/turn_markings_1.svg"
     }
   ]
 }

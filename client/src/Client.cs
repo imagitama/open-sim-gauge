@@ -18,6 +18,8 @@ namespace OpenGaugeClient
         public delegate void MessageHandler(ServerMessage<object> message);
         public event MessageHandler? OnMessage;
 
+        public bool IsConnected = false;
+
         public Client(string? host, int? port)
         {
             if (host != null)
@@ -50,13 +52,14 @@ namespace OpenGaugeClient
                     Console.WriteLine($"Connecting to server {_host}:{_port}...");
                     await _tcp.ConnectAsync(_host, _port);
                     _stream = _tcp.GetStream();
+                    IsConnected = true;
                     Console.WriteLine("Connected to server");
-                    _ = ListenAsync();
+                    _ = ListenAsync(); // background listener
                     return;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Retrying in 2 seconds...");
+                    Console.WriteLine($"[Client] Connect failed: {ex.Message}. Retrying in 2 seconds...");
                     await Task.Delay(2000);
                 }
             }
@@ -64,6 +67,9 @@ namespace OpenGaugeClient
 
         public async Task SendMessage<TPayload>(MessageType type, TPayload payload)
         {
+            if (!IsConnected)
+                return;
+
             var message = new ServerMessage<TPayload>
             {
                 Type = type,
@@ -93,30 +99,50 @@ namespace OpenGaugeClient
 
         private async Task ListenAsync()
         {
-            using var reader = new StreamReader(_stream!, Encoding.UTF8);
-
-            // TODO: poll if lost connection and attempt re-connect
-
-            while (_tcp.Connected)
+            try
             {
-                var line = await reader.ReadLineAsync();
-                
-                if (line == null) break;
+                using var reader = new StreamReader(_stream!, Encoding.UTF8);
 
-                try
+                while (true)
                 {
-                    var msg = JsonSerializer.Deserialize<ServerMessage<object>>(line);
-                    if (msg != null)
+                    var line = await reader.ReadLineAsync();
+                    if (line == null)
                     {
-                        OnMessage?.Invoke(msg);
+                        IsConnected = false;
+                        Console.WriteLine("[Client] Connection lost. Attempting reconnect...");
+                        break;
+                    }
+
+                    try
+                    {
+                        var msg = JsonSerializer.Deserialize<ServerMessage<object>>(line);
+                        if (msg != null)
+                            OnMessage?.Invoke(msg);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Client] Error parsing message: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    // TODO: just crash here?
-                    Console.WriteLine($"[Client] Error parsing message: {ex.Message}");
-                }
             }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"[Client] Connection error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Client] Unexpected error: {ex}");
+            }
+
+            await ReconnectAsync();
+        }
+
+        private async Task ReconnectAsync()
+        {
+            Console.WriteLine("[Client] Reconnecting...");
+            _tcp?.Close();
+            _tcp = new TcpClient();
+            await ConnectAsync();
         }
     }
 
@@ -143,6 +169,11 @@ namespace OpenGaugeClient
         public required string Name { get; set; }
         public required string Unit { get; set; }
         public required object Value { get; set; }
+
+        public override string ToString()
+        {
+            return $"SimVarPayload name={Name} unit={Unit} value={Value}";
+        }
     }
 
     public class InitPayload

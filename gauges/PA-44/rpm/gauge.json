@@ -1,20 +1,10 @@
 {
   "name": "rpm_twin",
-  "width": 500,
-  "height": 500,
+  "width": 600,
+  "height": 600,
   "layers": [
     {
-      "position": [
-        250,
-        250
-      ],
       "image": "needle_R.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ],
       "transform": {
         "rotate": {
           "var": [
@@ -29,17 +19,7 @@
       }
     },
     {
-      "position": [
-        250,
-        250
-      ],
       "image": "needle_L.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ],
       "transform": {
         "rotate": {
           "var": [
@@ -54,17 +34,7 @@
       }
     },
     {
-      "position": [
-        250,
-        250
-      ],
-      "image": "bg.svg",
-      "width": 600,
-      "height": 600,
-      "origin": [
-        300,
-        300
-      ]
+      "image": "bg.svg"
     }
   ]
 }

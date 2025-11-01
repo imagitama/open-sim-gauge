@@ -1,8 +1,0 @@
-{
-  "debug": false,
-  "source": "emulator",
-  "server": {
-    // "port": 1234
-  },
-  // "rate": 50
-}

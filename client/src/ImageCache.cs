@@ -11,9 +11,9 @@ namespace OpenGaugeClient
         private readonly Dictionary<string, Bitmap> _cache = new();
         private bool _disposed;
 
-        public ImageCache()
+        public ImageCache(FontProvider fontProvider)
         {
-            _fontProvider = new FontProvider();
+            _fontProvider = fontProvider;
         }
 
         public Bitmap Load(string imagePath, Layer layer)
@@ -69,7 +69,8 @@ namespace OpenGaugeClient
                 using var pngStream = png.AsStream();
                 var avaloniaBmp = new Bitmap(pngStream);
 
-                Console.WriteLine($"[ImageCache] Loaded SVG '{imagePath}' {picBounds.Width}x{picBounds.Height} => {width}x{height}");
+                if (layer.Debug)
+                    Console.WriteLine($"[ImageCache] Loaded SVG '{imagePath}' {picBounds.Width}x{picBounds.Height} => {width}x{height}");
 
                 _cache[absolutePath] = avaloniaBmp;
 
@@ -80,7 +81,8 @@ namespace OpenGaugeClient
                 using var s = File.OpenRead(absolutePath);
                 var bmp = new Bitmap(s);
 
-                Console.WriteLine($"[ImageCache] Loaded PNG '{absolutePath}'");
+                if (layer.Debug)
+                    Console.WriteLine($"[ImageCache] Loaded PNG '{absolutePath}'");
 
                 _cache[absolutePath] = bmp;
                 
@@ -98,10 +100,7 @@ namespace OpenGaugeClient
                 bmp.Dispose();
             }
 
-            _cache.Clear();
-
-            if (_fontProvider != null)
-                _fontProvider.Dispose();    
+            _cache.Clear(); 
 
             _disposed = true;
 

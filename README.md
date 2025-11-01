@@ -25,218 +25,209 @@ Inspired by
 To create a custom panel and/or gauge you must define everything inside of
 `config.json`.
 
-## Config (client)
+## Client
 
-\* = required
+### Config
 
-In your client edit `config.json` to configure it:
+| Property | Type            | Default | Description                                                                                                        |
+| -------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `fps`    | `int`           | `60`    | The intended FPS when rendering.                                                                                   |
+| `server` | `ServerConfig?` |         | Configure the server IP and port.                                                                                  |
+| `panels` | `List<Panel>`   |         | The panels to render. On desktop a panel is a window.                                                              |
+| `gauges` | `List<Gauge>`   | `[]`    | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
+| `debug`  | `bool`          | `false` | Log extra info to the console.                                                                                     |
 
-| Key     | Type         | Default | Description                                         |
-| ------- | ------------ | ------- | --------------------------------------------------- |
-| panels* | Panel[]      |         | The panels to display.                              |
-| gauges* | Gauge[]      |         | The gauges available for your panels.               |
-| debug   | bool         | false   | If to log more info and draw useful debugging info. |
-| server  | ServerConfig |         | Override the default server connection info.        |
+### ServerConfig
 
-### `ServerConfig`
+| Property    | Type     | Default       | Description |
+| ----------- | -------- | ------------- | ----------- |
+| `ipAddress` | `string` | `"127.0.0.1"` |             |
+| `port`      | `int`    | `1234`        |             |
 
-| Key       | Type   | Default   | Description |
-| --------- | ------ | --------- | ----------- |
-| ipAddress | string | 127.0.0.1 |             |
-| port      | int    | 1234      |             |
+### Panel
 
-## Creating a panel
+| Property     | Type                               | Default          | Description                                                                                                                                                                                                 |
+| ------------ | ---------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`       | `string`                           |                  | The name of this panel. Only used for debugging.                                                                                                                                                            |
+| `gauges`     | `List<GaugeRef>`                   |                  | The gauges to render in this panel.                                                                                                                                                                         |
+| `skip`       | `bool?`                            | `false`          | If to skip rendering this panel.                                                                                                                                                                            |
+| `screen`     | `int?`                             | `0`              | The index of the screen you want to render this panel on (starting at 0 which is usually your main one).                                                                                                    |
+| `width`      | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
+| `height`     | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
+| `fullscreen` | `bool`                             | `false`          | If to have the panel fill the screen.                                                                                                                                                                       |
+| `position`   | `[double\|string, double\|string]` | `["50%", "50%"]` | The position of the panel inside the screen. X or Y can be a pixel value or a string which is a percent of the screen.<br>Use a negative value to flip the position (so -100 is 100px from the right edge). |
+| `origin`     | `[double\|string, double\|string]` | `["50%", "50%"]` | The origin of the panel which is used for all transforms such as positioning, scaling and rotation.                                                                                                         |
+| `background` | `string`                           | `rgb(0, 0, 0)`   | Background color of the panel as a CSS-like value. Cannot use transparency.<br>eg. "rgb(255, 255, 255)" or "#FFF" or "white"                                                                                |
+| `debug`      | `bool?`                            | `false`          | Extra console logging for this panel.                                                                                                                                                                       |
 
-In your client edit `config.json` and under key `panels` define a panel:
+### GaugeRef
 
-| Key       | Type                      | Default | Description                                                                            |
-| --------- | ------------------------- | ------- | -------------------------------------------------------------------------------------- |
-| name      | string                    |         | The name of the panel. Used for debugging.                                             |
-| screen    | int                       | 0       | The index of the screen/monitor to display the panel on. 0 should be your primary one. |
-| position* | [int\|string,int\|string] |         | The position of the panel (in pixels). Relative to the selected screen.                |
-| width     | int or string             | 100%    | The width of the panel (in pixels).                                                    |
-| height    | int or string             | 100%    | The height of the panel (in pixels).                                                   |
-| gauges*   | `Gauge`[]                 |         | The gauges to display in the panel.                                                    |
+An object that describes a reference to a gauge to render inside a panel.
 
-### `Gauge`
+| Property   | Type                               | Default  | Description                                                                                                                                                                                                  |
+| ---------- | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`     | `string?`                          |          | The name of the gauge to use. Optional if you specify a path.                                                                                                                                                |
+| `path`     | `string?`                          |          | The path to a JSON file that contains the gauge to use.<br>The file should contain a single property "gauge" which is the Gauge object.                                                                      |
+| `position` | `[double\|string, double\|string]` | `[0, 0]` | The position of the gauge inside the panel.<br>X or Y can be a pixel value or a string which is a percent of the panel.<br>Use a negative value to flip the position (so -100 is 100px from the right edge). |
+| `scale`    | `double`                           | `1.0`    | How much to scale the gauge (respecting the width you set).                                                                                                                                                  |
+| `width`    | `double?`                          |          | Force the width of the gauge in pixels before scaling.                                                                                                                                                       |
+| `skip`     | `bool`                             | `false`  | If to skip rendering this gauge.                                                                                                                                                                             |
 
-| Key       | Type                      | Default | Description                                                                                                                                           |
-| --------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name      | string                    |         | The name of the gauge you should have defined in the gauges list.                                                                                     |
-| path      | string                    |         | The path to a JSON file that contains a gauge.                                                                                                        |
-| position* | [int\|string,int\|string] |         | The position of the gauge in your panel. Relative to the top left of the panel. Relative to the gauge's origin point (if defined). Percent supported. |
-| scale     | float                     | 1       | The scale of the gauge as a percent.                                                                                                                  |
+### Gauge
 
-## Creating a gauge
+An object that describes a gauge and how to render it.
 
-In your client edit `config.json` and under key `gauges` define a gauge.
-Optionally you can create a JSON file anywhere and link to it by specifying a
-`path` in your layer.
+| Property | Type                               | Default          | Description                                                                                                                    |
+| -------- | ---------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `name`   | `string`                           |                  | The name of the gauge. Used for referencing it from a panel and for debugging.                                                 |
+| `width`  | `int`                              |                  | The width of the gauge (in pixels).                                                                                            |
+| `height` | `int`                              |                  | The height of the gauge (in pixels).                                                                                           |
+| `origin` | `[double\|string, double\|string]` | `["50%", "50%"]` | The origin of the gauge which is used for all transforms such as positioning, scaling and rotation.                            |
+| `layers` | `List<Layer>`                      |                  | The layers to render to make the gauge.                                                                                        |
+| `clip`   | `ClipConfig?`                      |                  | How to clip the layers of the gauge. Useful for gauges like an attitude indicator that translates outside of the gauge bounds. |
 
-| Key     | Type      | Default | Description                                                                           |
-| ------- | --------- | ------- | ------------------------------------------------------------------------------------- |
-| name*   | string    |         | The unique name of the gauge.                                                         |
-| width*  | int       |         | The width of the gauge (in pixels). Used for positioning of your layers and clipping. |
-| height* | int       |         | The height of the gauge (in pixels).                                                  |
-| origin  | [int,int] | 50%,50% | The center of the gauge. Used for position, scale, etc.                               |
-| layers* | `Layer`[] |         | The layers of your gauge.                                                             |
-| clip    | `ClipObj` |         | How to clip your layers using an SVG path.                                            |
+### ClipConfig
 
-### `Layer`
+An object that describes how to clip the layers of a gauge.
 
-| Key        | Type           | Default   | Description                                                                                                           |
-| ---------- | -------------- | --------- | --------------------------------------------------------------------------------------------------------------------- |
-| name       | string         |           | The name of your layer. Optional for debugging.                                                                       |
-| image      | string         |           | The path to an image to render. PNGs recommended. SVGs supported. Relative to your config file.                       |
-| width      | int            |           | The width of the image. If using an SVG it will default to viewbox width.                                             |
-| height     | int            |           | The height of the image. If using an SVG it will default to viewbox height.                                           |
-| origin     | [int,int]      | 50%,50%   | The position of the "center" of your image. Used as pivot point for rotation and translation.                         |
-| position   | [int,int]      |           | Where to position your image/text/whatever inside your gauge. For a needle you probably want the center of the gauge. |
-| rotate     | float          | 0         | How many degrees to initially rotate it. Used to fix needles starting in the wrong direction.                         |
-| translateX | int            | 0         | How much to translate your layer initially on the X axis.                                                             |
-| translateY | int            | 0         | How much to translate your layer initially on the Y axis.                                                             |
-| transform  | `TransformObj` | Transform | How to transform the layer using SimVars.                                                                             |
-| skip       | bool           | false     | If to skip rendering this layer.                                                                                      |
+| Property   | Type                               | Default                      | Description                                                                                                            |
+| ---------- | ---------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `image`    | `string`                           |                              | The path to the SVG to use to clip. It must contain a single path element (such as a circle).                          |
+| `width`    | `double?`                          | `SVG viewbox width or 100%`  | The width of the SVG (in pixels).                                                                                      |
+| `height`   | `double?`                          | `SVG viewbox height or 100%` | The width of the SVG (in pixels).                                                                                      |
+| `origin`   | `[double\|string, double\|string]` | `["50%", "50%"]`             | The origin of the SVG for positioning.                                                                                 |
+| `position` | `[double\|string, double\|string]` | `["50%", "50%"]`             | The position of the clip inside the gauge.<br>X or Y can be a pixel value or a string which is a percent of the gauge. |
+| `debug`    | `bool`                             | `false`                      | Extra debugging for clipping.                                                                                          |
 
-### `TransformObj`
+### Layer
 
-This object describes different ways you can transform the layer using SimVars.
-All are optional and stack on each other.
+An object that describes a layer of a gauge.
 
-| Key        | Type           | Default | Description                                   |
-| ---------- | -------------- | ------- | --------------------------------------------- |
-| rotate     | `RotateObj`    |         | How to rotate your layer.                     |
-| translateX | `TranslateObj` |         | How to translate (move) your layer.           |
-| translateY | `TranslateObj` |         | How to translate (move) your layer.           |
-| path       | `PathObj`      |         | How to translate your layer along a SVG path. |
+| Property     | Type                               | Default          | Description                                                                                                                                                                    |
+| ------------ | ---------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`       | `string?`                          |                  | The name of the layer. Only used for debugging.                                                                                                                                |
+| `text`       | `TextDef?`                         |                  | Some text to render as this layer. If provided then `image` will be ignored.                                                                                                   |
+| `image`      | `string?`                          |                  | A path to an image to render as this layer. PNG and SVG supported. If provided then `text` will be ignored.                                                                    |
+| `width`      | `double?`                          |                  | The width of the layer (in pixels).                                                                                                                                            |
+| `height`     | `double?`                          |                  | The height of the layer (in pixels).                                                                                                                                           |
+| `origin`     | `[double\|string, double\|string]` | `["50%", "50%"]` | The origin of the layer (in pixels) for all transformations to be based on.                                                                                                    |
+| `position`   | `[double\|string, double\|string]` | `["50%", "50%"]` | The position of the layer inside the gauge.<br>X or Y can be a pixel value or a string which is a percent of the gauge.                                                        |
+| `transform`  | `TransformDef?`                    |                  | How to transform this layer using a SimVar.                                                                                                                                    |
+| `rotate`     | `double`                           | `0`              | How many degrees to initially rotate the layer.                                                                                                                                |
+| `translateX` | `double`                           | `0`              | How much to initially translate the layer on the X axis.                                                                                                                       |
+| `translateY` | `double`                           | `0`              | How much to initially translate the layer on the Y axis.                                                                                                                       |
+| `debug`      | `bool`                             | `false`          | Render useful debugging visuals such as bounding box.<br>Note: If you subscribe to a SimVar in this layer and debugging is enabled it is sent to the server for extra logging. |
+| `skip`       | `bool?`                            | `false`          | If to skip rendering this layer.                                                                                                                                               |
 
-#### `RotateObj`
+### TextDef
 
-This object describes how to rotate your layer using SimVars:
+An object that describes what kind of text to render in the layer.
 
-| Key    | Type                            | Default | Description                                                                                                                                                                                                              |
-| ------ | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| var*   | [string*, string*, `VarConfig`] |         | The name of the SimVar to depend on and what type it is. eg. `["PLANE HEADING DEGREES TRUE", "degrees"]`. List defined [here](https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variables.htm). |
-| from   | int                             |         | The minimum angle to rotate from. Relative to 0 degrees north. Can be negative.                                                                                                                                          |
-| to     | int                             |         | The maximum angle to rotate to. Relative to 0 degrees north. Can be negative.                                                                                                                                            |
-| min    | float                           |         | The minimum possible value from the SimVar. Used to determine the rotation.                                                                                                                                              |
-| max    | float                           |         | The maximum possible value from the SimVar. Used to determine the rotation.                                                                                                                                              |
-| wrap   | bool                            | false   | If the degrees can wrap around like an altimeter.                                                                                                                                                                        |
-| invert | bool                            | false   | If to invert the degrees.                                                                                                                                                                                                |
+| Property     | Type               | Default | Description                                                                                                                                                                                                 |
+| ------------ | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `var`        | `[string, string]` |         | How to subscribe to a SimVar (and its unit) as the source of the text. eg. ["AIRSPEED INDICATED", "knots"]<br>Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
+| `default`    | `string?`          |         | The default text to render when there is no SimVar value.                                                                                                                                                   |
+| `fontSize`   | `double`           | `64`    | The size of the text.                                                                                                                                                                                       |
+| `fontFamily` | `string?`          |         | The family of the text. Supports any system font plus any inside the `fonts/` directory (currently only "Gordon").<br>If you specify a font path this lets you choose a family inside it.                   |
+| `font`       | `string?`          |         | Path to a font file to use. Relative to the config JSON file.                                                                                                                                               |
+| `color`      | `ColorDef?`        |         | The color of the text as a CSS-like value.<br>eg. "rgb(255, 255, 255)" or "#FFF" or "white"                                                                                                                 |
 
-#### `TranslateObj`
+### TransformDef
 
-This object describes how to translate (move) your layer using SimVars:
+An object that describes how to transform a layer using SimVars.
 
-| Key  | Type                            | Default | Description                                                                                                                                                                                                                                                                                                         |
-| ---- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| var* | [string*, string*, `VarConfig`] |         | The name of the SimVar to depend on and what type it is. eg. `["INDICATED AIRSPEED", "knots"]`. List defined [here](https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variables.htm).<br />Note: All values are requested as float so some units like `position` are normalized to -1...1. |
-| from | int                             |         | The minimum position to translate from (in pixels).                                                                                                                                                                                                                                                                 |
-| to   | int                             |         | The maximum position to translate to (in pixels).                                                                                                                                                                                                                                                                   |
+| Property     | Type               | Default | Description |
+| ------------ | ------------------ | ------- | ----------- |
+| `rotate`     | `RotateConfig?`    |         |             |
+| `translateX` | `TranslateConfig?` |         |             |
+| `translateY` | `TranslateConfig?` |         |             |
+| `path`       | `PathConfig?`      |         |             |
 
-#### `PathObj`
+### CalibrationPoint
 
-This object describes how to translate (move) your layer along a path defined in
-a SVG, using SimVars. Useful for gauges like a turn coordinator.
+| Property  | Type     | Default | Description |
+| --------- | -------- | ------- | ----------- |
+| `value`   | `double` |         |             |
+| `degrees` | `double` |         |             |
 
-| Key    | Type                            | Default        | Description                                                                                                                                                                                                                                                                                                               |
-| ------ | ------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| var*   | [string*, string*, `VarConfig`] |                | The name of the SimVar to depend on and what type it is. eg. `["TURN COORDINATOR BALL", "position"]`. List defined [here](https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variables.htm).<br />Note: All values are requested as float so some units like `position` are normalized to -1...1. |
-| image* | string                          |                | The path to the SVG used to determine the path. It must contain a view box and a single `<path>` object. Relative to your config file.                                                                                                                                                                                    |
-| width  | int                             | viewbox width  | The width of the SVG that contains the path (in pixels).                                                                                                                                                                                                                                                                  |
-| height | int                             | viewbox height | The height of the SVG that contains the path (in pixels).                                                                                                                                                                                                                                                                 |
-| min    | number                          |                | The minimum possible value from the SimVar. Used to determine the path position. eg. `-1` for the turn coordinator.                                                                                                                                                                                                       |
-| max    | number                          |                | The maximum possible value from the SimVar. Used to determine the path position. eg. `1` for the turn coordinator.                                                                                                                                                                                                        |
+### TransformConfig
 
-#### `VarConfig`
+How to transform a layer using a SimVar.
 
-Some extra configuration such as calibrating values when gauges are not
-perfectly linear.
+| Property      | Type                      | Default | Description                                                                                                                                                                      |
+| ------------- | ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `var`         | `[string, string]`        |         | The SimVar and its unit to subscribe to. eg. ["AIRSPEED INDICATED", "knots"]<br>Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1.    |
+| `from`        | `double?`                 |         | The minimum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to.                                                                           |
+| `to`          | `double?`                 |         | The maximum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to.                                                                           |
+| `min`         | `double?`                 |         | The minimum possible value for the SimVar. eg. for airspeed it would be 0 for 0 knots                                                                                            |
+| `max`         | `double?`                 |         | The maximum possible value for the SimVar.                                                                                                                                       |
+| `invert`      | `bool`                    | `false` | If to invert the resulting rotation/translation.                                                                                                                                 |
+| `multiply`    | `double?`                 |         | How much to multiply the SimVar amount by. Useful to convert "feet per second" into "feet per minute".                                                                           |
+| `calibration` | `List<CalibrationPoint>?` |         | How to "calibrate" raw SimVar values to specific angles because there is not a linear relationship.<br>Some gauges are not linear so require calibration (such as the C172 ASI). |
+| `skip`        | `bool?`                   |         | If to skip applying this transform.                                                                                                                                              |
+| `debug`       | `bool?`                   |         | Extra logging. Beware of console spam!                                                                                                                                           |
+| `override`    | `double?`                 |         | Force a SimVar value for debugging purposes.                                                                                                                                     |
 
-| Key         | Type               | Default | Description                                                            |
-| ----------- | ------------------ | ------- | ---------------------------------------------------------------------- |
-| calibration | `CalibrationObj`[] |         | A list of degree positions. Useful for non-linear airspeed indicators. |
+### RotateConfig
 
-##### `CalibrationObj`
+An object that describes how a layer should rotate. Inherits from
+`TransformConfig`.
 
-| Key     | Type   | Default | Description                                                                         |
-| ------- | ------ | ------- | ----------------------------------------------------------------------------------- |
-| value   | number |         | The SimVar value to use as this position. eg. 40 for an airspeed of 40 knots.       |
-| degrees | number |         | The corresponding degrees to use. eg. for 40 you may use something like 33 degrees. |
+| Property | Type   | Default | Description                                                                      |
+| -------- | ------ | ------- | -------------------------------------------------------------------------------- |
+| `wrap`   | `bool` | `false` | If to allow the rotation to "wrap" around 360 degrees such as with an altimeter. |
 
-## `ClipObj`
+### PathConfig
 
-This object describes how to clip all layers using an SVG that contains a path
-as the clip boundary. Useful for layers in an attitude indicator which need to
-translate outside the boundary of the gauge.
+An object that describes how a layer should translate along a path. Inherits
+from `TransformConfig`.
 
-| Key      | Type      | Default        | Description                                                                                  |
-| -------- | --------- | -------------- | -------------------------------------------------------------------------------------------- |
-| image*   | string    |                | The path to a SVG to use to clip. Relative to your config file.                              |
-| width    | int       | viewbox width  | The width of the image to render the SVG at.                                                 |
-| height   | int       | viewbox height | The height of the image to render the SVG at.                                                |
-| origin   | [int,int] | [0,0]          | The position of the "center" of your clip. Used as pivot point for rotation and translation. |
-| position | [int,int] |                | Where to position your clip inside your gauge. Usually the center.                           |
+| Property   | Type                               | Default                      | Description                                                                                                             |
+| ---------- | ---------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `image`    | `string`                           |                              | The path to an SVG to use. It must contain a single path element.                                                       |
+| `width`    | `double?`                          | `SVG viewbox width or 100%`  | The width of the SVG (in pixels).                                                                                       |
+| `height`   | `double?`                          | `SVG viewbox height or 100%` | The width of the SVG (in pixels).                                                                                       |
+| `origin`   | `[double\|string, double\|string]` | `["50%", "50%"]`             | The origin of the SVG for positioning.                                                                                  |
+| `position` | `[double\|string, double\|string]` | `["50%", "50%"]`             | The position of the image inside the gauge.<br>X or Y can be a pixel value or a string which is a percent of the gauge. |
 
-There is a `circle-clip.svg` which contains a perfect circle:
+## Creating SVGs
 
-```json
-{
-  "clip": {
-    "image": "circle-clip.svg",
-    "width": 400,
-    "height": 400,
-    "origin": [200, 200],
-    "position": [250, 250]
-  }
-}
-```
-
-## Using SVGs
-
-You can render a SVG in any layer by specifying the SVG path, width and height:
-
-```json
-{
-  "image": "mysvg.svg",
-  "width": 600,
-  "height": 600
-}
-```
-
-I wrote a script to generate the layers of a gauge as SVGs using a config file
-(see example JSON file):
+There is a Python script to generate a SVG per layer of a gauge using
+"operations". Usually an operation equals a SVG node. Each operation is
+described in the script's README.md.
 
 ```cli
 python3 tools/create-svg-gauge.py gauges/rpm_piper_seminole/svg.json gauges/rpm_piper_seminole
 ```
 
-### Fonts
+## Fonts
 
 When using a text layer you can specify any system font or one of these special
 ones bundled with the client:
 
-| Font Family                                  | Description           |
-| -------------------------------------------- | --------------------- |
-| [Gordon](http://www.identifont.com/show?62D) | 1940s-1980s aircraft. |
+- [Gordon](http://www.identifont.com/show?62D)
 
-## Config (server)
+## Server
 
-In your server edit `config.json` to configure it (* = required):
+### Config
 
-| Key    | Type                           | Default        | Description                                                                                                                                                                           |
-| ------ | ------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| source | `"SimConnect"` or `"Emulator"` | `"SimConnect"` | The name of the data source for your clients. The emulator spits out random values for a 6 pack.                                                                                      |
-| server | `ServerConfig`                 |                | Override the default server connection.                                                                                                                                               |
-| rate   | int (ms)                       | 50             | How fast to ask the data source for new data, which is then sent over the network.<br />100 = 10Hz which is okay, 50 = 20Hz for most gauges, 33 = 30Hz is very good but can be laggy. |
-| debug  | bool                           | false          | If to log more info.                                                                                                                                                                  |
+Configuration of the server application that runs on the host machine.
 
-### `ServerConfig`
+| Property | Type                         | Default        | Description                                                                                                    |
+| -------- | ---------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| `source` | `'SimConnect' \| 'emulator'` |                | Which data source to use.                                                                                      |
+| `server` | `ServerConfig`               | `ServerConfig` | Override the default IP address and port of the server.                                                        |
+| `rate`   | `double`                     | `16.7`         | Override the default poll rate the data source should use (which is also network send rate).<br>16.7ms = 60Hz. |
+| `debug`  | `bool`                       | `false`        | Log extra output to help diagnose issues.                                                                      |
 
-| Key       | Type   | Default   | Description |
-| --------- | ------ | --------- | ----------- |
-| ipAddress | string | 127.0.0.1 |             |
-| port      | int    | 1234      |             |
+### ServerConfig
+
+Override the default IP address and port of the server.
+
+| Property    | Type     | Default     | Description |
+| ----------- | -------- | ----------- | ----------- |
+| `ipAddress` | `string` | `"0.0.0.0"` |             |
+| `port`      | `int`    | `1234`      |             |
 
 ## Development
 
@@ -271,6 +262,31 @@ On Windows you can just run `client/build.ps1` to build each platform.
 Yes - it just needs to connect over TCP to the server, broadcast the correct
 initialization message as JSON and the server will start sending it the SimVars.
 
+```json
+{
+  "type": "Init",
+  "payload": {
+    "simvars": [
+      {
+        "name": "AIRSPEED INDICATED",
+        "unit": "knots"
+      }
+    ]
+  }
+}
+```
+
+```json
+{
+  "type": "Var",
+  "payload": {
+    "name": "AIRSPEED INDICATED",
+    "unit": "knots",
+    "value": 123
+  }
+}
+```
+
 ### Can I use this with my train or some other sim?
 
 Yes - you just need to creae a new data source in the server and change your
@@ -290,7 +306,7 @@ Yes - you just need to creae a new data source in the server and change your
         void Disconnect() {
           // disconnect (called when all clients have disconnected)
         }
-        void Listen() {
+        void Listen(Config config) {
           // start a loop to request data from the game (optional)
         }
     }

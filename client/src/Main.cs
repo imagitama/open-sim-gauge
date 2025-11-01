@@ -40,6 +40,8 @@ namespace OpenGaugeClient
 
             var client = new Client(config.Server?.IpAddress, config.Server?.Port);
 
+            var hasSentAVar = false;
+
             client.OnMessage += (msg) =>
             {
                 switch (msg.Type)
@@ -47,7 +49,6 @@ namespace OpenGaugeClient
                     case MessageType.Init:
                         Console.WriteLine("Server has told us to init");
                         break;
-
                     case MessageType.Var:
                         var payload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>();
 
@@ -57,17 +58,24 @@ namespace OpenGaugeClient
                         var key = (payload.Name, payload.Unit);
                         simVarValues[key] = ((JsonElement)payload.Value).GetDouble();
 
+                        if (!hasSentAVar)
+                        {
+                            hasSentAVar = true;
+                            Console.WriteLine($"Server has sent us our first SimVar: '{payload.Name}' ({payload.Unit}) => {payload.Value}");
+                        }
+
                         break;
                 }
             };
 
             await client.ConnectAsync();
 
-            simVarValues = await BuildSimVars(config);
+            simVarValues = await GetEmptySimVarValues(config);
 
             var simVarDefs = await GetSimVarDefsToSubscribeTo(config);
 
-            Console.WriteLine($"Subscribing to sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
+            if (config.Debug)
+                Console.WriteLine($"Subscribing to sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
 
             await client.SendInitMessage(
                 simVarDefs.ToArray(),
@@ -85,7 +93,7 @@ namespace OpenGaugeClient
 
             _manager.Initialize(config!, GetSimVarValue);
 
-            await _manager.RunRenderLoop(config);
+            await _manager.RunRenderLoop(config, client);
 
             base.OnFrameworkInitializationCompleted();
 
@@ -163,7 +171,7 @@ namespace OpenGaugeClient
             return gauges;
         } 
 
-        public async Task<Dictionary<(string, string), object?>> BuildSimVars(Config config)
+        public async Task<Dictionary<(string, string), object?>> GetEmptySimVarValues(Config config)
         {
             Dictionary<(string, string), object?> simVarValues = new();
 

@@ -15,7 +15,7 @@ namespace OpenGaugeServer
 
             var config = await ConfigManager.LoadConfig();
 
-            var server = new Server(config.Server?.IpAddress, config.Server?.Port);
+            var server = new Server(config.Server.IpAddress, config.Server.Port);
             var dataSource = DataSourceFactory.Create(config.Source);
 
             server.OnMessage += (msg) =>
@@ -31,6 +31,9 @@ namespace OpenGaugeServer
                     {
                         dataSource.SubscribeToVar(simVar.Name, simVar.Unit, data =>
                         {
+                            if (simVar.Debug == true)
+                                Console.WriteLine($"SimVar '{simVar.Name}' ({simVar.Unit}) => {data}");
+
                             server.BroadcastSimVar(simVar.Name, simVar.Unit, data);
                         });
                     }
@@ -47,7 +50,7 @@ namespace OpenGaugeServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to connect to data source: {ex}");
+                    Console.WriteLine($"Failed to connect to data source: {ex.Message}");
                 }
 
                 if (!dataSource.IsConnected)

@@ -1,8 +1,9 @@
 {
   "debug": false,
   "source": "SimConnect",
+  // "source": "emulator",
   "server": {
     // "port": 1234
   },
-  // "rate": 50
+  // "rate": 16.7
 }

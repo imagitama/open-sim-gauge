@@ -26,12 +26,12 @@ namespace OpenGaugeClient
             return parsed.D;
         }
 
-        public SKPath LoadSKPath(string svgPath, int? configWidth = null, int? configHeight = null)
+        public SKPath LoadSKPath(string svgPath, double? configWidth = null, double? configHeight = null)
         {
             if (_skPathCache.TryGetValue(svgPath, out var cached))
                 return cached;
 
-            var parsed = SvgUtils.ParseSvgPathData(svgPath, configWidth, configHeight);
+            var parsed = SvgUtils.ParseSvgPathData(svgPath, (int?)configWidth, (int?)configHeight);
 
             var skPath = SKPath.ParseSvgPathData(parsed.D);
 

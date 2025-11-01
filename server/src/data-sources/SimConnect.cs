@@ -93,13 +93,7 @@ namespace OpenGaugeServer
                 var sub = kvp.Value;
                 if (sub.ReqId == reqId)
                 {
-                    if (sub.VarName == "PLANE BANK DEGREES")
-                        Console.WriteLine($"[SimConnect] {sub.VarName} = {value} ({sub.Unit})");
-
-                    // sub.Callback?.Invoke(value);
-
                     NotifySubscribers(sub.VarName, sub.Unit, value);
-
                     return;
                 }
             }
@@ -199,15 +193,12 @@ namespace OpenGaugeServer
         {
             _ = Task.Run(async () =>
             {
-                int rate = config.Rate ?? 50; // 20Hz
-
-                Console.WriteLine($"[SimConnect] Listening at rate {rate}");
+                Console.WriteLine($"[SimConnect] Listening at rate {config.Rate}ms");
 
                 while (IsConnected)
                 {
                     try
                     {
-                        // Console.WriteLine("[SimConnect] ReceiveMessage()");
                         _simConnect.ReceiveMessage();
                     }
                     catch (Exception ex)
@@ -215,7 +206,7 @@ namespace OpenGaugeServer
                         Console.WriteLine($"SimConnect error: {ex.Message}");
                     }
 
-                    await Task.Delay(rate);
+                    await Task.Delay((int)config.Rate);
                 }
             });
         }

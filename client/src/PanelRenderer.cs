@@ -23,19 +23,21 @@ namespace OpenGaugeClient
         public Panel _panel;
         public Window _window;
         public Image _imageControl;
+
         private ImageCache _imageCache;
+        private FontProvider _fontProvider;
         private SvgCache _svgCache;
 
-        public PanelRenderer(Panel panel, Func<string, string, object?> getSimVarValue)
+        public PanelRenderer(Panel panel, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue)
         {
-            Console.WriteLine($"[PanelRenderer] Panel '{panel.Name}' {panel.Width}x{panel.Height} screen={panel.Screen} fullscreen={panel.Fullscreen}");
-            
-            _imageCache = new ImageCache();
-            _svgCache = new SvgCache();
+            Console.WriteLine($"Panel '{panel.Name}' {panel.Width}x{panel.Height} screen={panel.Screen} fullscreen={panel.Fullscreen}");
 
             _panel = panel;
-
             _getSimVarValue = getSimVarValue;
+
+            _imageCache = imageCache;
+            _fontProvider = fontProvider;
+            _svgCache = svgCache;
 
             var canvas = new Canvas
             {
@@ -174,27 +176,30 @@ namespace OpenGaugeClient
 
         public PixelPoint GetWindowPosition()
         {
-            int x = _panel.Position != null ? _panel.Position[0] : 0;
-            int y = _panel.Position != null ? _panel.Position[1] : 0;
+            if (_window == null || _window.Screens.Primary == null || _panel == null)
+                throw new Exception("Cannot get window position");
+            
+            int screenWidth = _window.Screens.Primary.Bounds.Width;
+            int screenHeight = _window.Screens.Primary.Bounds.Height;
+
+            var (posX, posY) = _panel.Position.Resolve(
+                screenWidth,
+                screenHeight
+            );
+
             int windowWidth = (int)_window.Width;
             int windowHeight = (int)_window.Height;
 
+            var (originX, originY) = _panel.Origin.Resolve(windowWidth, windowHeight);
+
             var screens = _window.Screens.All;
-            var screenIndex = _panel.Screen ?? 0;
-            screenIndex = Math.Clamp(screenIndex, 0, screens.Count - 1);
+            var screenIndex = Math.Clamp(_panel.Screen ?? 0, 0, screens.Count - 1);
+            var bounds = screens[screenIndex].Bounds;
 
-            var targetScreen = screens[screenIndex];
-            var bounds = targetScreen.Bounds;
-            
-            if (x < 0)
-                x = bounds.X + bounds.Width - windowWidth + x;
-            else
-                x = bounds.X + x;
+            int x = bounds.X + (int)posX - (int)originX;
+            int y = bounds.Y + (int)posY - (int)originY;
 
-            if (y < 0)
-                y = bounds.Y + bounds.Height - windowHeight + y;
-            else
-                y = bounds.Y + y;
+            // Console.WriteLine($"GetWindowPosition {x},{y} :: pos={posX},{posY} origin={originX},{originY} window={windowWidth}x{windowHeight} screen={screenWidth}x{screenHeight}");
 
             return new PixelPoint(x, y);
         }
@@ -206,25 +211,19 @@ namespace OpenGaugeClient
 
             var target = new RenderTargetBitmap(new PixelSize(width, height));
 
-            double scale = gaugeRef.Scale ?? 1.0;
+            var (gaugeOriginX, gaugeOriginY) = gauge.Origin.Resolve(gauge.Width, gauge.Height);
 
-            var gaugeOriginX = gauge.Origin != null ? gauge.Origin[0] : gauge.Width / 2;
-            var gaugeOriginY = gauge.Origin != null ? gauge.Origin[1] : gauge.Height / 2;
-
-            var gaugeConfigPath = gaugeRef.Path != null ? Path.GetDirectoryName(gaugeRef.Path) : PathHelper.GetFilePath("config.json");
+            var gaugeConfigPath = gaugeRef.Path != null ? gaugeRef.Path : PathHelper.GetFilePath("config.json");
 
             foreach (var layer in layers)
             {
                 if (layer.Skip == true)
                     continue;
 
-                var layerOrigin = layer.Origin;
-                var layerOriginX = layerOrigin != null ? layerOrigin[0] : gaugeOriginX;
-                var layerOriginY = layerOrigin != null ? layerOrigin[1] : gaugeOriginY;
+                var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(gauge.Width, gauge.Height);
 
                 var layerPos = layer.Position;
-                var layerPosX = layerPos != null ? layerPos[0] : layerOriginX;
-                var layerPosY = layerPos != null ? layerPos[1] : layerOriginY;
+                var (layerPosX, layerPosY) = layerPos.Resolve(gauge.Width, gauge.Height);
 
                 double rotationAngle = 0;
                 double offsetX = 0;
@@ -301,20 +300,16 @@ namespace OpenGaugeClient
                     var simVarUnit = pathConfig.Var.Unit;
                     var varValue = pathConfig.Override != null ? pathConfig.Override : _getSimVarValue(simVarName, simVarUnit);
                     
-                    // double normalizedValue = Math.Clamp((double)varValue / 127.0, -1.0, 1.0);
-
-                    // note for ball position even tho requested unit "position" it returned as -1 to 1
-                    // TODO: update docs
-                    // TODO: update emulator to return same data
+                    // note for ball position even if requested unit "position" it returned as -1 to 1
                     double value = varValue != null ? (double)varValue : 0;
 
                     if (pathConfig.Image == null)
                         throw new Exception("Path transform must have an image");
 
-                    var pathImagePath = Path.Combine(gaugeConfigPath!, pathConfig!.Image!);
+                    var pathImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, pathConfig!.Image!);
                     var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
                     
-                    pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value);
+                    pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value, gauge);
 
                     pathValue = $"=>{pathPositionResult}";
 
@@ -324,9 +319,17 @@ namespace OpenGaugeClient
                     }
                 }
                     
+                var (x, y) = gaugeRef.Position.Resolve(_window.Width, _window.Height);
+                var scale = gaugeRef.Scale;
+                
+                if (gaugeRef.Width is double targetWidth && gauge.Width != 0)
+                {
+                    scale = (targetWidth / gauge.Width) * gaugeRef.Scale;
+                }
+
                 var gaugeTransform =
-                    Matrix.CreateScale(scale, scale) * 
-                    Matrix.CreateTranslation(gaugeRef.Position[0], gaugeRef.Position[1]);
+                    Matrix.CreateScale(scale, scale) *
+                    Matrix.CreateTranslation(x, y);
 
                 using (ctx.PushTransform(gaugeTransform))
                 {
@@ -341,15 +344,15 @@ namespace OpenGaugeClient
                     
                     using (ctx.PushTransform(Matrix.CreateTranslation(-gaugeOriginX, -gaugeOriginY)))
                     {
-                        var clipRect = new Rect(0, 0, gauge.Width, gauge.Height);
-
                         if (ConfigManager.Debug || layer.Debug == true)
                         {
-                            var pen = new Pen(Brushes.Red, 1)
+                            var gaugeRect = new Rect(0, 0, gauge.Width, gauge.Height);
+
+                            var pen = new Pen(Brushes.Pink, 1)
                             {
                                 DashStyle = new DashStyle(new double[] { 6, 4 }, 0)
                             };
-                            ctx.DrawRectangle(pen, clipRect);
+                            ctx.DrawRectangle(pen, gaugeRect);
                         }
 
                         Geometry? clipGeometry = null;
@@ -359,39 +362,51 @@ namespace OpenGaugeClient
                             if (gauge.Clip.Image == null)
                                 throw new Exception("Clip must have an image");
 
-                            var clipImagePath = Path.Combine(gaugeConfigPath!, gauge.Clip!.Image!);
+                            var clipConfig = gauge.Clip;
+
+                            var clipImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, clipConfig!.Image!);
                             var absoluteClipImagePath = PathHelper.GetFilePath(clipImagePath);
 
-                            clipGeometry = GetClipGeometry(absoluteClipImagePath, gauge.Clip);
+                            var clipWidth = clipConfig.Width ?? gauge.Width;
+                            var clipHeight = clipConfig.Width ?? gauge.Width;
+
+                            var skPath = _svgCache.LoadSKPath(
+                                absoluteClipImagePath,
+                                clipWidth,
+                                clipHeight
+                            );
+
+                            var svgPathData = skPath.ToSvgPathData();
+                            clipGeometry = Geometry.Parse(svgPathData);
 
                             var transformedClipGeometry = clipGeometry.Clone();
 
-                            var clipPos = gauge.Clip.Position ?? new int[] { 0, 0 };
-                            var clipPosX = clipPos.Length > 0 ? clipPos[0] : 0;
-                            var clipPosY = clipPos.Length > 1 ? clipPos[1] : 0;
+                            var (clipPosX, clipPosY) = clipConfig.Position.Resolve(gauge.Width, gauge.Height);
 
-                            var clipOrigin = gauge.Clip.Origin ?? new int[] { 0, 0 };
+                            var (clipOriginX, clipOriginY) = clipConfig.Origin.Resolve(clipWidth, clipHeight);
 
                             transformedClipGeometry.Transform = new MatrixTransform(
-                                Matrix.CreateTranslation(-clipOrigin[0], -clipOrigin[1]) *
-                                Matrix.CreateTranslation(clipPos[0], clipPos[1])
+                                Matrix.CreateTranslation(-clipOriginX, -clipOriginY) *
+                                Matrix.CreateTranslation(clipPosX, clipPosY)
                             );
+
+                            if (clipConfig.Debug)
+                                Console.WriteLine($"Clip {clipPosX},{clipPosY} origin={clipOriginX},{clipOriginY}");
 
                             clipGeometry = transformedClipGeometry;
                         }
                                 
                         IDisposable? clip = clipGeometry != null ? ctx.PushGeometryClip(clipGeometry) : null;
 
-                        var initialRotation = layer.Rotate != null ? layer.Rotate : 0;
-
+                        var initialRotation = layer.Rotate;
+                        rotationAngle += (double)initialRotation;
+                        
                         Matrix layerTransform;
 
-                        rotationAngle += (double)initialRotation;
-
-                        var initialTranslateX = layer.TranslateX != null ? layer.TranslateX : 0;
+                        var initialTranslateX = layer.TranslateX;
                         offsetX += (double)initialTranslateX;
 
-                        var initialTranslateY = layer.TranslateY != null ? layer.TranslateY : 0;
+                        var initialTranslateY = layer.TranslateY;
                         offsetY += (double)initialTranslateY;
 
                         layerTransform =
@@ -408,26 +423,26 @@ namespace OpenGaugeClient
                         {
                             var debugTransform =
                                 Matrix.CreateTranslation(-layerOriginX, -layerOriginY) *
-                                Matrix.CreateTranslation(layerPosX, layerPosY);   
+                                Matrix.CreateTranslation(layerPosX + offsetX, layerPosY + offsetY);  
 
                             using (ctx.PushTransform(debugTransform))
                             {
                                 if (!string.IsNullOrEmpty(rotationValue))
                                 {
-                                    DrawDebugText(ctx, $"{rotationValue}°", Brushes.LightBlue, new Point(0, 0), 2);
+                                    DrawDebugText(ctx, $"{rotationValue}°", Brushes.LightBlue, new Point(0, 0), 3);
                                 }
                                 if (!string.IsNullOrEmpty(translateXValue))
                                 {
-                                    DrawDebugText(ctx, $"{translateXValue}px", Brushes.LightBlue, new Point(-layerOriginX, -layerOriginY), 3);
+                                    DrawDebugText(ctx, $"{translateXValue}px", Brushes.LightBlue, new Point(0, 0), 3);
                                 }
                                 if (!string.IsNullOrEmpty(translateYValue))
                                 {
-                                    DrawDebugText(ctx, $"{translateYValue}px", Brushes.LightBlue, new Point(-layerOriginX, -layerOriginY), 3);
+                                    DrawDebugText(ctx, $"{translateYValue}px", Brushes.LightBlue, new Point(0, 0), 3);
                                 }
 
                                 const int crossSize = 10;
-                                ctx.DrawLine(new Pen(Brushes.Blue, 4), new Point(-crossSize, 0), new Point(crossSize, 0));
-                                ctx.DrawLine(new Pen(Brushes.Blue, 4), new Point(0, -crossSize), new Point(0, crossSize));
+                                ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(-crossSize, 0), new Point(crossSize, 0));
+                                ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(0, -crossSize), new Point(0, crossSize));
                             }
                         }
                             
@@ -437,16 +452,56 @@ namespace OpenGaugeClient
                             {
                                 if (layer.Text != null)
                                 {
-                                    var textLayout = GetText(layer.Text);
+                                    var textRef = layer.Text;
+                                    var familyName = textRef.FontFamily;
 
-                                    if (textLayout == null)
-                                        throw new Exception($"Failed to get text for layer '{layer.Name}'");
+                                    // TODO: if static text then add to imagecache to save on performance
+                                    if (textRef.Font != null)
+                                    {
+                                        var fontPath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, textRef.Font);
+                                        var fontAbsolutePath = PathHelper.GetFilePath(fontPath);
+                                        familyName = _fontProvider.AddFontFileAndGetFamilyName(fontAbsolutePath);
+                                    }
 
-                                    textLayout.Draw(ctx, new Point(-layerOriginX, -layerOriginY));
+                                    string text = textRef.Default != null ? (string)textRef.Default : "";
+
+                                    if (textRef.Var != null)
+                                    {
+                                        var varName = textRef.Var.Name;
+                                        var varType = textRef.Var.Unit;
+                                        var varValue = _getSimVarValue(varName, varType);
+
+                                        if (varValue != null)
+                                            text = varValue.ToString() ?? "";
+                                    }
+
+                                    if (familyName == null)
+                                        throw new Exception("Failed to get family name for text");
+
+                                    Bitmap bmp = SvgUtils.RenderTextSvgToBitmap(
+                                        _fontProvider,
+                                        text,
+                                        0,
+                                        0,
+                                        gauge.Width,
+                                        gauge.Height,
+                                        gauge.Width / 2,
+                                        gauge.Height / 2,
+                                        familyName,
+                                        (float)textRef.FontSize,
+                                        textRef.Color,
+                                        gauge.Width,
+                                        gauge.Height
+                                    );
+
+                                    var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+                                    var destRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+
+                                    ctx.DrawImage(bmp, srcRect, destRect);
 
                                     if (ConfigManager.Debug || layer.Debug == true)
                                     {
-                                        ctx.DrawRectangle(null, new Pen(Brushes.Blue, 2), new Rect(new Point(-layerOriginX, -layerOriginY), new Size(textLayout.Width, textLayout.Height)));
+                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 2), destRect);
                                     }
                                 }
                                 else if (layer.Image != null)
@@ -472,7 +527,7 @@ namespace OpenGaugeClient
 
                                     if (ConfigManager.Debug || layer.Debug == true)
                                     {
-                                        ctx.DrawRectangle(null, new Pen(Brushes.Blue, 2), destRect);
+                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 2), destRect);
                                     }
                                 }
                             }   
@@ -482,12 +537,12 @@ namespace OpenGaugeClient
             }
         }
 
-        public SKPoint GetPathPosition(string svgPath, PathConfig pathConfig, double value)
+        public SKPoint GetPathPosition(string svgPath, PathConfig pathConfig, double value, Gauge gauge)
         {
             var skPath = _svgCache.LoadSKPath(
                 svgPath,
-                pathConfig.Width ?? 600,
-                pathConfig.Height ?? 600
+                pathConfig.Width,
+                pathConfig.Height
             );
 
             using var pathMeasure = new SKPathMeasure(skPath, false);
@@ -504,32 +559,15 @@ namespace OpenGaugeClient
             float centerX = bounds.MidX;
             float centerY = bounds.MidY;
 
-            float relativeX = position.X - centerX;
-            float relativeY = position.Y - centerY;
+            double relativeX = position.X - centerX;
+            double relativeY = position.Y - centerY;
 
-            float offsetX = 0, offsetY = 0;
-            if (pathConfig.Position != null && pathConfig.Position.Length >= 2)
-            {
-                offsetX = pathConfig.Position[0];
-                offsetY = pathConfig.Position[1];
-            }
+            var (offsetX, offsetY) = pathConfig.Position.Resolve(gauge.Width, gauge.Height);
 
-            return new SKPoint(relativeX + offsetX, relativeY + offsetY);
-        }
+            var x = (float)(relativeX + offsetX);
+            var y = (float)(relativeY + offsetY);
 
-
-        public Geometry GetClipGeometry(string filePath, ClipConfig clipConfig)
-        {
-            var skPath = _svgCache.LoadSKPath(
-                filePath,
-                clipConfig.Width ?? 600,
-                clipConfig.Height ?? 600
-            );
-
-            var svgPathData = skPath.ToSvgPathData();
-            var geometry = Geometry.Parse(svgPathData);
-
-            return geometry;
+            return new SKPoint(x, y);
         }
 
         void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point pos, double scaleText = 1)
@@ -566,7 +604,7 @@ namespace OpenGaugeClient
             var varConfig = config.Var;
             string unit = varConfig.Unit;
 
-            var calibration = varConfig.Options?.Calibration;
+            var calibration = config.Calibration;
             if (calibration != null && calibration.Count > 0)
             {
                 // clamp
@@ -626,14 +664,13 @@ namespace OpenGaugeClient
             double inputMax = config.Max ?? defaultMax;
             double outputFrom = config.From ?? 0;
             double outputTo   = config.To ?? 1;
-            bool wrap = config.Wrap ?? false;
 
             double range = inputMax - inputMin;
             if (range <= 0)
                 return outputFrom;
 
             double normalized;
-            if (wrap)
+            if (config is RotateConfig rotate && rotate.Wrap)
             {
                 double revolutions = (value - inputMin) / range;
                 normalized = revolutions - Math.Floor(revolutions);
@@ -647,47 +684,6 @@ namespace OpenGaugeClient
             var finalValue = outputFrom + (outputTo - outputFrom) * normalized;
 
             return finalValue;
-        }
-
-
-        TextLayout GetText(TextDef textRef)
-        {
-            var fontSize = textRef.FontSize ?? 24;    
-            
-            Color color = Colors.White;
-
-            if (textRef.Color != null)
-            {
-                color = textRef.Color!.ToColor();
-            }
-
-            var fontFamily = !string.IsNullOrEmpty(textRef.FontFamily) ? textRef.FontFamily : "Arial";
-
-            string text = textRef.Default != null ? (string)textRef.Default : "";
-
-            if (textRef.Var != null)
-            {
-                var varName = textRef.Var.Name;
-                var varType = textRef.Var.Unit;
-                var varValue = _getSimVarValue(varName, varType);
-
-                if (varValue != null)
-                    text = varValue.ToString() ?? "";
-            }
-
-            var brush = new SolidColorBrush(color);
-
-            var textLayout = new TextLayout(
-                text,
-                new Typeface(fontFamily),
-                fontSize,
-                brush,
-                textAlignment: TextAlignment.Left,
-                flowDirection: FlowDirection.LeftToRight,
-                maxWidth: double.PositiveInfinity
-            );
-
-            return textLayout;
         }
 
         public void Dispose()
