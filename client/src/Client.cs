@@ -18,28 +18,15 @@ namespace OpenGaugeClient
         public delegate void MessageHandler(ServerMessage<object> message);
         public event MessageHandler? OnMessage;
 
+        public delegate void OnConnectHandler();
+        public event OnConnectHandler? OnConnect;
+
         public bool IsConnected = false;
 
-        public Client(string? host, int? port)
+        public Client(string host, int port)
         {
-            if (host != null)
-            {
-                _host = host;
-            }
-            else
-            {
-                _host = "127.0.0.1";
-            }
-
-            if (port != null)
-            {
-                _port = (int)port;
-            }
-            else
-            {
-                _port = 1234;
-            }
-
+            _host = host;
+            _port = port;
             _tcp = new TcpClient();
         }
 
@@ -54,7 +41,8 @@ namespace OpenGaugeClient
                     _stream = _tcp.GetStream();
                     IsConnected = true;
                     Console.WriteLine("Connected to server");
-                    _ = ListenAsync(); // background listener
+                    OnConnect?.Invoke();
+                    _ = ListenAsync();
                     return;
                 }
                 catch (Exception ex)

@@ -18,15 +18,25 @@ namespace OpenGaugeClient
 {
     public class PanelRenderer : IDisposable
     {
-        public Func<string, string, object?> _getSimVarValue { get; set; }
-
-        public Panel _panel;
-        public Window _window;
-        public Image _imageControl;
-
+        private Func<string, string, object?> _getSimVarValue { get; set; }
+        private Panel _panel;
         private ImageCache _imageCache;
         private FontProvider _fontProvider;
         private SvgCache _svgCache;
+
+        private Window _window;
+        public Window Window
+        {
+            get => _window;
+            set => _window = value;
+        }
+        
+        private Image _imageControl;
+        public Image ImageControl
+        {
+            get => _imageControl;
+            set => _imageControl = value;
+        }
 
         public PanelRenderer(Panel panel, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue)
         {
@@ -74,8 +84,16 @@ namespace OpenGaugeClient
                     ExtendClientAreaChromeHints = debug
                         ? Avalonia.Platform.ExtendClientAreaChromeHints.Default
                         : Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome,
-                    Background = background
+                    Background = panel.Transparent == true ? Brushes.Transparent : background
                 };
+
+            if (panel.Transparent == true)
+            {
+                _window.TransparencyLevelHint = new[]
+                {
+                    WindowTransparencyLevel.Transparent
+                };
+            }
 
             var screens =_window.Screens.All;
 
@@ -471,12 +489,18 @@ namespace OpenGaugeClient
                                         var varType = textRef.Var.Unit;
                                         var varValue = _getSimVarValue(varName, varType);
 
-                                        if (varValue != null)
-                                            text = varValue.ToString() ?? "";
+                                        if (varValue != null && textRef.Template != null)
+                                        {
+                                            text = string.Format(textRef.Template, varValue);
+                                        }
+                                    }
+                                    else if (textRef.Template != null)
+                                    {
+                                        text = string.Format(textRef.Template, text);
                                     }
 
-                                    if (familyName == null)
-                                        throw new Exception("Failed to get family name for text");
+                                    if (text == null)
+                                        throw new Exception("Text is null");
 
                                     Bitmap bmp = SvgUtils.RenderTextSvgToBitmap(
                                         _fontProvider,
@@ -570,7 +594,7 @@ namespace OpenGaugeClient
             return new SKPoint(x, y);
         }
 
-        void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point pos, double scaleText = 1)
+        public static void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point pos, double scaleText = 1)
         {
             var typeface = new Typeface("Arial");
 

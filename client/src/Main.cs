@@ -34,14 +34,24 @@ namespace OpenGaugeClient
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            Console.WriteLine("Framework initialized");
-
             var config = await ConfigManager.LoadConfig();
+            simVarValues = await GetEmptySimVarValues(config);
+            var simVarDefs = await GetSimVarDefsToSubscribeTo(config);
+            
+            if (config.Debug)
+                Console.WriteLine($"Subscribing to sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
 
-            var client = new Client(config.Server?.IpAddress, config.Server?.Port);
+            var client = new Client(config.Server.IpAddress, config.Server.Port);
+
+            client.OnConnect += async () => {
+                await client.SendInitMessage(
+                    simVarDefs.ToArray(),
+                    // TODO: finish events
+                    new string[] {}
+                );
+            };
 
             var hasSentAVar = false;
-
             client.OnMessage += (msg) =>
             {
                 switch (msg.Type)
@@ -68,23 +78,6 @@ namespace OpenGaugeClient
                 }
             };
 
-            await client.ConnectAsync();
-
-            simVarValues = await GetEmptySimVarValues(config);
-
-            var simVarDefs = await GetSimVarDefsToSubscribeTo(config);
-
-            if (config.Debug)
-                Console.WriteLine($"Subscribing to sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
-
-            await client.SendInitMessage(
-                simVarDefs.ToArray(),
-                // TODO: finish events
-                new string[] {}
-            );
-            
-            Console.WriteLine("Rendering panels...");
-
             Func<string, string, object?> GetSimVarValue = (name, unit) =>
             {
                 simVarValues.TryGetValue((name, unit), out var v);
@@ -93,7 +86,10 @@ namespace OpenGaugeClient
 
             _manager.Initialize(config!, GetSimVarValue);
 
-            await _manager.RunRenderLoop(config, client);
+            var connectTask = Task.Run(() => client.ConnectAsync());
+            var renderTask = _manager.RunRenderLoop(config, client);
+
+            await Task.WhenAll(connectTask, renderTask);
 
             base.OnFrameworkInitializationCompleted();
 
@@ -103,6 +99,9 @@ namespace OpenGaugeClient
         public async Task<List<SimVarDef>> GetSimVarDefsToSubscribeTo(Config config)
         {
             var simVarDefs = new List<SimVarDef>();
+
+            if (config.Panels == null || config.Panels.Count == 0)
+                throw new Exception("No panels");
 
             foreach (var panel in config.Panels)
             {
@@ -117,13 +116,16 @@ namespace OpenGaugeClient
 
                     foreach (var layer in layers)
                     {
+                        void AddSimVar(VarConfig varConfig)
+                        {
+                            simVarDefs.Add(new SimVarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
+                        }
+
+                        if (layer.Text?.Var is not null)
+                            AddSimVar(layer.Text.Var!);
+
                         if (layer.Transform is { } transform)
                         {
-                            void AddSimVar(VarConfig varConfig)
-                            {
-                                simVarDefs.Add(new SimVarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
-                            }
-
                             if (transform.Rotate?.Var is not null)
                                 AddSimVar(transform.Rotate.Var!);
 
@@ -142,34 +144,6 @@ namespace OpenGaugeClient
 
             return simVarDefs;
         }
-
-        public async Task<List<Gauge>> GetGaugesByNames(List<GaugeRef> gaugeRefs, Config config)
-        {
-            var gauges = new List<Gauge>();
-
-            foreach (var gaugeRef in gaugeRefs)
-            {
-                Gauge? gauge;
-
-                if (!string.IsNullOrEmpty(gaugeRef.Path))
-                {
-                    gauge = await ConfigManager.LoadJson<Gauge>(gaugeRef.Path);
-                }
-                else
-                {
-                    gauge = config.Gauges.Find(g => g.Name == gaugeRef.Name);
-                }
-
-                if (gauge == null)
-                {
-                    throw new Exception($"Gauge '{gaugeRef.Name ?? gaugeRef.Path}' not found");
-                }
-
-                gauges.Add(gauge);
-            }
-
-            return gauges;
-        } 
 
         public async Task<Dictionary<(string, string), object?>> GetEmptySimVarValues(Config config)
         {
@@ -220,6 +194,34 @@ namespace OpenGaugeClient
             }
 
             return simVarValues;
+        }
+
+        public async Task<List<Gauge>> GetGaugesByNames(List<GaugeRef> gaugeRefs, Config config)
+        {
+            var gauges = new List<Gauge>();
+
+            foreach (var gaugeRef in gaugeRefs)
+            {
+                Gauge? gauge;
+
+                if (!string.IsNullOrEmpty(gaugeRef.Path))
+                {
+                    gauge = await ConfigManager.LoadJson<Gauge>(gaugeRef.Path);
+                }
+                else
+                {
+                    gauge = config.Gauges.Find(g => g.Name == gaugeRef.Name);
+                }
+
+                if (gauge == null)
+                {
+                    throw new Exception($"Gauge '{gaugeRef.Name ?? gaugeRef.Path}' not found");
+                }
+
+                gauges.Add(gauge);
+            }
+
+            return gauges;
         }
     }
 }

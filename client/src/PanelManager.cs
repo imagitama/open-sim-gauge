@@ -51,42 +51,42 @@ namespace OpenGaugeClient
 
         public async Task RunRenderLoop(Config config, Client client)
         {
+            Console.WriteLine("Rendering panels...");
+            
             bool? lastIsConnected = null;
 
             while (true)
             {
                 if (lastIsConnected == false && client.IsConnected)
-                    Console.WriteLine("[PanelManager] Unpaused");
+                    Console.WriteLine("[PanelManager] Connection resumed");
 
-                lastIsConnected = client.IsConnected;
+                await RenderPanels(config, client.IsConnected);
                 
-                if (client.IsConnected)
+                if (!client.IsConnected)
                 {
-                    await RenderPanels(config);
-                }
-                else
-                {
-                    Console.WriteLine("[PanelManager] Paused");
+                    Console.WriteLine("[PanelManager] Connection lost");
 
                     while (!client.IsConnected)
                         await Task.Delay(500);
                 }
+                
+                lastIsConnected = client.IsConnected;
 
                 await Task.Delay(1000 / config.Fps);
             }
         }
         
-        async Task RenderPanels(Config config)
+        async Task RenderPanels(Config config, bool isConnected)
         {
             foreach (var (panel, renderer) in _panelsAndRenderers)
             {
                 if (panel.Skip == true)
                     continue;
-                    
-                var width = panel.Width ?? renderer._window.Width;
-                var height = panel.Height ?? renderer._window.Height;
+                
+                var width = renderer.Window.Width;
+                var height = renderer.Window.Height;
 
-                var target = new RenderTargetBitmap(new PixelSize((int)width, (int)height), new Vector(96, 96));
+                var target = new RenderTargetBitmap(new PixelSize((int)width, (int)height));
 
                 using (var ctx = target.CreateDrawingContext())
                 {
@@ -112,13 +112,16 @@ namespace OpenGaugeClient
                         var layersToDraw = gauge.Layers.ToArray().Reverse().ToList();
 
                         renderer.DrawGaugeLayers(ctx, layersToDraw, gauge, gaugeRef);
+
+                        if (!isConnected)
+                            PanelRenderer.DrawDebugText(ctx, "Not connected", Brushes.Red, new Point(0, 0));
                     }
 
                     // force re-paint
                     Dispatcher.UIThread.Post(() =>
                     {
-                        renderer._imageControl.Source = target;
-                        renderer._imageControl.InvalidateVisual();
+                        renderer.ImageControl.Source = target;
+                        renderer.ImageControl.InvalidateVisual();
                     });
                 }
             }

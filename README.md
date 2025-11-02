@@ -320,5 +320,3 @@ Yes - you just need to creae a new data source in the server and change your
 - Android/iOS app
 - add JSON validation for better UX
 - visual editor for panels/gauge
-- supply your own fonts in gauges
-- dim panel if not connected to sim

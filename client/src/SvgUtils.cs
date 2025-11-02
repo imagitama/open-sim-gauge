@@ -20,13 +20,6 @@ namespace OpenGaugeClient
 
             var doc = XDocument.Load(absolutePath);
 
-            // var pathElement = doc.Descendants()
-            //     .FirstOrDefault(e => e.Name.LocalName == "path")
-            //     ?? throw new Exception($"SVG '{svgPath}' does not contain a <path> element.");
-
-            // var d = pathElement.Attribute("d")?.Value
-            //     ?? throw new Exception($"SVG '{svgPath}' path has no 'd' attribute.");
-
             var svgElement = doc.Root
                 ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element.");
 
@@ -105,7 +98,7 @@ namespace OpenGaugeClient
             float vbHeight,
             float textX,
             float textY,
-            string fontFamily = "Arial",
+            string? fontFamily = "Arial",
             float fontSize = 48,
             ColorDef? fill = null,
             int targetWidth = 400,

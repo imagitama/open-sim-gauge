@@ -66,7 +66,7 @@ namespace OpenGaugeClient
         /// Configure the server IP and port.
         /// <default></default>
         /// </summary>
-        public ServerConfig? Server { get; set; } = new();
+        public ServerConfig Server { get; set; } = new();
         /// <summary>
         /// The panels to render. On desktop a panel is a window.
         /// </summary>
@@ -93,13 +93,13 @@ namespace OpenGaugeClient
     public class Panel
     {
         /// <summary>
-        /// The name of this panel. Only used for debugging.
+        /// The name of this panel. 
         /// </summary>
-        public required string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// The gauges to render in this panel.
         /// </summary>
-        public required List<GaugeRef> Gauges { get; set; }
+        public List<GaugeRef> Gauges { get; set; } = new();
         /// <summary>
         /// If to skip rendering this panel.
         /// </summary>
@@ -152,6 +152,10 @@ namespace OpenGaugeClient
         /// </summary>
         public ColorDef? Background { get; set; } = new ColorDef(0, 0, 0);
         /// <summary>
+        /// If to render with a transparent background.
+        /// </summary>
+        public bool? Transparent { get; set; } = false;
+        /// <summary>
         /// Extra console logging for this panel.
         /// </summary>
         public bool? Debug { get; set; } = false;
@@ -197,7 +201,6 @@ namespace OpenGaugeClient
 
     public class InternalGauge
     {
-        // internal
         public string? Source { get; set; } // absolute path to JSON file
     }
 
@@ -377,7 +380,12 @@ namespace OpenGaugeClient
         public VarConfig? Var { get; set; }
         /// <summary>
         /// The default text to render when there is no SimVar value.
+        /// </summary>
         public string? Default { get; set; }
+        /// <summary>
+        /// How to format the text. [Cheatsheet](https://gist.github.com/luizcentennial/c6353c2ae21815420e616a6db3897b4c)
+        /// </summary>
+        public string? Template { get; set; }
         /// <summary>
         /// The size of the text.
         /// </summary>

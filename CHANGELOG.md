@@ -1,3 +1,9 @@
+# 0.0.3
+
+- smoother drawing on high PPI displays
+- render message if disconnected
+- added transparency to panels
+
 # 0.0.2
 
 - handle reconnection better

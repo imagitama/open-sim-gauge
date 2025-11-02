@@ -99,5 +99,6 @@ namespace OpenGaugeServer
     public static class SourceName {
         public static string SimConnect = "SimConnect";
         public static string Emulator = "Emulator";
+        public static string Cpu = "Cpu";
     }
 }
