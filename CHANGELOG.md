@@ -1,9 +1,11 @@
 # 0.0.3
 
-- aircraft-specific panels with wildcards (`panel.vehicle = "Cessna Skyhawk *"`)
+- aircraft-specific panels with wildcards (`panel.vehicle = "*Cessna Skyhawk*"`)
 - smoother drawing on high PPI displays
 - render message if disconnected
 - added transparency to panels (`panel.transparency = true`)
+
+Tested in MSFS2020 Win10 and macOS ARM.
 
 # 0.0.2
 
@@ -17,7 +19,7 @@
 - fixed text positioning
 - fixed emulator ball position
 
-Tested in MSFS2020 Win10.
+Tested in MSFS2020 Win10 and macOS ARM.
 
 # 0.0.1
 
