@@ -1,12 +1,16 @@
 # OpenSimGauge
 
-An open-source tool for rendering customizable gauge panels for MSFS 2020/2024
-(and any other sim out there) - no coding needed, just config files and
-PNGs/SVGs.
+A free, open-source, cross-platform app to display panels that contain gauges
+that are declared in simple config files with PNGs and SVGs, for use with
+simulators like MSFS2020/2024.
 
-Works on Windows, macOS (ARM) and Linux.
+✅ vector-based using SVGs (can use PNGs)\
+✅ no coding required to create a panel or gauge\
+✅ uses SimConnect but any data source is supported (with configuration)
 
 ![](./screenshot.png)
+
+Tested with MSFS2020 on Windows 10 and macOS ARM (M4).
 
 Default 6 pack SVGs sourced from
 [here](https://github.com/cecn/Skyhawk-Flight-Instruments/tree/master).
@@ -25,7 +29,67 @@ Inspired by
 To create a custom panel and/or gauge you must define everything inside of
 `config.json`.
 
+## Example gauge
+
+This gauge is provided in the default config but skipped. It assumes the server
+uses "cpu" data source:
+
+```json
+{
+  "panels": [
+    {
+      "name": "System Info",
+      "width": 400,
+      "height": 400,
+      "gauges": [
+        {
+          "name": "cpu",
+          "position": [
+            "50%",
+            "50%"
+          ]
+        }
+      ]
+    }
+  ],
+  "gauges": [
+    {
+      "name": "cpu",
+      "width": 400,
+      "height": 400,
+      "layers": [
+        {
+          "position": [
+            "50%",
+            "33.3%"
+          ],
+          "text": {
+            "default": "CPU"
+          }
+        },
+        {
+          "position": [
+            "50%",
+            "66.6%"
+          ],
+          "text": {
+            "var": [
+              "CPU",
+              "percent"
+            ],
+            "template": "{0:F1}%",
+            "default": "---"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Client
+
+Everything lives inside `config.json`:
 
 ### Config
 
@@ -318,7 +382,6 @@ Yes - you just need to creae a new data source in the server and change your
 
 ## Ideas
 
-- better interpolation of values for smoother updates
 - send `config.json` to clients to remote update
 - Android/iOS app
 - add JSON validation for better UX

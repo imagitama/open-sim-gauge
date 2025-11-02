@@ -100,9 +100,9 @@ namespace OpenGaugeClient
         /// </summary>
         public string? Vehicle { get; set; }
         /// <summary>
-        /// The gauges to render in this panel.
+        /// Which gauges to render in this panel.
         /// </summary>
-        public List<GaugeRef> Gauges { get; set; } = new();
+        public required List<GaugeRef> Gauges { get; set; }
         /// <summary>
         /// If to skip rendering this panel.
         /// </summary>
