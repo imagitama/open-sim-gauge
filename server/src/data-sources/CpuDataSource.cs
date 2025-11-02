@@ -1,20 +1,17 @@
-using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace OpenGaugeServer
 {
-    public class CpuDataSource : IDataSource
+    public class CpuDataSource : DataSourceBase
     {
-        public bool IsConnected { get; set; }
+        public override string? CurrentVehicleName { get; set; } = "CPU";
 
         private Action<object>? _cpuCallback;
         private CancellationTokenSource? _cts;
         private readonly object _lock = new();
 
-        public void Connect()
+        public override void Connect()
         {
             if (IsConnected) return;
             IsConnected = true;
@@ -22,27 +19,27 @@ namespace OpenGaugeServer
             _cts = new CancellationTokenSource();
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (!IsConnected) return;
             IsConnected = false;
             _cts?.Cancel();
         }
 
-        public void Listen(Config config)
+        public override void Listen(Config config)
         {
             if (_cts == null)
                 return;
-            
+
             Task.Run(() => PollCpuUsageAsync(config.Rate, _cts.Token));
         }
 
-        public void SubscribeToVar(string varName, string unit, Action<object> callback)
+        public override void SubscribeToVar(string varName, string unit, Action<object> callback)
         {
             if (varName.Equals("CPU", StringComparison.OrdinalIgnoreCase))
             {
                 _cpuCallback = callback;
-            
+
                 Console.WriteLine($"[CPU] Subscribed to var '{varName}' ({unit})");
             }
             else
@@ -51,9 +48,19 @@ namespace OpenGaugeServer
             }
         }
 
-        public void SubscribeToEvent(string eventName, Action callback) { }
+        public override void UnsubscribeFromVar(string varName, string unit)
+        {
+            if (varName.Equals("CPU", StringComparison.OrdinalIgnoreCase))
+            {
+                _cpuCallback = null;
 
-        public void WatchVar(string varName) { }
+                Console.WriteLine($"[CPU] Unsubscribed from var '{varName}' ({unit})");
+            }
+            else
+            {
+                Console.WriteLine($"[CPU] Unknown var '{varName}' ({unit})");
+            }
+        }
 
         private async Task PollCpuUsageAsync(double rate, CancellationToken token)
         {
@@ -71,7 +78,7 @@ namespace OpenGaugeServer
             }
         }
 
-        private float GetSystemCpuUsage()
+        private static float GetSystemCpuUsage()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return GetWindowsCpuUsage();
@@ -81,7 +88,7 @@ namespace OpenGaugeServer
                 return GetLinuxCpuUsage();
         }
 
-        private float GetWindowsCpuUsage()
+        private static float GetWindowsCpuUsage()
         {
             using var proc = Process.GetCurrentProcess();
             var startCpu = proc.TotalProcessorTime;
@@ -94,18 +101,18 @@ namespace OpenGaugeServer
             return (float)(cpuUsedMs / totalMsPassed * 100);
         }
 
-        private float GetLinuxCpuUsage()
+        private static float GetLinuxCpuUsage()
         {
             try
             {
-                var fields = System.IO.File.ReadAllText("/proc/stat").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var fields = File.ReadAllText("/proc/stat").Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 long user = long.Parse(fields[1]);
                 long nice = long.Parse(fields[2]);
                 long system = long.Parse(fields[3]);
                 long idle = long.Parse(fields[4]);
                 long total = user + nice + system + idle;
                 Thread.Sleep(200);
-                fields = System.IO.File.ReadAllText("/proc/stat").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                fields = File.ReadAllText("/proc/stat").Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 long user2 = long.Parse(fields[1]);
                 long nice2 = long.Parse(fields[2]);
                 long system2 = long.Parse(fields[3]);
@@ -121,7 +128,7 @@ namespace OpenGaugeServer
             }
         }
 
-        private float GetMacCpuUsage()
+        private static float GetMacCpuUsage()
         {
             try
             {

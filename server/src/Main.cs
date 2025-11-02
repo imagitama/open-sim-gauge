@@ -1,7 +1,4 @@
-using System;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text.Json;
 using System.Globalization;
 
@@ -23,9 +20,35 @@ namespace OpenGaugeServer
                 if (msg.Type == MessageType.Init)
                 {
                     if (ConfigManager.Debug)
-                        Console.WriteLine($"Initialize client: {msg}");
+                        Console.WriteLine($"Client wants to initialize: {msg}");
 
                     var payload = ((JsonElement)msg.Payload).Deserialize<InitPayload>();
+
+                    if (payload == null)
+                        throw new Exception("Payload is null");
+
+                    if (dataSource.CurrentVehicleName == null)
+                        throw new Exception("Data source vehicle name is null");
+
+                    if (payload.VehicleName != dataSource.CurrentVehicleName)
+                    {
+                        Console.WriteLine($"Client has vehicle '{payload.VehicleName}' but it is currently '{dataSource.CurrentVehicleName}' - telling them to re-init");
+
+                        // TODO: Broadcast to this client specifically
+
+                        // tell all clients they need to start again
+                        server.BroadcastReInit(dataSource.CurrentVehicleName);
+                        return;
+                    }
+                    else
+                    {
+                        // tell all clients everything matches up and they can render panels
+                        server.BroadcastInit(dataSource.CurrentVehicleName);
+                    }
+
+                    // TODO: Move to SubscriptionManager to handle unsubscribing
+
+                    Console.WriteLine($"Subscribing to {payload!.SimVars.Length} SimVars");
 
                     foreach (var simVar in payload!.SimVars)
                     {
@@ -40,22 +63,29 @@ namespace OpenGaugeServer
                 }
             };
 
+            dataSource.SubscribeToVehicle(vehicleName =>
+            {
+                Console.WriteLine($"New vehicle '{vehicleName}', informing clients...");
+
+                server.BroadcastReInit(dataSource.CurrentVehicleName!);
+            });
+
             while (!dataSource.IsConnected)
             {
                 try
                 {
-                    Console.WriteLine($"Connecting to data source '{config.Source}' {dataSource}...");
+                    Console.WriteLine($"Connecting to data source '{config.Source}'...");
                     dataSource.Connect();
-                    Console.WriteLine($"Connected to data source successfully");
+                    Console.WriteLine($"Connected to data source '{config.Source}' successfully");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to connect to data source: {ex.Message}");
+                    Console.WriteLine($"Failed to connect to data source '{config.Source}': {ex.Message}");
                 }
 
                 if (!dataSource.IsConnected)
                 {
-                    Console.WriteLine("Retrying connecting to data source in 2 seconds...");
+                    Console.WriteLine($"Retrying connecting to data source '{config.Source}' in 2 seconds...");
                     await Task.Delay(2000);
                 }
             }

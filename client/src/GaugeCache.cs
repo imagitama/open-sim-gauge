@@ -7,7 +7,7 @@ namespace OpenGaugeClient
 {
     public class GaugeCache
     {
-        private readonly Dictionary<string, Gauge> _cache = new();
+        private readonly Dictionary<string, Gauge> _cache = [];
 
         public async Task<Gauge> Load(string path)
         {
@@ -15,7 +15,7 @@ namespace OpenGaugeClient
                 return cached;
 
             var gauge = await ConfigManager.LoadJson<Gauge>(path);
-            
+
             gauge.Source = PathHelper.GetFilePath(path);
 
             _cache[path] = gauge;

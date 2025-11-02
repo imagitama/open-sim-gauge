@@ -1,23 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using SkiaSharp;
-using Svg.Skia;
-using Svg.Skia.TypefaceProviders;
 
 namespace OpenGaugeClient
 {
     public class FontCache : IDisposable
     {
-        private readonly Dictionary<string, SKTypeface> _cache = new();
+        private readonly Dictionary<string, SKTypeface> _cache = [];
         private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
         private bool _disposed;
-        private Dictionary<string, string> addedFontFiles = new();
+        private Dictionary<string, string> addedFontFiles = [];
 
         public string AddFontFileAndGetFamilyName(string absolutePath)
         {
-            if (addedFontFiles.ContainsKey(absolutePath))
-                return addedFontFiles[absolutePath];
+            if (addedFontFiles.TryGetValue(absolutePath, out string? value))
+                return value;
 
             if (!File.Exists(absolutePath))
                 throw new Exception($"Font does not exist: {absolutePath}");
@@ -38,7 +33,7 @@ namespace OpenGaugeClient
 
             return familyName;
         }
-    
+
         public SKTypeface LoadFromPath(string absolutePath, string? familyName = null)
         {
             if (!File.Exists(absolutePath))
@@ -51,7 +46,7 @@ namespace OpenGaugeClient
 
             if (familyName == null)
                 familyName = actual;
-            
+
             _cache[actual] = typeface;
 
             _aliases[familyName] = actual;

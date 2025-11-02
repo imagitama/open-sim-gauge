@@ -1,18 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
 using Avalonia;
-using Avalonia.Platform;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using Avalonia.Layout;
 using SkiaSharp;
-using Svg.Skia;
-using System.Xml.Linq;
 
 namespace OpenGaugeClient
 {
@@ -30,7 +23,7 @@ namespace OpenGaugeClient
             get => _window;
             set => _window = value;
         }
-        
+
         private Image _imageControl;
         public Image ImageControl
         {
@@ -40,8 +33,6 @@ namespace OpenGaugeClient
 
         public PanelRenderer(Panel panel, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue)
         {
-            Console.WriteLine($"Panel '{panel.Name}' {panel.Width}x{panel.Height} screen={panel.Screen} fullscreen={panel.Fullscreen}");
-
             _panel = panel;
             _getSimVarValue = getSimVarValue;
 
@@ -58,7 +49,7 @@ namespace OpenGaugeClient
             {
                 Stretch = Stretch.None,
                 HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top, 
+                VerticalAlignment = VerticalAlignment.Top,
             };
 
             Canvas.SetLeft(_imageControl, 0);
@@ -66,7 +57,7 @@ namespace OpenGaugeClient
             canvas.Children.Add(_imageControl);
 
             var startupLocation = panel.Position is null ? WindowStartupLocation.CenterScreen : WindowStartupLocation.Manual;
-            
+
             var background = new SolidColorBrush(
                 (panel.Background?.ToColor()) ?? Color.FromRgb(0, 0, 0)
             );
@@ -74,18 +65,18 @@ namespace OpenGaugeClient
             var debug = ConfigManager.Debug || panel.Debug == true;
 
             _window = new Window
-                {
-                    Title = panel.Name,
-                    Content = canvas,
-                    WindowStartupLocation = startupLocation,
-                    CanResize = debug,
-                    SystemDecorations = debug ? SystemDecorations.Full : SystemDecorations.None,
-                    ExtendClientAreaToDecorationsHint = !debug,
-                    ExtendClientAreaChromeHints = debug
+            {
+                Title = panel.Name,
+                Content = canvas,
+                WindowStartupLocation = startupLocation,
+                CanResize = debug,
+                SystemDecorations = debug ? SystemDecorations.Full : SystemDecorations.None,
+                ExtendClientAreaToDecorationsHint = !debug,
+                ExtendClientAreaChromeHints = debug
                         ? Avalonia.Platform.ExtendClientAreaChromeHints.Default
                         : Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome,
-                    Background = panel.Transparent == true ? Brushes.Transparent : background
-                };
+                Background = panel.Transparent == true ? Brushes.Transparent : background
+            };
 
             if (panel.Transparent == true)
             {
@@ -95,7 +86,7 @@ namespace OpenGaugeClient
                 };
             }
 
-            var screens =_window.Screens.All;
+            var screens = _window.Screens.All;
 
             if (panel.Screen != null)
             {
@@ -116,7 +107,7 @@ namespace OpenGaugeClient
             {
                 _window.Position = GetWindowPosition();
             }
-            
+
             _window.Opened += (_, _) =>
             {
                 if (panel.Screen != null)
@@ -153,7 +144,7 @@ namespace OpenGaugeClient
                 };
 
                 _window.PositionChanged += (_, __) => UpdateWindowTitle();
-            
+
                 _window.PropertyChanged += (sender, e) =>
                 {
                     if (e.Property == Window.ClientSizeProperty)
@@ -196,7 +187,7 @@ namespace OpenGaugeClient
         {
             if (_window == null || _window.Screens.Primary == null || _panel == null)
                 throw new Exception("Cannot get window position");
-            
+
             int screenWidth = _window.Screens.Primary.Bounds.Width;
             int screenHeight = _window.Screens.Primary.Bounds.Height;
 
@@ -216,8 +207,6 @@ namespace OpenGaugeClient
 
             int x = bounds.X + (int)posX - (int)originX;
             int y = bounds.Y + (int)posY - (int)originY;
-
-            // Console.WriteLine($"GetWindowPosition {x},{y} :: pos={posX},{posY} origin={originX},{originY} window={windowWidth}x{windowHeight} screen={screenWidth}x{screenHeight}");
 
             return new PixelPoint(x, y);
         }
@@ -260,7 +249,7 @@ namespace OpenGaugeClient
                     var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
 
                     rotationAngle = ComputeValue(rotateConfig, varValue, layer);
-                    
+
                     rotationValue = varValue == null
                         ? "null"
                         : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(rotationAngle * 10) / 10:F1}";
@@ -279,7 +268,7 @@ namespace OpenGaugeClient
                     var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
 
                     offsetX = ComputeValue(translateConfig, varValue);
-                    
+
                     translateXValue = varValue == null
                         ? "null"
                         : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(offsetX * 10) / 10:F1}";
@@ -298,7 +287,7 @@ namespace OpenGaugeClient
                     var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
 
                     offsetY = ComputeValue(translateConfig, varValue);
-                    
+
                     translateYValue = varValue == null
                         ? "null"
                         : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(offsetY * 10) / 10:F1}";
@@ -317,7 +306,7 @@ namespace OpenGaugeClient
                     var simVarName = pathConfig.Var.Name;
                     var simVarUnit = pathConfig.Var.Unit;
                     var varValue = pathConfig.Override != null ? pathConfig.Override : _getSimVarValue(simVarName, simVarUnit);
-                    
+
                     // note for ball position even if requested unit "position" it returned as -1 to 1
                     double value = varValue != null ? (double)varValue : 0;
 
@@ -326,20 +315,18 @@ namespace OpenGaugeClient
 
                     var pathImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, pathConfig!.Image!);
                     var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
-                    
+
                     pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value, gauge);
 
                     pathValue = $"=>{pathPositionResult}";
 
                     if (layer.Debug == true)
-                    {
                         Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}°");
-                    }
                 }
-                    
+
                 var (x, y) = gaugeRef.Position.Resolve(_window.Width, _window.Height);
                 var scale = gaugeRef.Scale;
-                
+
                 if (gaugeRef.Width is double targetWidth && gauge.Width != 0)
                 {
                     scale = (targetWidth / gauge.Width) * gaugeRef.Scale;
@@ -359,7 +346,7 @@ namespace OpenGaugeClient
                         ctx.DrawLine(new Pen(Brushes.Orange, 4),
                             new Point(0, -crossSize), new Point(0, crossSize));
                     }
-                    
+
                     using (ctx.PushTransform(Matrix.CreateTranslation(-gaugeOriginX, -gaugeOriginY)))
                     {
                         if (ConfigManager.Debug || layer.Debug == true)
@@ -413,12 +400,12 @@ namespace OpenGaugeClient
 
                             clipGeometry = transformedClipGeometry;
                         }
-                                
+
                         IDisposable? clip = clipGeometry != null ? ctx.PushGeometryClip(clipGeometry) : null;
 
                         var initialRotation = layer.Rotate;
                         rotationAngle += (double)initialRotation;
-                        
+
                         Matrix layerTransform;
 
                         var initialTranslateX = layer.TranslateX;
@@ -431,7 +418,7 @@ namespace OpenGaugeClient
                             Matrix.CreateTranslation(-layerOriginX, -layerOriginY) *
                             Matrix.CreateRotation(Math.PI * rotationAngle / 180.0) *
                             Matrix.CreateTranslation(layerPosX + offsetX, layerPosY + offsetY);
-                        
+
                         if (pathPositionResult != null)
                         {
                             layerTransform *= Matrix.CreateTranslation(pathPositionResult.Value.X, pathPositionResult.Value.Y);
@@ -441,7 +428,7 @@ namespace OpenGaugeClient
                         {
                             var debugTransform =
                                 Matrix.CreateTranslation(-layerOriginX, -layerOriginY) *
-                                Matrix.CreateTranslation(layerPosX + offsetX, layerPosY + offsetY);  
+                                Matrix.CreateTranslation(layerPosX + offsetX, layerPosY + offsetY);
 
                             using (ctx.PushTransform(debugTransform))
                             {
@@ -463,7 +450,7 @@ namespace OpenGaugeClient
                                 ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(0, -crossSize), new Point(0, crossSize));
                             }
                         }
-                            
+
                         using (clip)
                         {
                             using (ctx.PushTransform(layerTransform))
@@ -554,7 +541,7 @@ namespace OpenGaugeClient
                                         ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 2), destRect);
                                     }
                                 }
-                            }   
+                            }
                         }
                     }
                 }
@@ -596,8 +583,6 @@ namespace OpenGaugeClient
 
         public static void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point pos, double scaleText = 1)
         {
-            var typeface = new Typeface("Arial");
-
             var formattedText = new FormattedText(
                 text,
                 CultureInfo.CurrentCulture,
@@ -610,21 +595,19 @@ namespace OpenGaugeClient
             ctx.DrawText(formattedText, new Point(pos.X + 2, pos.Y + 2));
         }
 
-        double ComputeValue(TransformConfig config, object? varValue, Layer? layer = null)
+        static double ComputeValue(TransformConfig config, object? varValue, Layer? layer = null)
         {
             if (varValue == null)
                 return 0;
 
             double value = Convert.ToDouble(varValue);
 
-            var debug = config.Debug == true;
-
             if (config.Multiply != null)
                 value *= (double)config.Multiply;
 
             if (config.Invert == true)
                 value *= -1;
-            
+
             var varConfig = config.Var;
             string unit = varConfig.Unit;
 
@@ -654,9 +637,7 @@ namespace OpenGaugeClient
 
             // if user doesnt want any clamping or anything
             if (config.Min == null && config.Max == null && config.From == null && config.To == null)
-            {
                 return value;
-            }
 
             if (unit == "radians")
             {
@@ -669,10 +650,10 @@ namespace OpenGaugeClient
             double defaultMin, defaultMax;
             switch (unit)
             {
-                case "feet":     defaultMin = 0; defaultMax = 10000; break;
-                case "knots":    defaultMin = 0; defaultMax = 200; break;
-                case "rpm":      defaultMin = 0; defaultMax = 3000; break;
-                case "fpm":      defaultMin = -2000; defaultMax = 2000; break;
+                case "feet": defaultMin = 0; defaultMax = 10000; break;
+                case "knots": defaultMin = 0; defaultMax = 200; break;
+                case "rpm": defaultMin = 0; defaultMax = 3000; break;
+                case "fpm": defaultMin = -2000; defaultMax = 2000; break;
                 case "position": defaultMin = -127; defaultMax = 127; break;
                 case "radians":
                     defaultMin = -Math.PI;
@@ -687,7 +668,7 @@ namespace OpenGaugeClient
             double inputMin = config.Min ?? defaultMin;
             double inputMax = config.Max ?? defaultMax;
             double outputFrom = config.From ?? 0;
-            double outputTo   = config.To ?? 1;
+            double outputTo = config.To ?? 1;
 
             double range = inputMax - inputMin;
             if (range <= 0)
@@ -714,6 +695,8 @@ namespace OpenGaugeClient
         {
             _svgCache.Dispose();
             _window?.Close();
+
+            GC.SuppressFinalize(this);
         }
     }
 }

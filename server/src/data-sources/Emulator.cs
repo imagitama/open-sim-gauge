@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace OpenGaugeServer
 {
-    public class EmulatorDataSource : IDataSource
+    public class EmulatorDataSource : DataSourceBase
     {
+        private readonly string[] _aircraftTitles =
+        {
+            "Cessna Skyhawk",
+            "Piper PA44"
+        };
+        private Action<string>? _vehicleCallback;
         private readonly Random _rand = new();
-        private readonly Dictionary<string, Func<string?, object>> _simVars = new();
-        private readonly Dictionary<string, object> _forcedVars = new();
-        private readonly List<string> _simEvents = new();
+        private readonly Dictionary<string, Func<string?, object>> _simVars = [];
+        private readonly Dictionary<string, object> _forcedVars = [];
         private CancellationTokenSource _cts = null!;
         private string? _watching = null;
         private int _watchCount = 0;
@@ -22,39 +22,47 @@ namespace OpenGaugeServer
             public required Action<object> callback;
         }
 
-        private readonly List<CallbackInfo> callbacks = new();
+        private readonly List<CallbackInfo> _simVarCallbacks = [];
 
-        public bool IsConnected { get; set; } = false;
-
-        public void WatchVar(string varName)
+        public override void WatchVar(string varName)
         {
             _watching = varName;
         }
 
-        public void SubscribeToVar(string name, string unit, Action<object> callback)
+        public bool GetIsSubscribed(string varName, string unit)
         {
-            callbacks.Add(new CallbackInfo {
-                name = name,
+            return _simVarCallbacks.Any(cb => cb.name == varName && cb.unit == unit);
+        }
+
+        public override void SubscribeToVar(string varName, string unit, Action<object> callback)
+        {
+            if (GetIsSubscribed(varName, unit))
+                return;
+
+            _simVarCallbacks.Add(new CallbackInfo
+            {
+                name = varName,
                 unit = unit,
                 callback = callback
             });
-            
-            Console.WriteLine($"[EMULATOR] Subscribed to var '{name}' ({unit})");
+
+            Console.WriteLine($"[EMULATOR] Subscribed to var '{varName}' ({unit})");
         }
 
-        public void SubscribeToEvent(string eventName, Action callback)
+        public override void UnsubscribeFromVar(string name, string unit)
         {
-            // if (!_simEvents.Contains(eventName))
-            // {
-            //     _simEvents.Add(eventName);
-                
-            //     _eventCallbacks[eventName] = callback;
-
-            //     Console.WriteLine($"[EMULATOR] Subscribed to event '{eventName}'");
-            // }
+            // TODO
+            // Console.WriteLine($"[EMULATOR] Unsubscribed from var '{name}' ({unit})");
         }
 
-        public void Listen(Config config) {
+        public override void SubscribeToVehicle(Action<string> callback)
+        {
+            _vehicleCallback = callback;
+            Console.WriteLine($"[EMULATOR] Subscribed to vehicle change");
+        }
+
+        public override void Listen(Config config)
+        {
             _cts = new CancellationTokenSource();
 
             _simVars.Clear();
@@ -103,7 +111,42 @@ namespace OpenGaugeServer
             _simVars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
             _simVars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
 
-            Task.Run(async () => {
+            Task.Run(async () =>
+            {
+                var remainingTitles = new List<string>(_aircraftTitles);
+
+                while (!_cts.Token.IsCancellationRequested)
+                {
+                    if (remainingTitles.Count == 0)
+                        remainingTitles = new List<string>(_aircraftTitles);
+
+                    int index = _rand.Next(remainingTitles.Count);
+                    var newName = remainingTitles[index];
+
+                    if (newName != CurrentVehicleName)
+                    {
+                        CurrentVehicleName = newName;
+
+                        Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
+
+                        _vehicleCallback?.Invoke(CurrentVehicleName);
+                    }
+
+                    remainingTitles.RemoveAt(index);
+
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
+                }
+            }, _cts.Token);
+
+            Task.Run(async () =>
+            {
                 while (!_cts.Token.IsCancellationRequested)
                 {
                     UpdatePlaneAltitude();
@@ -120,14 +163,14 @@ namespace OpenGaugeServer
                     await Task.Delay(10);
                 }
             }, _cts.Token);
-            
+
             Task.Run(async () =>
             {
                 Console.WriteLine($"[EMULATOR] Sending fake data at rate {(int)config.Rate}ms");
 
                 while (!_cts.Token.IsCancellationRequested)
                 {
-                    foreach (var info in callbacks)
+                    foreach (var info in _simVarCallbacks)
                     {
                         var value = GetVarValue(info.name, info.unit);
                         if (value != null)
@@ -139,13 +182,13 @@ namespace OpenGaugeServer
                                     Console.WriteLine($"SimVar {_watching}: {value}");
                                     _watchCount++;
                                 }
-                                else 
+                                else
                                 {
                                     _watching = null;
                                     _watchCount = 0;
                                 }
                             }
-                            
+
                             info.callback(value);
                         }
                         else
@@ -159,7 +202,7 @@ namespace OpenGaugeServer
             }, _cts.Token);
         }
 
-        public void Connect()
+        public override void Connect()
         {
             IsConnected = true;
         }
@@ -168,17 +211,17 @@ namespace OpenGaugeServer
         {
             object? result;
 
-                if (_forcedVars.TryGetValue(name, out var forced))
-                    result = forced;
-                else if (_simVars.TryGetValue(name, out var generator))
-                    result = generator(unit);
-                else
-                    return null;
+            if (_forcedVars.TryGetValue(name, out var forced))
+                result = forced;
+            else if (_simVars.TryGetValue(name, out var generator))
+                result = generator(unit);
+            else
+                return null;
 
-                if (result is string s && double.TryParse(s, out var n))
-                    result = n;
+            if (result is string s && double.TryParse(s, out var n))
+                result = n;
 
-                return result;
+            return result;
         }
 
         public void ForceVarValue(string name, object value)
@@ -191,7 +234,7 @@ namespace OpenGaugeServer
             _forcedVars.Remove(name);
         }
 
-        public void Disconnect() => _cts?.Cancel();
+        public override void Disconnect() => _cts?.Cancel();
 
         private double _altitude = 1000;
         private bool _ascending = true;

@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Xml.Linq;
 using SkiaSharp;
-using Avalonia.Media;
 
 namespace OpenGaugeClient
 {
     public class SvgCache : IDisposable
     {
-        private readonly Dictionary<string, string> _stringCache = new();
-        private readonly Dictionary<string, SKPath> _skPathCache = new();
+        private readonly Dictionary<string, string> _stringCache = [];
+        private readonly Dictionary<string, SKPath> _skPathCache = [];
         private bool _disposed;
 
         public string LoadStringPath(string svgPath, int? configWidth = null, int? configHeight = null)
@@ -20,7 +14,7 @@ namespace OpenGaugeClient
                 return cached;
 
             var parsed = SvgUtils.ParseSvgPathData(svgPath, configWidth, configHeight);
-            
+
             _stringCache[svgPath] = parsed.D;
 
             return parsed.D;

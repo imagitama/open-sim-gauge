@@ -1,14 +1,19 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace OpenGaugeServer
 {
     class ConfigManager
     {
         public static Config Config { get; set; } = null!;
+
+        private static readonly JsonSerializerOptions _options = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+            WriteIndented = true
+        };
 
         public static async Task<Config> LoadConfig()
         {
@@ -34,13 +39,7 @@ namespace OpenGaugeServer
                     AllowTrailingCommas = true
                 });
 
-                var options = new JsonSerializerOptions { 
-                    PropertyNameCaseInsensitive = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true
-                };
-
-                var newConfig = JsonSerializer.Deserialize<Config>(json, options);
+                var newConfig = JsonSerializer.Deserialize<Config>(json, _options);
 
                 if (newConfig == null)
                     throw new InvalidOperationException("Failed to load config.");
@@ -48,7 +47,7 @@ namespace OpenGaugeServer
                 Config = newConfig;
 
                 return newConfig;
-            } 
+            }
             catch
             {
                 Console.WriteLine(json);
@@ -85,7 +84,7 @@ namespace OpenGaugeServer
         /// </summary>
         public bool Debug { get; set; } = false;
     }
-    
+
     [GenerateMarkdownTable]
     /// <summary>
     /// Override the default IP address and port of the server.
@@ -96,7 +95,8 @@ namespace OpenGaugeServer
         public int Port { get; set; } = 1234;
     }
 
-    public static class SourceName {
+    public static class SourceName
+    {
         public static string SimConnect = "SimConnect";
         public static string Emulator = "Emulator";
         public static string Cpu = "Cpu";

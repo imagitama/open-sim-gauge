@@ -1,8 +1,9 @@
 # 0.0.3
 
+- aircraft-specific panels with wildcards (`panel.vehicle = "Cessna Skyhawk *"`)
 - smoother drawing on high PPI displays
 - render message if disconnected
-- added transparency to panels
+- added transparency to panels (`panel.transparency = true`)
 
 # 0.0.2
 

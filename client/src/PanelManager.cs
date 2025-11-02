@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -11,12 +7,13 @@ namespace OpenGaugeClient
 {
     public class PanelManager : IDisposable
     {
-        private readonly List<(Panel panel, PanelRenderer renderer)> _panelsAndRenderers = new();
-        private GaugeCache _gaugeCache;
-        private ImageCache _imageCache;
-        private FontCache _fontCache;
-        private FontProvider _fontProvider;
-        private SvgCache _svgCache;
+        public bool IsReady = false;
+        private readonly Dictionary<string, PanelRenderer> _panelRenderers = [];
+        private readonly GaugeCache _gaugeCache;
+        private readonly ImageCache _imageCache;
+        private readonly FontCache _fontCache;
+        private readonly FontProvider _fontProvider;
+        private readonly SvgCache _svgCache;
 
         public PanelManager()
         {
@@ -27,15 +24,31 @@ namespace OpenGaugeClient
             _imageCache = new ImageCache(_fontProvider);
         }
 
-        public void Initialize(Config config, Func<string, string, object?> _getSimVarValue)
+        public void Initialize(Config config, Func<string, string, object?> _getSimVarValue, string? vehicleName)
         {
+            if (config.Debug == true)
+                Console.WriteLine($"[PanelManager] Initialize '{vehicleName}'");
+
+            if (vehicleName == null)
+                return;
+
             foreach (var panel in config.Panels)
             {
+                if (panel.Vehicle != null && vehicleName != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
+                {
+                    UnrenderPanel(panel);
+                    continue;
+                }
+
                 if (panel.Skip == true)
                 {
                     Console.WriteLine($"Skipping panel '{panel.Name}'");
+                    UnrenderPanel(panel);
                     continue;
                 }
+
+                if (_panelRenderers.ContainsKey(panel.Name))
+                    continue;
 
                 var renderer = new PanelRenderer(
                     panel,
@@ -45,44 +58,70 @@ namespace OpenGaugeClient
                     _getSimVarValue
                 );
 
-                _panelsAndRenderers.Add((panel, renderer));
+                Console.WriteLine($"[PanelManager] Load panel '{panel.Name}' {panel.Width}x{panel.Height} screen={panel.Screen} fullscreen={panel.Fullscreen}");
+
+                _panelRenderers[panel.Name] = renderer;
+            }
+
+            IsReady = true;
+        }
+
+        private void UnrenderPanel(Panel panel)
+        {
+            if (_panelRenderers.ContainsKey(panel.Name))
+            {
+                _panelRenderers[panel.Name].Dispose();
+                _panelRenderers.Remove(panel.Name);
+
+                Console.WriteLine($"[PanelManager] Unload panel '{panel.Name}'");
             }
         }
 
         public async Task RunRenderLoop(Config config, Client client)
         {
             Console.WriteLine("Rendering panels...");
-            
+
             bool? lastIsConnected = null;
 
             while (true)
             {
-                if (lastIsConnected == false && client.IsConnected)
-                    Console.WriteLine("[PanelManager] Connection resumed");
+                if (client.IsConnected)
+                {
+                    if (lastIsConnected == false)
+                    {
+                        Console.WriteLine("[PanelManager] Connection resumed");
+                    }
+
+                    lastIsConnected = client.IsConnected;
+                }
+                else
+                {
+                    if (lastIsConnected == true)
+                    {
+                        Console.WriteLine("[PanelManager] Connection lost");
+
+                        lastIsConnected = client.IsConnected;
+
+                        while (!client.IsConnected)
+                            await Task.Delay(100);
+                    }
+                }
 
                 await RenderPanels(config, client.IsConnected);
-                
-                if (!client.IsConnected)
-                {
-                    Console.WriteLine("[PanelManager] Connection lost");
-
-                    while (!client.IsConnected)
-                        await Task.Delay(500);
-                }
-                
-                lastIsConnected = client.IsConnected;
 
                 await Task.Delay(1000 / config.Fps);
             }
         }
-        
+
         async Task RenderPanels(Config config, bool isConnected)
         {
-            foreach (var (panel, renderer) in _panelsAndRenderers)
+            if (!IsReady)
+                return;
+
+            // ensure copy to avoid InvalidOperationException
+            foreach (var (panelName, renderer) in _panelRenderers.ToList())
             {
-                if (panel.Skip == true)
-                    continue;
-                
+                var panel = config.Panels.Find(panel => panel.Name == panelName) ?? throw new Exception($"Cannot render panel '{panelName}' - panel data not found");
                 var width = renderer.Window.Width;
                 var height = renderer.Window.Height;
 
@@ -105,7 +144,7 @@ namespace OpenGaugeClient
                         {
                             gauge = config.Gauges.Find(g => g.Name == gaugeRef.Name);
                         }
-                        
+
                         if (gauge == null)
                             throw new Exception($"[PanelManager] Gauge '{gaugeRef.Name ?? gaugeRef.Path}' not found");
 
@@ -129,9 +168,11 @@ namespace OpenGaugeClient
 
         public void Dispose()
         {
-            foreach (var (panel, renderer) in _panelsAndRenderers)
+            foreach (var (panelName, renderer) in _panelRenderers)
                 renderer.Dispose();
-            _panelsAndRenderers.Clear();
+            _panelRenderers.Clear();
+
+            GC.SuppressFinalize(this);
         }
     }
 }

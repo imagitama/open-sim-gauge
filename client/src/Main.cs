@@ -1,9 +1,8 @@
-using System;
-using System.Threading;
-using System.Collections.Generic;
 using System.Text.Json;
 using Avalonia;
+using Avalonia.Threading;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls;
 
 namespace OpenGaugeClient
 {
@@ -22,10 +21,18 @@ namespace OpenGaugeClient
             .LogToTrace();
     }
 
-    public class App : Application {
+    public class App : Application
+    {
         private PanelManager _manager;
+        private string? lastKnownVehicleName;
 
         private Dictionary<(string, string), object?> simVarValues = new Dictionary<(string, string), object?>();
+
+        private object? GetSimVarValue(string name, string unit)
+        {
+            simVarValues.TryGetValue((name, unit), out var v);
+            return v;
+        }
 
         public App()
         {
@@ -34,21 +41,45 @@ namespace OpenGaugeClient
 
         public override async void OnFrameworkInitializationCompleted()
         {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            }
+
+            var persistedState = await PersistanceManager.LoadState();
+
+            if (persistedState != null && persistedState.LastKnownVehicleName != null)
+            {
+                lastKnownVehicleName = persistedState.LastKnownVehicleName;
+                Console.WriteLine($"Last known vehicle was '{lastKnownVehicleName}'");
+            }
+
             var config = await ConfigManager.LoadConfig();
-            simVarValues = await GetEmptySimVarValues(config);
-            var simVarDefs = await GetSimVarDefsToSubscribeTo(config);
-            
-            if (config.Debug)
-                Console.WriteLine($"Subscribing to sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
 
             var client = new Client(config.Server.IpAddress, config.Server.Port);
 
-            client.OnConnect += async () => {
+            Func<Task> performInit = async () =>
+            {
+                if (config.Debug)
+                    Console.WriteLine($"Telling server we want to initialize (vehicle '{lastKnownVehicleName}')...");
+
+                simVarValues = await GetEmptySimVarValues(config, lastKnownVehicleName);
+                var simVarDefs = await GetSimVarDefsToSubscribeTo(config, lastKnownVehicleName);
+
+                if (config.Debug)
+                    Console.WriteLine($"With sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
+
                 await client.SendInitMessage(
+                    lastKnownVehicleName,
                     simVarDefs.ToArray(),
                     // TODO: finish events
-                    new string[] {}
+                    new string[] { }
                 );
+            };
+
+            client.OnConnect += () =>
+            {
+                performInit();
             };
 
             var hasSentAVar = false;
@@ -56,35 +87,58 @@ namespace OpenGaugeClient
             {
                 switch (msg.Type)
                 {
+                    case MessageType.ReInit:
                     case MessageType.Init:
-                        Console.WriteLine("Server has told us to init");
-                        break;
-                    case MessageType.Var:
-                        var payload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>();
+                        if (msg.Type == MessageType.ReInit)
+                        {
+                            Console.WriteLine("Re-initializing...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Initializing...");
+                        }
 
-                        if (payload == null)
-                            throw new Exception("Var payload invalid");
-                        
-                        var key = (payload.Name, payload.Unit);
-                        simVarValues[key] = ((JsonElement)payload.Value).GetDouble();
+                        var initPayload = ((JsonElement)msg.Payload).Deserialize<InitPayload>() ?? throw new Exception("Payload is null");
+
+                        if (initPayload.VehicleName != lastKnownVehicleName)
+                        {
+                            Console.WriteLine($"Vehicle changed to '{initPayload.VehicleName}'");
+
+                            lastKnownVehicleName = initPayload.VehicleName;
+
+#pragma warning disable CS4014
+                            PersistanceManager.Persist("LastKnownVehicleName", lastKnownVehicleName);
+#pragma warning restore CS4014
+                        }
+
+                        if (msg.Type == MessageType.ReInit)
+                        {
+                            performInit();
+                        }
+                        else
+                        {
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                _manager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
+                            });
+                        }
+                        break;
+
+                    case MessageType.Var:
+                        var simVarPayload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>() ?? throw new Exception("Payload is null");
+
+                        var key = (simVarPayload.Name, simVarPayload.Unit);
+                        simVarValues[key] = ((JsonElement)simVarPayload.Value).GetDouble();
 
                         if (!hasSentAVar)
                         {
                             hasSentAVar = true;
-                            Console.WriteLine($"Server has sent us our first SimVar: '{payload.Name}' ({payload.Unit}) => {payload.Value}");
+                            Console.WriteLine($"Our first SimVar: '{simVarPayload.Name}' ({simVarPayload.Unit}) => {simVarPayload.Value}");
                         }
 
                         break;
                 }
             };
-
-            Func<string, string, object?> GetSimVarValue = (name, unit) =>
-            {
-                simVarValues.TryGetValue((name, unit), out var v);
-                return v;
-            };
-
-            _manager.Initialize(config!, GetSimVarValue);
 
             var connectTask = Task.Run(() => client.ConnectAsync());
             var renderTask = _manager.RunRenderLoop(config, client);
@@ -96,7 +150,7 @@ namespace OpenGaugeClient
             Console.WriteLine("Closed");
         }
 
-        public async Task<List<SimVarDef>> GetSimVarDefsToSubscribeTo(Config config)
+        public async Task<List<SimVarDef>> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName)
         {
             var simVarDefs = new List<SimVarDef>();
 
@@ -105,6 +159,9 @@ namespace OpenGaugeClient
 
             foreach (var panel in config.Panels)
             {
+                if (vehicleName != null && panel.Vehicle != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
+                    continue;
+
                 if (panel.Skip == true)
                     continue;
 
@@ -145,12 +202,15 @@ namespace OpenGaugeClient
             return simVarDefs;
         }
 
-        public async Task<Dictionary<(string, string), object?>> GetEmptySimVarValues(Config config)
+        public async Task<Dictionary<(string, string), object?>> GetEmptySimVarValues(Config config, string? vehicleName)
         {
             Dictionary<(string, string), object?> simVarValues = new();
 
             foreach (var panel in config.Panels)
             {
+                if (vehicleName != null && panel.Vehicle != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
+                    continue;
+
                 if (panel.Skip == true)
                     continue;
 
@@ -176,7 +236,7 @@ namespace OpenGaugeClient
 
                             if (transform.TranslateX?.Var != null)
                                 varConfigs.Add(transform.TranslateX.Var);
-                            
+
                             if (transform.TranslateY?.Var != null)
                                 varConfigs.Add(transform.TranslateY.Var);
 
@@ -225,4 +285,3 @@ namespace OpenGaugeClient
         }
     }
 }
- 

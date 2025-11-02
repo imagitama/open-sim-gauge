@@ -1,10 +1,7 @@
-using System;
-using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace OpenGaugeClient
 {
@@ -80,9 +77,9 @@ namespace OpenGaugeClient
             await _stream!.WriteAsync(bytes, 0, bytes.Length);
         }
 
-        public async Task SendInitMessage(SimVarDef[] simVars, string[] simEvents)
+        public async Task SendInitMessage(string? vehicleName, SimVarDef[] simVars, string[] simEvents)
         {
-            await SendMessage(MessageType.Init, new InitPayload { SimVars = simVars, SimEvents = simEvents });
+            await SendMessage(MessageType.Init, new InitPayload { VehicleName = vehicleName, SimVars = simVars, SimEvents = simEvents });
         }
 
         private async Task ListenAsync()
@@ -109,7 +106,7 @@ namespace OpenGaugeClient
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[Client] Error parsing message: {ex.Message}");
+                        Console.WriteLine($"[Client] Error parsing message or calling handler: {ex}");
                     }
                 }
             }
@@ -166,6 +163,7 @@ namespace OpenGaugeClient
 
     public class InitPayload
     {
+        public required string? VehicleName { get; set; }
         public required SimVarDef[] SimVars { get; set; }
         public required string[] SimEvents { get; set; }
     }
@@ -173,6 +171,7 @@ namespace OpenGaugeClient
     public enum MessageType
     {
         Init,
+        ReInit,
         Var,
         Event,
         Unknown

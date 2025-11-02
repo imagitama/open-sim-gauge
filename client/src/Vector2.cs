@@ -16,9 +16,9 @@ namespace OpenGaugeClient
             Y = y;
         }
 
-        public int[] ToArray() => new[] { X, Y };
+        public readonly int[] ToArray() => [X, Y];
 
-        public override string ToString() => $"[{X}, {Y}]";
+        public override readonly string ToString() => $"[{X}, {Y}]";
     }
 
     public class Vector2Converter : JsonConverter<Vector2>

@@ -1,8 +1,5 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 
 namespace OpenGaugeClient
@@ -13,12 +10,12 @@ namespace OpenGaugeClient
 
         public static async Task<Config> LoadConfig()
         {
-            return await LoadJson<Config>("config.json");
+            return await LoadJson<Config>("config.json", true);
         }
 
-        public static async Task<T> LoadJson<T>(string filePath)
+        public static async Task<T> LoadJson<T>(string filePath, bool useDevRoot = false)
         {
-            string absoluteFilePath = PathHelper.GetFilePath(filePath);
+            string absoluteFilePath = PathHelper.GetFilePath(filePath, useDevRoot);
 
             if (Config?.Debug == true)
                 Console.WriteLine($"Load JSON: {absoluteFilePath}");
@@ -36,15 +33,16 @@ namespace OpenGaugeClient
                     AllowTrailingCommas = true
                 });
 
-                var options = new JsonSerializerOptions { 
+                var options = new JsonSerializerOptions
+                {
                     PropertyNameCaseInsensitive = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
                     AllowTrailingCommas = true
-                 };
-                 
+                };
+
                 var result = JsonSerializer.Deserialize<T>(ref reader, options);
                 return result!;
-            } 
+            }
             catch
             {
                 Console.WriteLine(json);
@@ -81,7 +79,7 @@ namespace OpenGaugeClient
         /// </summary>
         public bool Debug { get; set; } = false;
     }
-    
+
     [GenerateMarkdownTable]
     public class ServerConfig
     {
@@ -93,9 +91,14 @@ namespace OpenGaugeClient
     public class Panel
     {
         /// <summary>
-        /// The name of this panel. 
+        /// The unique name of this panel.
         /// </summary>
-        public string? Name { get; set; }
+        public required string Name { get; set; }
+        /// <summary>
+        /// The name of a vehicle (ie. aircraft) to only render this panel for. Wildcards supported (eg. `"*Skyhawk*"`).
+        /// Uses aircraft title eg. "Cessna Skyhawk G1000 Asobo".        
+        /// </summary>
+        public string? Vehicle { get; set; }
         /// <summary>
         /// The gauges to render in this panel.
         /// </summary>
@@ -129,7 +132,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Position { get; set; } = new() {
+        public FlexibleVector2 Position { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -139,7 +143,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Origin { get; set; } = new() {
+        public FlexibleVector2 Origin { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -228,7 +233,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Origin { get; set; } = new() {
+        public FlexibleVector2 Origin { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -268,7 +274,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Origin { get; set; } = new() {
+        public FlexibleVector2 Origin { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -279,7 +286,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Position { get; set; } = new() {
+        public FlexibleVector2 Position { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -323,7 +331,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Origin { get; set; } = new() {
+        public FlexibleVector2 Origin { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -334,7 +343,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Position { get; set; } = new() {
+        public FlexibleVector2 Position { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };
@@ -502,7 +512,8 @@ namespace OpenGaugeClient
     /// <summary>
     /// An object that describes how a layer should rotate. Inherits from `TransformConfig`.
     /// </summary>
-    public class RotateConfig : TransformConfig {
+    public class RotateConfig : TransformConfig
+    {
         /// <summary>
         /// If to allow the rotation to "wrap" around 360 degrees such as with an altimeter.
         /// </summary>
@@ -540,7 +551,8 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>["50%", "50%"]</default>
         /// </summary>
-        public FlexibleVector2 Origin { get; set; } = new() {
+        public FlexibleVector2 Origin { get; set; } = new()
+        {
             X = "50%",
             Y = "50%"
         };

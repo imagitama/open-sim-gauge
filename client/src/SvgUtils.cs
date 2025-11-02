@@ -1,13 +1,8 @@
-using System;
-using System.IO;
 using System.Text;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Xml.Linq;
 using Svg.Skia;
 using SkiaSharp;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
 namespace OpenGaugeClient
@@ -21,7 +16,7 @@ namespace OpenGaugeClient
             var doc = XDocument.Load(absolutePath);
 
             var svgElement = doc.Root
-                ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element.");
+                ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element");
 
             float viewBoxWidth = 0;
             float viewBoxHeight = 0;
@@ -43,13 +38,13 @@ namespace OpenGaugeClient
 
             var pathElement = doc.Descendants()
                 .FirstOrDefault(e => e.Name.LocalName == "path")
-                ?? throw new Exception($"SVG '{svgPath}' does not contain a <path> element.");
+                ?? throw new Exception($"SVG '{svgPath}' does not contain a <path> element");
 
             var d = pathElement.Attribute("d")?.Value
-                ?? throw new Exception($"SVG '{svgPath}' path has no 'd' attribute.");
+                ?? throw new Exception($"SVG '{svgPath}' path has no 'd' attribute");
 
             var svgElement = doc.Root
-                ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element.");
+                ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element");
 
             float viewBoxWidth = 0;
             float viewBoxHeight = 0;
@@ -64,7 +59,7 @@ namespace OpenGaugeClient
             float targetHeight = configHeight ?? ParseSvgLength(svgElement.Attribute("height")?.Value) ?? viewBoxHeight;
 
             if (viewBoxWidth <= 0 || viewBoxHeight <= 0)
-                throw new Exception($"SVG '{svgPath}' has no valid viewBox or explicit width/height.");
+                throw new Exception($"SVG '{svgPath}' has no valid viewBox or explicit width/height");
 
             float scaleX = (targetWidth != 0 && targetWidth != viewBoxWidth)
                 ? targetWidth / viewBoxWidth
@@ -72,8 +67,6 @@ namespace OpenGaugeClient
             float scaleY = (targetHeight != 0 && targetHeight != viewBoxHeight)
                 ? targetHeight / viewBoxHeight
                 : 1;
-
-            // Console.WriteLine($"[SvgCache] Loaded SVG '{svgPath}' target={targetWidth}x{targetHeight} viewBox={viewBoxWidth}x{viewBoxHeight} scale={scaleX}x{scaleY}");
 
             return (d, scaleX, scaleY);
         }

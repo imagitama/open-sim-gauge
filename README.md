@@ -29,13 +29,13 @@ To create a custom panel and/or gauge you must define everything inside of
 
 ### Config
 
-| Property | Type            | Default | Description                                                                                                        |
-| -------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| `fps`    | `int`           | `60`    | The intended FPS when rendering.                                                                                   |
-| `server` | `ServerConfig?` |         | Configure the server IP and port.                                                                                  |
-| `panels` | `List<Panel>`   |         | The panels to render. On desktop a panel is a window.                                                              |
-| `gauges` | `List<Gauge>`   | `[]`    | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
-| `debug`  | `bool`          | `false` | Log extra info to the console.                                                                                     |
+| Property | Type           | Default | Description                                                                                                        |
+| -------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `fps`    | `int`          | `60`    | The intended FPS when rendering.                                                                                   |
+| `server` | `ServerConfig` |         | Configure the server IP and port.                                                                                  |
+| `panels` | `List<Panel>`  |         | The panels to render. On desktop a panel is a window.                                                              |
+| `gauges` | `List<Gauge>`  | `[]`    | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
+| `debug`  | `bool`         | `false` | Log extra info to the console.                                                                                     |
 
 ### ServerConfig
 
@@ -46,19 +46,21 @@ To create a custom panel and/or gauge you must define everything inside of
 
 ### Panel
 
-| Property     | Type                               | Default          | Description                                                                                                                                                                                                 |
-| ------------ | ---------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`       | `string`                           |                  | The name of this panel. Only used for debugging.                                                                                                                                                            |
-| `gauges`     | `List<GaugeRef>`                   |                  | The gauges to render in this panel.                                                                                                                                                                         |
-| `skip`       | `bool?`                            | `false`          | If to skip rendering this panel.                                                                                                                                                                            |
-| `screen`     | `int?`                             | `0`              | The index of the screen you want to render this panel on (starting at 0 which is usually your main one).                                                                                                    |
-| `width`      | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
-| `height`     | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
-| `fullscreen` | `bool`                             | `false`          | If to have the panel fill the screen.                                                                                                                                                                       |
-| `position`   | `[double\|string, double\|string]` | `["50%", "50%"]` | The position of the panel inside the screen. X or Y can be a pixel value or a string which is a percent of the screen.<br>Use a negative value to flip the position (so -100 is 100px from the right edge). |
-| `origin`     | `[double\|string, double\|string]` | `["50%", "50%"]` | The origin of the panel which is used for all transforms such as positioning, scaling and rotation.                                                                                                         |
-| `background` | `string`                           | `rgb(0, 0, 0)`   | Background color of the panel as a CSS-like value. Cannot use transparency.<br>eg. "rgb(255, 255, 255)" or "#FFF" or "white"                                                                                |
-| `debug`      | `bool?`                            | `false`          | Extra console logging for this panel.                                                                                                                                                                       |
+| Property      | Type                               | Default          | Description                                                                                                                                                                                                 |
+| ------------- | ---------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | `string`                           |                  | The unique name of this panel.                                                                                                                                                                              |
+| `vehicle`     | `string?`                          |                  | The name of a vehicle (ie. aircraft) to only render this panel for. Wildcards supported (eg. `"*Skyhawk*"`).<br />Uses aircraft title eg. "Cessna Skyhawk G1000 Asobo".                                     |
+| `gauges`      | `List<GaugeRef>`                   | `new()`          | The gauges to render in this panel.                                                                                                                                                                         |
+| `skip`        | `bool?`                            | `false`          | If to skip rendering this panel.                                                                                                                                                                            |
+| `screen`      | `int?`                             | `0`              | The index of the screen you want to render this panel on (starting at 0 which is usually your main one).                                                                                                    |
+| `width`       | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
+| `height`      | `double?`                          |                  | The width of the panel in pixels or a percent of the screen.<br>Optional if you use fullscreen.                                                                                                             |
+| `fullscreen`  | `bool`                             | `false`          | If to have the panel fill the screen.                                                                                                                                                                       |
+| `position`    | `[double\|string, double\|string]` | `["50%", "50%"]` | The position of the panel inside the screen. X or Y can be a pixel value or a string which is a percent of the screen.<br>Use a negative value to flip the position (so -100 is 100px from the right edge). |
+| `origin`      | `[double\|string, double\|string]` | `["50%", "50%"]` | The origin of the panel which is used for all transforms such as positioning, scaling and rotation.                                                                                                         |
+| `background`  | `string`                           | `rgb(0, 0, 0)`   | Background color of the panel as a CSS-like value. Cannot use transparency.<br>eg. "rgb(255, 255, 255)" or "#FFF" or "white"                                                                                |
+| `transparent` | `bool?`                            | `false`          | If to render with a transparent background.                                                                                                                                                                 |
+| `debug`       | `bool?`                            | `false`          | Extra console logging for this panel.                                                                                                                                                                       |
 
 ### GaugeRef
 
@@ -127,6 +129,7 @@ An object that describes what kind of text to render in the layer.
 | ------------ | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `var`        | `[string, string]` |         | How to subscribe to a SimVar (and its unit) as the source of the text. eg. ["AIRSPEED INDICATED", "knots"]<br>Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
 | `default`    | `string?`          |         | The default text to render when there is no SimVar value.                                                                                                                                                   |
+| `template`   | `string?`          |         | How to format the text. [Cheatsheet](https://gist.github.com/luizcentennial/c6353c2ae21815420e616a6db3897b4c)                                                                                               |
 | `fontSize`   | `double`           | `64`    | The size of the text.                                                                                                                                                                                       |
 | `fontFamily` | `string?`          |         | The family of the text. Supports any system font plus any inside the `fonts/` directory (currently only "Gordon").<br>If you specify a font path this lets you choose a family inside it.                   |
 | `font`       | `string?`          |         | Path to a font file to use. Relative to the config JSON file.                                                                                                                                               |

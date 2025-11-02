@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace OpenGaugeServer
 {
@@ -15,7 +12,7 @@ namespace OpenGaugeServer
         private readonly TcpListener _listener;
         private readonly ConcurrentDictionary<TcpClient, NetworkStream> _clients = new();
 
-        public delegate void MessageHandler(ServerMessage<object> message);
+        public delegate void MessageHandler(ClientMessage<object> message);
         public event MessageHandler? OnMessage;
 
         public bool IsRunning = false;
@@ -40,7 +37,7 @@ namespace OpenGaugeServer
             while (!cancellationToken.IsCancellationRequested)
             {
                 var client = await _listener.AcceptTcpClientAsync();
-                
+
                 var endpoint = client.Client.RemoteEndPoint as IPEndPoint;
                 if (endpoint != null)
                 {
@@ -52,7 +49,7 @@ namespace OpenGaugeServer
                 {
                     Console.WriteLine($"Client connected");
                 }
-                
+
                 _clients[client] = client.GetStream();
                 _ = HandleClientAsync(client);
             }
@@ -87,7 +84,7 @@ namespace OpenGaugeServer
                             {
                                 Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
                             };
-                            var msg = JsonSerializer.Deserialize<ServerMessage<object>>(line, options);
+                            var msg = JsonSerializer.Deserialize<ClientMessage<object>>(line, options);
                             if (msg != null)
                                 OnMessage?.Invoke(msg);
                         }
@@ -118,25 +115,29 @@ namespace OpenGaugeServer
 
         public void BroadcastSimVar(string name, string unit, object value)
         {
-            Broadcast<SimVarPayload>(MessageType.Var, new SimVarPayload { Name = name, Unit = unit, Value = value });
+            Broadcast(MessageType.Var, new SimVarPayload { Name = name, Unit = unit, Value = value });
         }
 
-        // public void BroadcastEvent(string name)
-        // {
-        //     Broadcast(new ServerMessage { Type = MessageType.Event, Name = name });
-        // }
+        public void BroadcastInit(string currentVehicleName)
+        {
+            Broadcast(MessageType.Init, new InitPayload { VehicleName = currentVehicleName, SimEvents = [], SimVars = [] });
+        }
+
+        public void BroadcastReInit(string currentVehicleName)
+        {
+            Broadcast(MessageType.ReInit, new InitPayload { VehicleName = currentVehicleName, SimEvents = [], SimVars = [] });
+        }
 
         public void Broadcast<TPayload>(MessageType type, TPayload payload)
         {
-            var message = new ServerMessage<TPayload> {
+            var message = new ServerMessage<TPayload>
+            {
                 Type = type,
                 Payload = payload
             };
 
             if (ConfigManager.Debug)
-            {
-                Console.WriteLine($"[Server] Broadcast {message.ToString()}");
-            }
+                Console.WriteLine($"[Server] Broadcast {message}");
 
             var json = JsonSerializer.Serialize(message) + "\n";
             var bytes = Encoding.UTF8.GetBytes(json);
@@ -156,10 +157,13 @@ namespace OpenGaugeServer
         public bool? Debug { get; set; } // if client wants us to print extra debugging stuff
     }
 
-    public class ServerMessage<T>
+    /// <summary>
+    /// A message to send from us to the clients.
+    /// </summary>
+    public class ServerMessage<TPayload>
     {
         public MessageType Type { get; set; }
-        public required T Payload { get; set; }
+        public required TPayload Payload { get; set; }
 
         public override string ToString()
         {
@@ -181,6 +185,7 @@ namespace OpenGaugeServer
 
     public class InitPayload
     {
+        public required string VehicleName { get; set; }
         public required SimVarDef[] SimVars { get; set; }
         public required string[] SimEvents { get; set; }
 
@@ -190,14 +195,30 @@ namespace OpenGaugeServer
             var eventsList = string.Join(", ", SimEvents);
 
             return $"InitPayload:\n" +
+                $"  Vehicle: {VehicleName}" +
                 $"  SimVars: [{simVarsList}]\n" +
                 $"  SimEvents: [{eventsList}]";
+        }
+    }
+
+    /// <summary>
+    /// A message from a client.
+    /// </summary>
+    public class ClientMessage<TPayload>
+    {
+        public MessageType Type { get; set; }
+        public required TPayload Payload { get; set; }
+
+        public override string ToString()
+        {
+            return $"ClientMessage type={Type} payload={Payload!}";
         }
     }
 
     public enum MessageType
     {
         Init,
+        ReInit,
         Var,
         Event,
         Unknown

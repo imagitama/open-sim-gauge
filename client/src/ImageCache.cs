@@ -1,20 +1,14 @@
 using SkiaSharp;
 using Svg.Skia;
 using Avalonia.Media.Imaging;
-using System.IO;
 
 namespace OpenGaugeClient
 {
-    public class ImageCache : IDisposable
+    public class ImageCache(FontProvider fontProvider) : IDisposable
     {
-        private FontProvider _fontProvider;
-        private readonly Dictionary<string, Bitmap> _cache = new();
+        private readonly FontProvider _fontProvider = fontProvider;
+        private readonly Dictionary<string, Bitmap> _cache = [];
         private bool _disposed;
-
-        public ImageCache(FontProvider fontProvider)
-        {
-            _fontProvider = fontProvider;
-        }
 
         public Bitmap Load(string imagePath, Layer layer)
         {
@@ -85,7 +79,7 @@ namespace OpenGaugeClient
                     Console.WriteLine($"[ImageCache] Loaded PNG '{absolutePath}'");
 
                 _cache[absolutePath] = bmp;
-                
+
                 return bmp;
             }
         }
@@ -100,8 +94,7 @@ namespace OpenGaugeClient
                 bmp.Dispose();
             }
 
-            _cache.Clear(); 
-
+            _cache.Clear();
             _disposed = true;
 
             GC.SuppressFinalize(this);
