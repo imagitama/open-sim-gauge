@@ -1,0 +1,88 @@
+<UserControl
+        x:Class="OpenGaugeClient.Editor.Components.TransformControl"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:components="using:OpenGaugeClient.Editor.Components">
+        <Grid
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ColumnDefinitions="30,30,30"
+                RowDefinitions="30,30,30">
+
+                <!--  Top row  -->
+                <components:PrimaryButton
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterUpsize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="➕"
+                        ToolTip.Tip="Scale Up" />
+                <components:PrimaryButton
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterUp, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="↑"
+                        ToolTip.Tip="Move Up" />
+                <components:PrimaryButton
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterCW, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="⟳"
+                        ToolTip.Tip="Rotate Clockwise" />
+
+                <!--  Middle row  -->
+                <components:PrimaryButton
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterLeft, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="←"
+                        ToolTip.Tip="Move Left" />
+                <Border
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Width="30"
+                        Height="30"
+                        Background="Transparent" />
+                <components:PrimaryButton
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterRight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="→"
+                        ToolTip.Tip="Move Right" />
+
+                <!--  Bottom row  -->
+                <components:PrimaryButton
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterCCW, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="⟲"
+                        ToolTip.Tip="Rotate Counter-clockwise" />
+                <components:PrimaryButton
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterDown, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="↓"
+                        ToolTip.Tip="Move Down" />
+                <components:PrimaryButton
+                        Grid.Row="2"
+                        Grid.Column="2"
+                        Width="30"
+                        Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding CommandParameterDownsize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Label="➖"
+                        ToolTip.Tip="Scale Down" />
+        </Grid>
+</UserControl>

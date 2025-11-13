@@ -1,0 +1,17 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.Components.SelectFileField"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components">
+    <StackPanel Orientation="Vertical">
+        <TextBlock
+            x:Name="FileName"
+            Margin="0,5"
+            VerticalAlignment="Center" />
+        <components:PrimaryButton
+            x:Name="PickButton"
+            Command="{Binding PickCommand, RelativeSource={RelativeSource AncestorType={x:Type components:SelectFileField}}}"
+            Label="Select..."
+            Size="Small" />
+    </StackPanel>
+</UserControl>

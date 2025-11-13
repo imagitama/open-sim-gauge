@@ -1,3 +1,10 @@
 old/
+obj/
+bin/
+dist/
 .DS_Store
 *.sln
+TODO
+config*.json
+persist*.json
+settings*.json

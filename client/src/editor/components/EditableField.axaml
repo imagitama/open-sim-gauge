@@ -1,0 +1,30 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.Components.EditableField"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:conv="clr-namespace:OpenGaugeClient.Editor.Converters">
+    <UserControl.Resources>
+        <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
+    </UserControl.Resources>
+    <StackPanel
+        MinHeight="20"
+        Margin="0"
+        Orientation="Horizontal"
+        Spacing="0">
+        <TextBlock
+            Width="80"
+            VerticalAlignment="Center"
+            FontWeight="Bold"
+            IsVisible="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            ToolTip.Tip="{Binding Hint, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        <ContentPresenter x:Name="Presenter" />
+        <components:PrimaryButton
+            x:Name="EditButton"
+            Margin="5,0,0,0"
+            IsVisible="{Binding ReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBoolConverter}}"
+            Label="✎"
+            Size="Small" />
+    </StackPanel>
+</UserControl>

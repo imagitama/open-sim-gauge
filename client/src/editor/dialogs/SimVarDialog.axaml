@@ -1,0 +1,38 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.SimVarDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Select SimVar"
+    Width="350"
+    Height="300"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock FontSize="24" Text="Select SimVar" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="16"
+                Text="SimVar Name eg. 'AIRSPEED INDICATED'" />
+            <TextBox Text="{Binding SimVarName}" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="16"
+                Text="SimVar Unit eg. 'degrees' or 'knots' or 'feet' or 'position'" />
+            <TextBox Text="{Binding SimVarUnit}" />
+            <Button Click="OpenWebsite_Click" Content="View SimVar Website" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding OkCommand}"
+                    Content="OK" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

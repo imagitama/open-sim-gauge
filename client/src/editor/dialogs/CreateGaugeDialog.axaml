@@ -1,0 +1,39 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.CreateGaugeDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    Title="Create Dialog"
+    Width="350"
+    Height="300"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock FontSize="24" Text="Create Dialog" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="16"
+                Text="Name" />
+            <TextBox Text="{Binding Name}" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="16"
+                Text="...or Save as JSON File" />
+            <TextBlock Margin="0,5" Text="Gauge will be saved to directory/gauge.json" />
+            <components:SelectFileField DirectoryOnly="True" Path="{Binding Path, Mode=TwoWay}" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding OkCommand}"
+                    Content="OK" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

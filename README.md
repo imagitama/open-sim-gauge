@@ -4,11 +4,12 @@ A free, open-source, cross-platform app to display panels that contain gauges
 that are declared in simple config files with PNGs and SVGs, for use with
 simulators like MSFS2020/2024.
 
+✅ GUI for editing panels and gauges\
 ✅ vector-based using SVGs (can use PNGs)\
 ✅ no coding required to create a panel or gauge\
 ✅ uses SimConnect but any data source is supported (with configuration)
 
-![](./screenshot.png)
+![](./screenshot_editor.png) ![](./screenshot.png)
 
 Tested with MSFS2020 on Windows 10 and macOS ARM (M4).
 

@@ -1,0 +1,17 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.Components.FlexibleVector2Field"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="150"
+    Height="32">
+    <StackPanel Orientation="Horizontal">
+        <TextBox
+            x:Name="XBox"
+            Width="60"
+            Watermark="X" />
+        <TextBox
+            x:Name="YBox"
+            Width="60"
+            Watermark="Y" />
+    </StackPanel>
+</UserControl>

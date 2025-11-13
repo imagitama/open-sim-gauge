@@ -1,0 +1,52 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.SelectFileDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="{Binding Title}"
+    Width="500"
+    Height="180"
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock FontSize="24" Text="{Binding Title}" />
+
+            <StackPanel Orientation="Horizontal">
+                <TextBox
+                    Width="350"
+                    Text="{Binding EnteredPath, UpdateSourceTrigger=PropertyChanged}"
+                    Watermark="Enter or browse for a path..." />
+                <Button
+                    Width="80"
+                    Command="{Binding BrowseCommand}"
+                    Content="Browse" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Relative:" />
+                <TextBlock Text="{Binding RelativePath}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="File Types:" />
+                <TextBlock Text="{Binding AllowedExtensionsDisplay}" />
+            </StackPanel>
+
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ConfirmCommand}"
+                    Content="OK" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

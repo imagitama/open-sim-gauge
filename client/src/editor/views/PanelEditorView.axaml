@@ -1,0 +1,258 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.PanelEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:editor="using:OpenGaugeClient.Editor"
+    xmlns:local="clr-namespace:OpenGaugeClient"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:CompileBindings="True"
+    x:DataType="editor:PanelEditorViewViewModel">
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="{x:Type local:ReactiveGaugeRef}">
+            <components:ToolPanel>
+                <StackPanel>
+                    <components:TransformControl Command="{Binding ViewModel.TransformGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}" CommandTarget="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Name}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Name"
+                        Label="Name"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Path}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Path"
+                        FieldType="JsonFile"
+                        Label="Path"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Position}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Position"
+                        FieldType="FlexibleVector2"
+                        Label="Position"
+                        OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.CenterGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Center"
+                            Size="Small" />
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Scale}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Scale"
+                        FieldType="Number"
+                        Label="Scale"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Width}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Width"
+                        FieldType="Number"
+                        Label="Width"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Skip}"
+                        EditCommittedCommand="{Binding ViewModel.EditGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        FieldName="Skip"
+                        FieldType="Bool"
+                        Label="Skip"
+                        OriginalObj="{Binding}" />
+                    <components:PrimaryButton
+                        Command="{Binding ViewModel.OpenGaugeEditorCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                        CommandParameter="{Binding}"
+                        Label="Edit Gauge" />
+                </StackPanel>
+            </components:ToolPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+    <Grid>
+        <Image
+            x:Name="RenderTargetImage"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Stretch="UniformToFill" />
+        <DockPanel>
+            <components:NavBar DockPanel.Dock="Top" />
+            <!--  Main Content Grid  -->
+            <Grid ColumnDefinitions="*,*,*" RowDefinitions="*,*">
+                <!--  Top Left Panel  -->
+                <StackPanel Grid.Row="0" Grid.Column="0">
+                    <components:PrimaryButton
+                        Command="{Binding ResetCommand}"
+                        Label="Reset"
+                        Positivity="-1" />
+                    <components:PrimaryButton
+                        Command="{Binding SaveCommand}"
+                        Label="Save Panel"
+                        Positivity="1" />
+                </StackPanel>
+                <!--  Bottom Left Panel  -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Hidden">
+                    <StackPanel
+                        Margin="0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Spacing="0">
+                        <StackPanel>
+                            <components:PrimaryButton Command="{Binding AddGaugeRefCommand}" Label="Add Gauge" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding GaugeRefsWithSelected}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0" Orientation="Horizontal">
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.SelectGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="{Binding GaugeRef.Label}"
+                                            Selected="{Binding IsSelected}" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveGaugeRefUpCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↑" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveGaugeRefDownCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↓" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+                <!--  Top Right Panel  -->
+                <ScrollViewer
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Hidden">
+                    <components:ToolPanel>
+                        <StackPanel>
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Name, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Name"
+                                Label="Name" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Vehicle, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Vehicle"
+                                Label="Vehicle" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Screen, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Screen"
+                                FieldType="Number"
+                                Label="Screen" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="80" />
+                                <ItemsControl ItemsSource="{Binding ScreenIndexes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <components:PrimaryButton
+                                                Command="{Binding ViewModel.MoveToScreenCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                                CommandParameter="{Binding .}"
+                                                Label="{Binding ., StringFormat='Move to screen {0}'}"
+                                                Size="Small" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Skip, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Skip"
+                                Label="Skip" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Width, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Width"
+                                FieldType="Number"
+                                Label="Width" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Height, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Height"
+                                FieldType="Number"
+                                Label="Height" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="80" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.FillScreenCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                    Label="Fill Screen"
+                                    Size="Small" />
+                            </StackPanel>
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Position, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Position"
+                                FieldType="FlexibleVector2"
+                                Label="Position" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="80" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.CenterCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                    Label="Center"
+                                    Size="Small" />
+                            </StackPanel>
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Origin, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Origin"
+                                FieldType="FlexibleVector2"
+                                Label="Origin" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Background, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Background"
+                                FieldType="Color"
+                                Label="Background" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Transparent, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Transparent"
+                                FieldType="Bool"
+                                Label="Transparent" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Debug, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Debug"
+                                FieldType="Bool"
+                                Label="Debug" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Fullscreen, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Fullscreen"
+                                FieldType="Bool"
+                                Label="Fullscreen" />
+                        </StackPanel>
+                    </components:ToolPanel>
+                </ScrollViewer>
+                <!--  Bottom Right Panel  -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Hidden">
+                    <ContentControl Content="{Binding SelectedGaugeRef}" />
+                </ScrollViewer>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,22 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.Components.ColorPickerField"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OpenGaugeClient.Editor"
+    Width="160"
+    Height="32">
+    <StackPanel Orientation="Horizontal">
+        <Border
+            x:Name="Preview"
+            Width="40"
+            Height="20"
+            Background="Transparent"
+            BorderBrush="Gray"
+            BorderThickness="1" />
+        <Button
+            x:Name="PickButton"
+            Width="100"
+            Height="26"
+            Content="Pick Color..." />
+    </StackPanel>
+</UserControl>

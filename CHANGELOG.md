@@ -1,3 +1,10 @@
+# 0.0.4
+
+- added a GUI for editing panels (`editor.exe`)
+- improved rendering performance
+- various fixes
+- panels always render on top
+
 # 0.0.3
 
 - aircraft-specific panels with wildcards (`panel.vehicle = "*Cessna Skyhawk*"`)

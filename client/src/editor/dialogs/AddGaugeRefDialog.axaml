@@ -1,0 +1,53 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.AddGaugeRefDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    Title="Add Gauge"
+    Width="350"
+    Height="300"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock FontSize="24" Text="Add Gauge" />
+            <TextBlock Margin="0,5,0,0" Text="Define gauges in your base config or load from file." />
+            <TextBlock
+                Margin="0,10,0,0"
+                FontSize="16"
+                Text="Use Existing" />
+            <ItemsControl ItemsSource="{Binding GaugeNames}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <components:PrimaryButton
+                            Command="{Binding DataContext.SelectGaugeNameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding .}"
+                            Label="{Binding .}"
+                            Size="Small" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock
+                Margin="0,10,0,0"
+                FontSize="16"
+                Text="Load From File" />
+            <components:SelectFileField AllowedExtensions="json" Path="{Binding Path, Mode=TwoWay}" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
+                <Button
+                    Width="80"
+                    Command="{Binding OkCommand}"
+                    Content="OK" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

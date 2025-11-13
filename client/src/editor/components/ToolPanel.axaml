@@ -1,0 +1,10 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.Components.ToolPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="rgba(0,0,0,150)"
+    CornerRadius="10">
+    <Border Padding="5">
+        <ContentPresenter />
+    </Border>
+</UserControl>

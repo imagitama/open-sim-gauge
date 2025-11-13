@@ -1,5 +1,0 @@
-obj/
-bin/
-dist/
-src/config*.json
-src/persist.json

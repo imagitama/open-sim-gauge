@@ -1,0 +1,727 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.GaugeEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:conv="clr-namespace:OpenGaugeClient.Editor.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:editor="using:OpenGaugeClient.Editor"
+    xmlns:local="clr-namespace:OpenGaugeClient"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:CompileBindings="True"
+    x:DataType="editor:GaugeEditorViewViewModel">
+    <UserControl.Resources>
+        <conv:ObjectNullToggleConverter x:Key="ObjectNullToggleConverter" />
+        <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+    </UserControl.Resources>
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="{x:Type local:ReactiveLayer}">
+            <components:ToolPanel>
+                <StackPanel Width="250">
+                    <components:TransformControl Command="{Binding ViewModel.TransformLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}" CommandTarget="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Name, Mode=TwoWay}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Name"
+                        Label="Name"
+                        OriginalObj="{Binding}" />
+                    <CheckBox Content="Text" IsChecked="{Binding HasText, Mode=TwoWay}" />
+                    <StackPanel
+                        Margin="5,0,0,0"
+                        IsVisible="{Binding HasText}"
+                        Spacing="0">
+                        <components:EditableField
+                            Content="{Binding Text.Var}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.Var"
+                            FieldType="VarConfig"
+                            Label="SimVar"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.Default}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.Default"
+                            Hint="Text shown when there is no SimVar value."
+                            Label="Default"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.Template}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.Template"
+                            Hint="How to format the text."
+                            Label="Template"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.FontSize}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.FontSize"
+                            FieldType="Number"
+                            Label="Font Size"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.FontFamily}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.FontFamily"
+                            Label="Font Family"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.Font}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.Font"
+                            FieldType="FontFile"
+                            Label="Font File"
+                            OriginalObj="{Binding}" />
+                        <components:EditableField
+                            Content="{Binding Text.Color}"
+                            EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            FieldName="Text.Color"
+                            FieldType="Color"
+                            Label="Color"
+                            OriginalObj="{Binding}" />
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Image}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Image"
+                        FieldType="ImageFile"
+                        Label="Image"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Width}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Width"
+                        FieldType="Number"
+                        Label="Width"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Height}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Height"
+                        FieldType="Number"
+                        Label="Height"
+                        OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.MakeLayerFillCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Fill"
+                            Size="Small" />
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Origin}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Origin"
+                        FieldType="FlexibleVector2"
+                        Label="Origin"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Position}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Position"
+                        FieldType="FlexibleVector2"
+                        Label="Position"
+                        OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.CenterLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Center"
+                            Size="Small" />
+                    </StackPanel>
+                    <StackPanel Margin="0" Spacing="0">
+                        <CheckBox Content="Transform With SimVar" IsChecked="{Binding HasTransform}" />
+                        <StackPanel
+                            Margin="5,0,0,0"
+                            IsVisible="{Binding HasTransform}"
+                            Spacing="0">
+                            <CheckBox Content="Rotate" IsChecked="{Binding Transform.HasRotate}" />
+                            <StackPanel IsVisible="{Binding Transform.HasRotate}">
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Var}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Var"
+                                    FieldType="VarConfig"
+                                    Label="SimVar"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.From}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.From"
+                                    FieldType="Number"
+                                    Hint="The minimum to rotate (in degrees)"
+                                    Label="From"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.To}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.To"
+                                    FieldType="Number"
+                                    Hint="The maximum to rotate (in degrees)."
+                                    Label="To"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Min}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Min"
+                                    FieldType="Number"
+                                    Hint="The minimum possible value of the SimVar."
+                                    Label="Min"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Max}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Max"
+                                    FieldType="Number"
+                                    Hint="The maximum possible value of the SimVar."
+                                    Label="Max"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Invert}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Invert"
+                                    FieldType="Bool"
+                                    Hint="If to invert the rotation so (90deg becomes -90deg)."
+                                    Label="Invert"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Multiply}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Multiply"
+                                    FieldType="Number"
+                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Label="Multiply"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Skip}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Skip"
+                                    FieldType="Bool"
+                                    Label="Skip"
+                                    OriginalObj="{Binding}" />
+                                <!-- <components:EditableField
+                                Content="{Binding Transform.Rotate.Calibration}"
+                                EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                FieldName="Calibration"
+                                FieldType="???"
+                                Label="Calibration"
+                                OriginalObj="{Binding}" />-->
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Debug}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Debug"
+                                    FieldType="Bool"
+                                    Label="Debug"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Rotate.Override}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Rotate.Override"
+                                    FieldType="Number"
+                                    Hint="Force the SimVar value for debugging."
+                                    Label="Override"
+                                    OriginalObj="{Binding}" />
+                            </StackPanel>
+                            <CheckBox Content="Translate X" IsChecked="{Binding Transform.HasTranslateX}" />
+                            <StackPanel IsVisible="{Binding Transform.HasTranslateX}">
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Var}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Var"
+                                    FieldType="VarConfig"
+                                    Label="SimVar"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.From}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.From"
+                                    FieldType="Number"
+                                    Hint="The minimum to translate (in pixels)."
+                                    Label="From"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.To}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.To"
+                                    FieldType="Number"
+                                    Hint="The maximum to translate (in pixels)."
+                                    Label="To"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Min}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Min"
+                                    FieldType="Number"
+                                    Hint="The minimum possible value of the SimVar."
+                                    Label="Min"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Max}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Max"
+                                    FieldType="Number"
+                                    Hint="The maximum possible value of the SimVar."
+                                    Label="Max"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Invert}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Invert"
+                                    FieldType="Bool"
+                                    Hint="If to invert the translation so (150px becomes -150px)."
+                                    Label="Invert"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Multiply}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Multiply"
+                                    FieldType="Number"
+                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Label="Multiply"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Skip}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateX.Skip"
+                                    FieldType="Bool"
+                                    Label="Skip"
+                                    OriginalObj="{Binding}" />
+                                <!-- <components:EditableField
+                                Content="{Binding Transform.TranslateX.Calibration}"
+                                EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                FieldName="Calibration"
+                                FieldType="???"
+                                Label="Calibration"
+                                OriginalObj="{Binding}" />-->
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Debug}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Debug"
+                                    FieldType="Bool"
+                                    Label="Debug"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateX.Override}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Override"
+                                    FieldType="Number"
+                                    Hint="Force the SimVar value for debugging."
+                                    Label="Override"
+                                    OriginalObj="{Binding}" />
+                            </StackPanel>
+                            <CheckBox Content="Translate Y" IsChecked="{Binding Transform.HasTranslateY}" />
+                            <StackPanel IsVisible="{Binding Transform.HasTranslateY}">
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Var}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Var"
+                                    FieldType="VarConfig"
+                                    Label="SimVar"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.From}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.From"
+                                    FieldType="Number"
+                                    Hint="The minimum to translate (in pixels)."
+                                    Label="From"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.To}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.To"
+                                    FieldType="Number"
+                                    Hint="The maximum to translate (in pixels)."
+                                    Label="To"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Min}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Min"
+                                    FieldType="Number"
+                                    Hint="The minimum possible value of the SimVar."
+                                    Label="Min"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Max}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Max"
+                                    FieldType="Number"
+                                    Hint="The maximum possible value of the SimVar."
+                                    Label="Max"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Invert}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Invert"
+                                    FieldType="Bool"
+                                    Hint="If to invert the translation so (150px becomes -150px)."
+                                    Label="Invert"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Multiply}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Multiply"
+                                    FieldType="Number"
+                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Label="Multiply"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Skip}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.TranslateY.Skip"
+                                    FieldType="Bool"
+                                    Label="Skip"
+                                    OriginalObj="{Binding}" />
+                                <!-- <components:EditableField
+                                Content="{Binding Transform.TranslateY.Calibration}"
+                                EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                FieldName="Calibration"
+                                FieldType="???"
+                                Label="Calibration"
+                                OriginalObj="{Binding}" />-->
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Debug}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Debug"
+                                    FieldType="Bool"
+                                    Label="Debug"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.TranslateY.Override}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Override"
+                                    FieldType="Number"
+                                    Hint="Force the SimVar value for debugging."
+                                    Label="Override"
+                                    OriginalObj="{Binding}" />
+                            </StackPanel>
+                            <CheckBox Content="Follow Path" IsChecked="{Binding Transform.HasPath}" />
+                            <StackPanel IsVisible="{Binding Transform.HasPath}">
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Var}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Var"
+                                    FieldType="VarConfig"
+                                    Label="SimVar"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.From}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.From"
+                                    FieldType="Number"
+                                    Hint="The minimum to translate (in pixels)."
+                                    Label="From"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.To}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.To"
+                                    FieldType="Number"
+                                    Hint="The maximum to translate (in pixels)."
+                                    Label="To"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Min}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Min"
+                                    FieldType="Number"
+                                    Hint="The minimum possible value of the SimVar."
+                                    Label="Min"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Max}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Max"
+                                    FieldType="Number"
+                                    Hint="The maximum possible value of the SimVar."
+                                    Label="Max"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Invert}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Invert"
+                                    FieldType="Bool"
+                                    Hint="If to invert the translation so (150px becomes -150px)."
+                                    Label="Invert"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Multiply}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Multiply"
+                                    FieldType="Number"
+                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Label="Multiply"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Skip}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Transform.Path.Skip"
+                                    FieldType="Bool"
+                                    Label="Skip"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Debug}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Debug"
+                                    FieldType="Bool"
+                                    Label="Debug"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Override}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Override"
+                                    FieldType="Number"
+                                    Hint="Force the SimVar value for debugging."
+                                    Label="Override"
+                                    OriginalObj="{Binding}" />
+                                <!--  CUSTOM  -->
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Image}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Image"
+                                    FieldType="SvgFile"
+                                    Hint="The SVG that contains a single path to follow."
+                                    Label="SVG Image"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Width}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Width"
+                                    FieldType="Number"
+                                    Hint="The width of the SVG (in pixels). Defaults to viewbox width."
+                                    Label="Width"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Height}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Height"
+                                    FieldType="Number"
+                                    Hint="The height of the SVG (in pixels). Defaults to viewbox height."
+                                    Label="Height"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Origin}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Origin"
+                                    FieldType="FlexibleVector2"
+                                    Label="Origin"
+                                    OriginalObj="{Binding}" />
+                                <components:EditableField
+                                    Content="{Binding Transform.Path.Position}"
+                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                    FieldName="Position"
+                                    FieldType="FlexibleVector2"
+                                    Label="Position"
+                                    OriginalObj="{Binding}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Rotate}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Rotate"
+                        FieldType="Number"
+                        Label="Rotate"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding TranslateX}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="TranslateX"
+                        FieldType="Number"
+                        Label="Translate X"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding TranslateY}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="TranslateY"
+                        FieldType="Number"
+                        Label="Translate Y"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Debug}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Debug"
+                        Label="Debug"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Skip}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Skip"
+                        Label="Skip"
+                        OriginalObj="{Binding}" />
+                </StackPanel>
+            </components:ToolPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+    <Grid>
+        <Image
+            x:Name="RenderTargetImage"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Stretch="UniformToFill" />
+        <DockPanel
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            LastChildFill="True">
+            <components:NavBar DockPanel.Dock="Top" />
+            <Grid ColumnDefinitions="250,*,250">
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <StackPanel>
+                        <components:PrimaryButton
+                            Command="{Binding ResetCommand}"
+                            Label="Reset"
+                            Positivity="-1" />
+                        <Border IsVisible="{Binding Gauge.Source, Converter={StaticResource NullToBoolConverter}}">
+                            <components:PrimaryButton Command="{Binding OpenSourceCommand}" Label="Open JSON File" />
+                        </Border>
+                        <components:PrimaryButton
+                            Command="{Binding SaveCommand}"
+                            Label="Save Gauge"
+                            Positivity="1" />
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="5,5,0,0">
+                            <components:ToolPanel>
+                                <StackPanel>
+                                    <Border IsVisible="{Binding Gauge.Source, Converter={StaticResource NullToBoolConverter}}">
+                                        <components:EditableField
+                                            Content="{Binding Gauge.Source}"
+                                            FieldName="Source"
+                                            FieldType="JsonFile"
+                                            Label="Source"
+                                            ReadOnly="True" />
+                                    </Border>
+                                    <components:EditableField
+                                        Content="{Binding Gauge.Name}"
+                                        EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                        FieldName="Name"
+                                        Label="Name"
+                                        OriginalObj="{Binding}" />
+                                    <components:EditableField
+                                        Content="{Binding Gauge.Width}"
+                                        EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                        FieldName="Width"
+                                        FieldType="Number"
+                                        Label="Width"
+                                        OriginalObj="{Binding}" />
+                                    <components:EditableField
+                                        Content="{Binding Gauge.Height}"
+                                        EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                        FieldName="Height"
+                                        FieldType="Number"
+                                        Label="Height"
+                                        OriginalObj="{Binding}" />
+                                    <components:EditableField
+                                        Content="{Binding Gauge.Origin}"
+                                        EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                        FieldName="Origin"
+                                        FieldType="FlexibleVector2"
+                                        Label="Origin"
+                                        OriginalObj="{Binding}" />
+                                    <StackPanel>
+                                        <CheckBox Content="Clip" IsChecked="{Binding Gauge.HasClip}" />
+                                        <StackPanel
+                                            Margin="5,0,0,0"
+                                            IsVisible="{Binding Gauge.HasClip}"
+                                            Spacing="0">
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Image}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Image"
+                                                FieldType="SvgFile"
+                                                Label="Image" />
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Width}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Width"
+                                                FieldType="Number"
+                                                Label="Width" />
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Height}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Height"
+                                                FieldType="Number"
+                                                Label="Height" />
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Origin}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Origin"
+                                                FieldType="FlexibleVector2"
+                                                Label="Origin" />
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Position}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Position"
+                                                FieldType="FlexibleVector2"
+                                                Label="Position" />
+                                            <components:EditableField
+                                                Content="{Binding Gauge.Clip.Debug}"
+                                                EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                                FieldName="Clip.Debug"
+                                                FieldType="Bool"
+                                                Label="Debug" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </components:ToolPanel>
+                        </StackPanel>
+                    </StackPanel>
+                    <!--  Bottom Left Panel  -->
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom">
+                        <components:PrimaryButton Command="{Binding AddLayerCommand}" Label="Add Layer" />
+                        <ItemsControl ItemsSource="{Binding LayersWithSelected}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <components:PrimaryButton
+                                            Width="125"
+                                            Command="{Binding ViewModel.SelectLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="{Binding Layer.Label}"
+                                            Selected="{Binding IsSelected}" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.DeleteLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="🗑️" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.DuplicateLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="📄" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveLayerUpCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↑" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveLayerDownCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↓" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1" />
+                <Grid Grid.Row="0" Grid.Column="2">
+                    <!--  Bottom Right Panel  -->
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Hidden">
+                        <ContentControl Content="{Binding SelectedLayer}" />
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

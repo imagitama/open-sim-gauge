@@ -1,0 +1,28 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.ColorPickerDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Select Color"
+    Width="350"
+    Height="300"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock FontSize="24" Text="Select Color" />
+            <ColorPicker x:Name="Picker" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Click="OnCancel"
+                    Content="Cancel" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Click="OnOk"
+                    Content="OK" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

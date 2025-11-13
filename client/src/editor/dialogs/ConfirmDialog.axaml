@@ -1,0 +1,30 @@
+<Window
+    x:Class="OpenGaugeClient.Editor.ConfirmDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Confirm"
+    Width="350"
+    Height="300"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner">
+    <Border Margin="10">
+        <StackPanel>
+            <TextBlock
+                FontSize="24"
+                Text="Are you sure?"
+                TextAlignment="Center" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Click="OnNo"
+                    Content="No" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Click="OnYes"
+                    Content="Yes" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
