@@ -2,39 +2,47 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using Avalonia.Layout;
 
 namespace OpenGaugeClient
 {
     public class PanelRenderer : IDisposable
     {
-        private readonly Panel _panel;
+        private Panel _panel;
         private readonly ImageCache _imageCache;
         private readonly GaugeCache _gaugeCache;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
         private Func<string, string, object?> _getSimVarValue { get; set; }
         private readonly Dictionary<int, GaugeRenderer> _gaugeRenderers = [];
-
+        private bool? _isConnected = false;
         private Window _window;
         public Window Window
         {
             get => _window;
             set => _window = value;
         }
-
         private Image _imageControl;
         public Image ImageControl
         {
             get => _imageControl;
             set => _imageControl = value;
         }
-
         private RenderingHelper _renderer;
+        private int? _gridSize = null;
+        private int? _debugGaugeIndex = null;
 
-        public PanelRenderer(Panel panel, GaugeCache gaugeCache, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue)
+        public PanelRenderer(
+            Panel panel,
+            GaugeCache gaugeCache,
+            ImageCache imageCache,
+            FontProvider fontProvider,
+            SvgCache svgCache,
+            Func<string, string, object?> getSimVarValue,
+            bool? isConnected = null,
+            bool? disableRenderOnTop = false,
+            int? gridSize = null
+        )
         {
             _panel = panel;
             _gaugeCache = gaugeCache;
@@ -42,6 +50,8 @@ namespace OpenGaugeClient
             _fontProvider = fontProvider;
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
+            _isConnected = isConnected;
+            _gridSize = gridSize;
 
             var canvas = new Canvas
             {
@@ -63,6 +73,9 @@ namespace OpenGaugeClient
 
             _window = PanelHelper.CreatePanelWindowFromPanel(_panel);
 
+            if (disableRenderOnTop == true)
+                _window.Topmost = false;
+
             _window.Content = canvas;
 
             if (ConfigManager.Debug || panel.Debug == true)
@@ -74,17 +87,9 @@ namespace OpenGaugeClient
                         _window.BeginMoveDrag(e);
                     }
                 };
-
-                _window.PositionChanged += (_, __) => UpdateWindowTitle();
-
-                _window.PropertyChanged += (sender, e) =>
-                {
-                    if (e.Property == TopLevel.ClientSizeProperty)
-                        UpdateWindowTitle();
-                };
             }
 
-            CreateGaugeRenderers();
+            RebuildGaugeRenderers();
 
             _renderer = new RenderingHelper(_imageControl, RenderFrameAsync, ConfigManager.Config!.Fps, _window);
 
@@ -94,59 +99,81 @@ namespace OpenGaugeClient
             _window.Show();
         }
 
-        void CreateGaugeRenderers()
+        public void ReplacePanel(Panel newPanel)
+        {
+            _panel = newPanel;
+
+            PanelHelper.UpdateWindowForPanel(_window, _panel);
+
+            RebuildGaugeRenderers();
+        }
+
+        public void UpdateGrid(int? gridSize)
+        {
+            _gridSize = gridSize;
+        }
+
+        public void DebugGauge(int? index)
+        {
+            _debugGaugeIndex = index;
+        }
+
+        void RebuildGaugeRenderers()
         {
             for (var i = 0; i < _panel.Gauges.Count; i++)
             {
                 var gaugeRef = _panel.Gauges[i];
 
-                if (gaugeRef.Gauge == null)
-                    throw new Exception("Gauge is null");
+                var gauge = gaugeRef.Gauge;
+
+                if (gauge == null)
+                {
+                    Console.WriteLine($"Panel '{_panel.Name}' has empty gauge at index {i}");
+                    gauge = new Gauge()
+                    {
+                        Width = 200,
+                        Height = 200,
+                        Layers = new List<Layer>()
+                        {
+                            new Layer()
+                            {
+                                Text = new TextDef()
+                                {
+                                    Default = $"Gauge #{i} not found",
+                                    Color = new ColorDef(255, 0, 0),
+                                    FontSize = 16
+                                }
+                            }
+                        }
+                    };
+                }
 
                 var gaugeRenderer = new GaugeRenderer(
-                    gaugeRef.Gauge,
+                    gauge,
+                    gaugeRef,
                     (int)_window.Width,
                     (int)_window.Height,
                     _imageCache,
                     _fontProvider,
                     _svgCache,
-                    _getSimVarValue
+                    _getSimVarValue,
+                    debug: _debugGaugeIndex != null && _debugGaugeIndex == i
                 );
 
                 _gaugeRenderers[i] = gaugeRenderer;
             }
         }
 
-        void UpdateWindowTitle()
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                var pos = _window.Position;
-                var clientSize = _window.ClientSize;
-                var screen = _window.Screens.ScreenFromWindow(_window);
-
-                if (screen is not null)
-                {
-                    var bounds = screen.Bounds;
-                    var workingArea = screen.WorkingArea;
-
-                    var relativeX = pos.X - bounds.X;
-                    var relativeY = pos.Y - bounds.Y;
-
-                    _window.Title = $"{_panel.Name} - " +
-                        $"({relativeX},{relativeY}) - {clientSize.Width:F0}x{clientSize.Height:F0}";
-                }
-                else
-                {
-                    _window.Title = $"{_panel.Name}  " +
-                        $"({pos.X},{pos.Y})  Canvas {clientSize.Width:F0}x{clientSize.Height:F0}";
-                }
-            });
-        }
-
         private async Task RenderFrameAsync(DrawingContext ctx)
         {
-            // Console.WriteLine("RENDER FRAME");
+            if (_gridSize != null && _gridSize > 0)
+                RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (int)_gridSize);
+
+            if (_panel.Debug == true)
+                RenderDebugText(ctx);
+
+            if (_isConnected == false)
+                DrawDebugText(ctx, "Not connected", Brushes.Red, new Point(0, 0));
 
             for (var i = 0; i < _panel.Gauges.Count; i++)
             {
@@ -155,57 +182,34 @@ namespace OpenGaugeClient
                 if (gaugeRef.Skip == true)
                     continue;
 
-                if (gaugeRef.Gauge == null)
-                    throw new Exception("Gauge is null");
-
-                var layersToDraw = gaugeRef.Gauge.Layers.ToArray().Reverse().ToList();
-
                 var gaugeRenderer = _gaugeRenderers[i];
 
-                gaugeRenderer.DrawGaugeLayers(ctx, layersToDraw, gaugeRef.Gauge, gaugeRef);
-
-                // if (!isConnected)
-                //     DrawDebugText(ctx, "Not connected", Brushes.Red, new Point(0, 0));
+                if (gaugeRenderer != null)
+                    gaugeRenderer.DrawGaugeLayers(ctx);
             }
         }
 
-        // public async Task Render(bool isConnected)
-        // {
-        // var width = _window.Width;
-        // var height = _window.Height;
+        private void RenderDebugText(DrawingContext ctx)
+        {
+            var canvasWidth = (int)_window!.Width;
+            var canvasHeight = (int)_window!.Height;
 
-        // var target = new RenderTargetBitmap(new PixelSize((int)width, (int)height));
+            var formattedText = new FormattedText(
+                $"'{_panel.Name}'\n" +
+                $"{_panel.Position.X},{_panel.Position.Y} => {_window.Position.X},{_window.Position.Y}\n" +
+                $"{_panel.Width}x{_panel.Height} => {_window.Width}x{_window.Height}",
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface("Arial"),
+                14,
+                Brushes.White
+            );
 
-        // using (var ctx = target.CreateDrawingContext())
-        // {
-        //     for (var i = 0; i < _panel.Gauges.Count; i++)
-        //     {
-        //         var gaugeRef = _panel.Gauges[i];
+            var x = canvasWidth - formattedText.Width;
+            var y = canvasHeight - formattedText.Height;
 
-        //         if (gaugeRef.Skip == true)
-        //             continue;
-
-        //         if (gaugeRef.Gauge == null)
-        //             throw new Exception("Gauge is null");
-
-        //         var layersToDraw = gaugeRef.Gauge.Layers.ToArray().Reverse().ToList();
-
-        //         var gaugeRenderer = _gaugeRenderers[i];
-
-        //         gaugeRenderer.DrawGaugeLayers(ctx, layersToDraw, gaugeRef.Gauge, gaugeRef);
-
-        //         if (!isConnected)
-        //             DrawDebugText(ctx, "Not connected", Brushes.Red, new Point(0, 0));
-        //     }
-
-        //     // force re-paint
-        //     Dispatcher.UIThread.Post(() =>
-        //     {
-        //         _imageControl.Source = target;
-        //         _imageControl.InvalidateVisual();
-        //     });
-        // }
-        // }
+            ctx.DrawText(formattedText, new Point(x - 10, y - 10));
+        }
 
         public void Dispose()
         {

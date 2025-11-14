@@ -35,8 +35,7 @@ namespace OpenGaugeClient.Editor
 
     public partial class GaugeEditorView : UserControl
     {
-        private GaugeEditorViewViewModel _vm;
-        public GaugeEditorViewViewModel ViewModel => _vm;
+        public GaugeEditorViewViewModel ViewModel { get; private set; }
         private Gauge _gauge;
         private int? _gaugeIndex;
         private ReactiveGauge _reactiveGauge;
@@ -68,14 +67,8 @@ namespace OpenGaugeClient.Editor
 
             Console.WriteLine($"[GaugeEditorView] Initialize gauge={gauge} gaugeIndex={gaugeIndex} gaugeFromPath={gaugeFromPath}");
 
-            _vm = new GaugeEditorViewViewModel(_reactiveGauge);
-            DataContext = _vm;
-
-            _reactiveGauge
-                .WhenAnyChange()
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => RebuildRenderer())
-                .DisposeWith(_cleanup);
+            ViewModel = new GaugeEditorViewViewModel(_reactiveGauge);
+            DataContext = ViewModel;
 
             _gaugeCache = new GaugeCache();
             _fontCache = new FontCache();
@@ -88,7 +81,15 @@ namespace OpenGaugeClient.Editor
 
             AttachedToVisualTree += (_, _) =>
             {
-                WindowHelper.CenterWindowWithoutFrame(VisualRoot as Window);
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
+
+                WindowHelper.CenterWindowWithoutFrame(window);
+
+                RebuildGaugeRenderer();
+
+                SubscribeToGaugeChanges();
+
                 _renderer.Start();
             };
             DetachedFromVisualTree += (_, _) =>
@@ -100,18 +101,34 @@ namespace OpenGaugeClient.Editor
                 Console.WriteLine("[GaugeEditorView] Cleaned up");
             };
 
-            RebuildRenderer();
+            ViewModel.OnReset += OnReset;
+            ViewModel.OnSave += OnSave;
+            ViewModel.OnOpenSource += OnOpenSource;
+        }
 
-            _vm.OnReset += OnReset;
-            _vm.OnSave += OnSave;
-            _vm.OnOpenSource += OnOpenSource;
+        private void SubscribeToGaugeChanges()
+        {
+            _reactiveGauge
+                .WhenAnyChange()
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => RebuildGaugeRenderer())
+                .DisposeWith(_cleanup);
+
+            ViewModel.WhenAnyValue(ViewModel => ViewModel.SelectedLayerIndex)
+               .Subscribe(index =>
+               {
+                   Console.WriteLine($"[GaugeEditorView] Selected layer changed index={index}");
+
+                   RebuildGaugeRenderer();
+               })
+               .DisposeWith(_cleanup);
         }
 
         private async void OnReset()
         {
             Console.WriteLine($"[GaugeEditorView] Reset gauge");
 
-            _vm.Gauge.Replace(_gauge);
+            ViewModel.Gauge.Replace(_gauge);
         }
 
         private async void OnSave(ReactiveGauge gauge)
@@ -145,12 +162,25 @@ namespace OpenGaugeClient.Editor
             return null;
         }
 
-        private void RebuildRenderer()
+        private void RebuildGaugeRenderer()
         {
-            Console.WriteLine($"[GaugeEditorView] Rebuild renderer {_vm.Gauge.ToModel()}");
+            if (VisualRoot is not Window window)
+                return;
+
+            var halfX = window.Bounds.Width / 2;
+            var halfY = window.Bounds.Height / 2;
+            var snappedX = Math.Round(halfX / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
+            var snappedY = Math.Round(halfY / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
+
+            Console.WriteLine($"[GaugeEditorView] Rebuild renderer at {snappedX},{snappedY}");
+
+            var gaugeToRender = ViewModel.Gauge.ToModel();
+
+            gaugeToRender.Layers = gaugeToRender.Layers.Select((x, i) => { x.Debug = ViewModel.SelectedLayerIndex == i; return x; }).ToList();
 
             _gaugeRenderer = new GaugeRenderer(
-                _vm.Gauge.ToModel(),
+                gaugeToRender,
+                new GaugeRef() { Position = { X = snappedX, Y = snappedY }, Gauge = null, Path = ViewModel.Gauge.Source },
                 (int)Width,
                 (int)Height,
                 _imageCache,
@@ -163,10 +193,8 @@ namespace OpenGaugeClient.Editor
 
         public async Task RenderFrameAsync(DrawingContext ctx)
         {
-            var window = VisualRoot as Window;
-
             // handle unmount
-            if (window == null)
+            if (VisualRoot is not Window window)
                 return;
 
             if (SettingsService.Instance.GridVisible)
@@ -175,24 +203,8 @@ namespace OpenGaugeClient.Editor
             if (_gaugeRenderer == null)
                 return;
 
-            var layersToDraw = _vm.Gauge.Layers.Items
-                        .Select((layer, i) => { layer.Debug = _vm.SelectedLayerIndex == i; return layer.ToModel(); })
-                        .Reverse()
-                        .ToList();
-
-            var halfX = Bounds.Width / 2;
-            var halfY = Bounds.Height / 2;
-            var snappedX = Math.Round(halfX / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
-            var snappedY = Math.Round(halfY / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
-
             _gaugeRenderer?.DrawGaugeLayers(
-                ctx: ctx,
-                // TODO: cache these layers between renders
-                layers: layersToDraw,
-                // TODO: cache this model between frames
-                gauge: _vm.Gauge.ToModel(),
-                // TODO: cache theis gaugeref between renders
-                gaugeRef: new GaugeRef() { Position = { X = snappedX, Y = snappedY }, Gauge = null, Path = _vm.Gauge.Source },
+                ctx,
                 useCachedPositions: false,
                 disableClipping: !SettingsService.Instance.ClipVisually
             );

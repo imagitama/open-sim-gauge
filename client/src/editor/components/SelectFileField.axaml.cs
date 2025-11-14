@@ -59,10 +59,8 @@ namespace OpenGaugeClient.Editor.Components
 
         private async Task Pick()
         {
-            Window? owner = VisualRoot as Window;
-
-            if (owner == null)
-                throw new Exception("Cannot pick without owner");
+            if (VisualRoot is not Window owner)
+                throw new Exception("Owner is null");
 
             Console.WriteLine($"[SelectFileField] Dialog owner={owner}");
 

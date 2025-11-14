@@ -25,13 +25,27 @@ namespace OpenGaugeClient
             Debug = layer.Debug;
             Skip = layer.Skip;
 
-            Changed.Subscribe(change =>
-            {
-                var prop = change.Sender?.GetType().GetProperty(change.PropertyName ?? "");
-                var newValue = prop?.GetValue(change.Sender);
+            Changed
+                .Where(change =>
+                {
+                    if (change.PropertyName is null)
+                        return false;
 
-                Console.WriteLine($"[ReactiveLayer] Changed {change.PropertyName} = {newValue}");
-            }).DisposeWith(_cleanup);
+                    var prop = change.Sender?.GetType().GetProperty(change.PropertyName);
+                    if (prop == null)
+                        return false;
+
+                    return prop.SetMethod != null;
+                })
+                .Subscribe(change =>
+                {
+                    var prop = change.Sender!.GetType().GetProperty(change.PropertyName!);
+                    var newValue = prop?.GetValue(change.Sender);
+
+                    Console.WriteLine($"[ReactiveLayer] Changed {change.PropertyName} = {newValue}");
+                })
+                .DisposeWith(_cleanup);
+
 
             this.WhenAnyValue(x => x.Name, x => x.Image)
                      .Select(tuple =>

@@ -3,8 +3,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:converters="clr-namespace:OpenGaugeClient.Editor.Converters"
     xmlns:services="using:OpenGaugeClient.Editor.Services"
     Background="Transparent">
+    <UserControl.Resources>
+        <converters:EmptyConverter x:Key="EmptyConverter" />
+    </UserControl.Resources>
     <DockPanel
         HorizontalAlignment="Stretch"
         VerticalAlignment="Center"
@@ -50,18 +54,19 @@
                 Label="Grid"
                 Selected="{Binding GridVisible, Source={x:Static services:SettingsService.Instance}}"
                 Size="Small" />
-            <components:PrimaryButton
+            <TextBox Text="{Binding SnapAmount, Source={x:Static services:SettingsService.Instance}, Converter={StaticResource EmptyConverter}, ConverterParameter=0}" />
+            <!-- <components:PrimaryButton
                 VerticalAlignment="Center"
                 Command="{Binding ToggleWindowBorderVisibleCommand, Source={x:Static services:SettingsService.Instance}}"
                 Label="Border"
                 Selected="{Binding WindowBorderVisible, Source={x:Static services:SettingsService.Instance}}"
-                Size="Small" />
-            <components:PrimaryButton
+                Size="Small" />-->
+            <!-- <components:PrimaryButton
                 VerticalAlignment="Center"
                 Command="{Binding ToggleSyncingWithWindowCommand, Source={x:Static services:SettingsService.Instance}}"
                 Label="Sync Window"
                 Selected="{Binding SyncingWithWindow, Source={x:Static services:SettingsService.Instance}}"
-                Size="Small" />
+                Size="Small" />-->
         </StackPanel>
     </DockPanel>
 

@@ -45,18 +45,19 @@ namespace OpenGaugeClient.Editor
 
     public partial class PanelEditorView : UserControl
     {
-        private PanelEditorViewViewModel _vm;
-        public PanelEditorViewViewModel ViewModel => _vm;
+        private readonly CompositeDisposable _cleanup = new();
+        public PanelEditorViewViewModel ViewModel { get; private set; }
         private Panel _panel;
         private ReactivePanel _reactivePanel;
         private int _panelIndex;
         private RenderingHelper? _renderer;
-        private List<GaugeRenderer?> _gaugeRenderers = [];
+        private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
         private readonly FontCache _fontCache;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
-        private bool _isSubscribedToWindow = false;
+        private PanelRenderer _panelRenderer;
+        private int _selectedGaugeRefIndex = -1;
 
         // for compiled bindings
         public PanelEditorView()
@@ -76,80 +77,82 @@ namespace OpenGaugeClient.Editor
             _reactivePanel = new ReactivePanel(panel);
             _panelIndex = panelIndex;
 
-            var window = VisualRoot as Window;
+            ViewModel = new PanelEditorViewViewModel(_reactivePanel);
+            DataContext = ViewModel;
 
-            _vm = new PanelEditorViewViewModel(_reactivePanel);
-            DataContext = _vm;
-
-            _vm.GetGeometry = () =>
+            ViewModel.GetGeometry = () =>
             {
-                var provider = new WindowGeometryProvider(VisualRoot as Window);
-                return provider;
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
+
+                return new WindowGeometryProvider(window);
             };
 
+            _gaugeCache = new GaugeCache();
             _fontCache = new FontCache();
             _fontProvider = new FontProvider(_fontCache);
             _svgCache = new SvgCache();
             _imageCache = new ImageCache(_fontProvider);
 
-            var image = this.FindControl<Image>("RenderTargetImage") ?? throw new Exception("No image");
-
             AttachedToVisualTree += (_, _) =>
             {
                 SubscribeToPanelChanges();
-
-                if (SettingsService.Instance.SyncingWithWindow)
-                    SubscribeToWindowChanges();
-
                 SubscribeToSettings();
 
-                _renderer = new RenderingHelper(image, RenderFrameAsync, ConfigManager.Config!.Fps, VisualRoot as Window);
-                _renderer.Start();
+                _panelRenderer = new PanelRenderer(
+                    _panel,
+                    _gaugeCache,
+                    _imageCache,
+                    _fontProvider,
+                    _svgCache,
+                    GetSimVarValue,
+                    isConnected: null,
+                    disableRenderOnTop: true,
+                    gridSize: SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null
+                );
+
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
+
+                // make main window overlap
+                window.Activate();
+
+                window.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+                window.Background = Brushes.Transparent;
             };
             DetachedFromVisualTree += (_, _) =>
             {
-                (DataContext as PanelEditorViewViewModel)!.Dispose();
-
-                if (_renderer != null)
-                    _renderer.Dispose();
-
-                _isSubscribedToWindow = false;
+                ViewModel.Dispose();
+                _renderer?.Dispose();
                 _cleanup.Dispose();
-                _windowStateSubscription?.Dispose();
-                _debounceTimer?.Dispose();
                 _reactivePanel.Dispose();
+                _panelRenderer?.Dispose();
                 Console.WriteLine("[PanelEditorView] Cleaned up");
             };
 
-            _vm.OnReset += OnReset;
-            _vm.OnSave += OnSave;
-            _vm.OnAddGaugeRef += () => _ = OnAddGaugeRef();
-            _vm.OnCenter += OnCenter;
+            ViewModel.OnReset += OnReset;
+            ViewModel.OnSave += OnSave;
+            ViewModel.OnAddGaugeRef += () => _ = OnAddGaugeRef();
+            ViewModel.OnCenter += OnCenter;
         }
 
-        private bool _ignoreWindowReposition = false;
+        private void RebuildPanelRenderer()
+        {
+            _panelRenderer?.DebugGauge(ViewModel.SelectedGaugeRefIndex != -1 ? ViewModel.SelectedGaugeRefIndex : null);
+            var panel = ViewModel.Panel.ToPanel();
+            panel.Debug = true;
+            _panelRenderer?.ReplacePanel(panel);
+        }
 
         private void OnCenter()
         {
             Console.WriteLine("[PanelEditorView] On center");
 
-            var oldPos = _vm.Panel.Position;
+            var oldPos = ViewModel.Panel.Position;
 
             var centeredPos = new FlexibleVector2() { X = "50%", Y = "50%" };
 
-            _isUpdatingFromWindow = true;
-            _isUpdatingFromPanel = true;
-
-            _vm.Panel.Position = centeredPos;
-
-            var window = VisualRoot as Window;
-
-            _ignoreWindowReposition = true;
-
-            PanelHelper.UpdateWindowForPanel(window!, _reactivePanel.ToPanel(), SettingsService.Instance.WindowBorderVisible);
-
-            _isUpdatingFromWindow = false;
-            _isUpdatingFromPanel = false;
+            ViewModel.Panel.Position = centeredPos;
 
             Console.WriteLine($"[PanelEditorView] On center done oldPos={oldPos} newPos={centeredPos}");
         }
@@ -160,7 +163,8 @@ namespace OpenGaugeClient.Editor
             {
                 Console.WriteLine($"[PanelEditorView] Showing 'add gauge ref' dialog");
 
-                var window = VisualRoot as Window;
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
 
                 var dialog = new AddGaugeRefDialog();
                 var ok = await dialog.ShowDialog<bool>(window!);
@@ -195,7 +199,7 @@ namespace OpenGaugeClient.Editor
                             Gauge = gauge
                         }));
 
-                        _vm.SelectedGaugeRefIndex = gauges.Count - 1;
+                        ViewModel.SelectedGaugeRefIndex = gauges.Count - 1;
                     });
 
                     Console.WriteLine($"[PanelEditorView] Gauge ref added successfully");
@@ -213,42 +217,30 @@ namespace OpenGaugeClient.Editor
 
         private void SubscribeToPanelChanges()
         {
-            var window = VisualRoot as Window;
-
-            if (window == null)
+            if (VisualRoot is not Window window)
                 throw new Exception("Window is null");
 
             void OnLayoutUpdated(object? sender, EventArgs e)
             {
                 window.LayoutUpdated -= OnLayoutUpdated; // only run once
 
-                PanelHelper.UpdateWindowForPanel(window, _reactivePanel.ToPanel(), SettingsService.Instance.WindowBorderVisible);
-
-                RebuildRenderers();
+                RebuildPanelRenderer();
             }
 
             window.LayoutUpdated += OnLayoutUpdated;
 
             _reactivePanel.Changed.Subscribe(change =>
             {
-                if (_isUpdatingFromWindow) return;
-
-                _isUpdatingFromPanel = true;
-
                 Console.WriteLine($"[PanelEditorView] Panel changed prop={change.PropertyName}");
-
-                PanelHelper.UpdateWindowForPanel(window, _reactivePanel.ToPanel(), SettingsService.Instance.WindowBorderVisible);
-
-                RebuildRenderers();
-
-                _isUpdatingFromPanel = false;
+                RebuildPanelRenderer();
             }).DisposeWith(_cleanup);
 
-            _vm.WhenAnyValue(_vm => _vm.SelectedGaugeRef)
-               .Subscribe(layer =>
+            ViewModel.WhenAnyValue(ViewModel => ViewModel.SelectedGaugeRefIndex)
+               .Subscribe(index =>
                {
-                   Console.WriteLine($"[PanelEditorView] SelectedLayer changed → {(layer != null ? layer : "(none)")}");
-                   RebuildRenderers();
+                   Console.WriteLine($"[PanelEditorView] Selected gauge ref changed index={index}");
+
+                   RebuildPanelRenderer();
                })
                .DisposeWith(_cleanup);
 
@@ -266,168 +258,29 @@ namespace OpenGaugeClient.Editor
                 .Subscribe(_ =>
                 {
                     Console.WriteLine("[PanelEditorView] List of gauges changed");
-                    RebuildRenderers();
+                    RebuildPanelRenderer();
                 })
                 .DisposeWith(_cleanup);
         }
-
-        private readonly CompositeDisposable _cleanup = new();
 
         private void SubscribeToSettings()
         {
-            var window = VisualRoot as Window;
-
-            if (window == null)
-                throw new Exception("Window is null");
-
             SettingsService.Instance
-                .WhenAnyValue(x => x.WindowBorderVisible)
-                .Subscribe(visible =>
-                {
-                    Console.WriteLine($"[PanelEditorView] Window border visibility toggled => {visible}");
-                    PanelHelper.SetWindowUsingFrame(window, visible);
-                })
-                .DisposeWith(_cleanup);
-
-            SettingsService.Instance
-                .WhenAnyValue(x => x.SyncingWithWindow)
-                .Subscribe(isSyncing =>
-                {
-                    Console.WriteLine($"[PanelEditorView] Syncing with window toggled => {isSyncing}");
-
-                    if (isSyncing)
-                        SubscribeToWindowChanges();
-                    else
-                        UnsubscribeFromWindowChanges();
-                })
-                .DisposeWith(_cleanup);
+                    .WhenAnyValue(x => x.GridVisible, x => x.SnapAmount)
+                    .Subscribe(vals =>
+                    {
+                        var (gridVisible, snapAmount) = vals;
+                        Console.WriteLine($"[PanelEditorView] Settings changed grid={gridVisible} amount={snapAmount}");
+                        _panelRenderer?.UpdateGrid(gridVisible == true ? snapAmount : null);
+                    })
+                    .DisposeWith(_cleanup);
         }
-
-        private Timer? _debounceTimer;
-        private EventHandler<WindowResizedEventArgs>? _resizedHandler;
-        private EventHandler<PixelPointEventArgs>? _positionChangedHandler;
-        private IDisposable? _windowStateSubscription;
-        private bool _isUpdatingFromWindow = false;
-        private bool _isUpdatingFromPanel = false;
-
-        private void SubscribeToWindowChanges()
-        {
-            var debounceMs = 200;
-
-            var window = VisualRoot as Window;
-
-            if (window == null)
-                throw new Exception("Window is null");
-
-            _resizedHandler = (_, _) =>
-            {
-                if (_isUpdatingFromPanel)
-                {
-                    Console.WriteLine("IGNORE");
-                    return;
-                }
-                ;
-                _isUpdatingFromWindow = true;
-
-                _debounceTimer?.Dispose();
-                _debounceTimer = new Timer(_ =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        Console.WriteLine($"[PanelEditorView] Window resized, setting panel to => {window.Width}x{window.Height}");
-
-                        _vm.Panel.Width = Math.Round(window.Width, 2);
-                        _vm.Panel.Height = Math.Round(window.Height, 2);
-
-                        _isUpdatingFromWindow = false;
-                    });
-                }, null, debounceMs, Timeout.Infinite);
-            };
-
-            _positionChangedHandler = (_, _) =>
-            {
-                _debounceTimer?.Dispose();
-                _debounceTimer = new Timer(_ =>
-                {
-                    if (_ignoreWindowReposition)
-                    {
-                        _ignoreWindowReposition = false;
-                        return;
-                    }
-
-                    if (_isUpdatingFromPanel) return;
-                    _isUpdatingFromWindow = true;
-
-                    // for some reason timer still occurs
-                    if (!_isSubscribedToWindow)
-                        return;
-
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        var oldPos = _vm.Panel.Position;
-                        var newPos = PanelHelper.GetPanelPositionFromWindow(_vm.Panel.ToPanel(), window);
-
-                        _vm.Panel.Position = newPos;
-
-                        Console.WriteLine($"[PanelEditorView] Window re-positioned {window.Position.X},{window.Position.Y} old={oldPos.X},{oldPos.Y} new={newPos.X},{newPos.Y}");
-
-                        _isUpdatingFromWindow = false;
-                    });
-                }, null, debounceMs, Timeout.Infinite);
-            };
-
-            window.Resized += _resizedHandler;
-            window.PositionChanged += _positionChangedHandler;
-
-            var lastWindowState = window.WindowState;
-
-            _windowStateSubscription = this
-                .GetObservable(Window.WindowStateProperty)
-                .Throttle(TimeSpan.FromMilliseconds(debounceMs))
-                .Subscribe(state =>
-                {
-                    if (_isUpdatingFromPanel) return;
-                    _isUpdatingFromWindow = true;
-
-                    if (state == lastWindowState)
-                    {
-                        return;
-                    }
-
-                    Console.WriteLine($"[PanelEditorView] Window state {lastWindowState} => {state}");
-                    _vm.Panel.Fullscreen = state == WindowState.FullScreen;
-                    lastWindowState = state;
-
-                    _isUpdatingFromWindow = true;
-                });
-
-            _isSubscribedToWindow = true;
-        }
-
-        private void UnsubscribeFromWindowChanges()
-        {
-            Console.WriteLine("[PanelEditorView] Unsubscribe from window");
-
-            var window = VisualRoot as Window;
-
-            if (_resizedHandler is not null)
-                window!.Resized -= _resizedHandler;
-
-            if (_positionChangedHandler is not null)
-                window!.PositionChanged -= _positionChangedHandler;
-
-            _windowStateSubscription?.Dispose();
-            _debounceTimer?.Dispose();
-
-            _isSubscribedToWindow = false;
-        }
-
 
         private void OnReset()
         {
             Console.WriteLine($"[PanelEditorView] Reset panel");
 
-            _vm.Panel.Replace(_panel);
+            ViewModel.Panel.Replace(_panel);
         }
 
         private void OnSave(ReactivePanel panel)
@@ -442,91 +295,6 @@ namespace OpenGaugeClient.Editor
             // simVarValues.TryGetValue((name, unit), out var v);
             // return v;
             return null;
-        }
-
-        private void RebuildRenderers()
-        {
-            Console.WriteLine($"[PanelEditorView] Rebuild {_reactivePanel.Gauges.Count} gauge renderers");
-
-            _gaugeRenderers = [];
-
-            var window = VisualRoot as Window;
-
-            for (int i = 0; i < _reactivePanel.Gauges.Count; i++)
-            {
-                var gaugeRef = _reactivePanel.Gauges.Items[i];
-
-                var gaugeRenderer = gaugeRef.Gauge != null ? new GaugeRenderer(
-                                        gaugeRef.Gauge,
-                                        (int)window!.Width,
-                                        (int)window!.Height,
-                                        _imageCache,
-                                        _fontProvider,
-                                        _svgCache,
-                                        GetSimVarValue,
-                                        debug: _vm.SelectedGaugeRefIndex == i
-                                    ) : null;
-
-                _gaugeRenderers.Add(gaugeRenderer);
-            }
-        }
-
-        public async Task RenderFrameAsync(DrawingContext ctx)
-        {
-            var window = VisualRoot as Window;
-
-            // if rendering but unmounted
-            if (window == null)
-                return;
-
-            if (SettingsService.Instance.GridVisible)
-                RenderingHelper.DrawGrid(ctx, (int)window.Width, (int)window.Height, SettingsService.Instance.SnapAmount);
-
-            if (_gaugeRenderers.Count == 0)
-                return;
-
-            if (_gaugeRenderers.Count != _reactivePanel.Gauges.Count)
-                throw new Exception($"Renderer mismatch {_gaugeRenderers.Count} vs {_reactivePanel.Gauges.Count}");
-
-            for (var i = 0; i < _reactivePanel.Gauges.Count; i++)
-            {
-                var gaugeRef = _reactivePanel.Gauges.Items[i];
-
-                var layersToDraw = gaugeRef.Gauge.Layers
-                            .Select((layer, i) => { layer.Debug = false; return layer; })
-                            .Reverse()
-                            .ToList();
-
-                var gaugeRenderer = _gaugeRenderers[i];
-
-                gaugeRenderer?.DrawGaugeLayers(ctx, layersToDraw, gaugeRef.Gauge, gaugeRef.ToGaugeRef(), useCachedPositions: false);
-            }
-
-            RenderDebugText(ctx);
-        }
-
-        // TODO: Move to some kind of helper
-        private void RenderDebugText(DrawingContext ctx)
-        {
-            var window = VisualRoot as Window;
-            var canvasWidth = (int)window!.Width;
-            var canvasHeight = (int)window!.Height;
-
-            var formattedText = new FormattedText(
-                $"'{_vm.Panel.Name}'\n" +
-                $"{_vm.Panel.Position.X},{_vm.Panel.Position.Y} => {window.Position.X},{window.Position.Y}\n" +
-                $"{_vm.Panel.Width}x{_vm.Panel.Height} => {window.Width}x{window.Height}",
-                CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                new Typeface("Arial"),
-                14,
-                Brushes.White
-            );
-
-            var x = canvasWidth - formattedText.Width;
-            var y = canvasHeight - formattedText.Height;
-
-            ctx.DrawText(formattedText, new Point(x - 10, y - 10));
         }
     }
 

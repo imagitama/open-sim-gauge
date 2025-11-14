@@ -9,6 +9,7 @@ namespace OpenGaugeClient
     public class GaugeRenderer
     {
         private Gauge _gauge;
+        private GaugeRef _gaugeRef;
         private int _canvasWidth;
         private int _canvasHeight;
         private Func<string, string, object?> _getSimVarValue { get; set; }
@@ -17,9 +18,10 @@ namespace OpenGaugeClient
         private SvgCache _svgCache;
         private bool _debug;
 
-        public GaugeRenderer(Gauge gauge, int canvasWidth, int canvasHeight, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
+        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
         {
             _gauge = gauge;
+            _gaugeRef = gaugeRef;
             _canvasWidth = canvasWidth;
             _canvasHeight = canvasHeight;
             _imageCache = imageCache;
@@ -29,18 +31,20 @@ namespace OpenGaugeClient
             _debug = debug;
         }
 
-        public void DrawGaugeLayers(DrawingContext ctx, List<Layer> layers, Gauge gauge, GaugeRef gaugeRef, bool useCachedPositions = true, bool? disableClipping = null)
+        public void DrawGaugeLayers(DrawingContext ctx, bool useCachedPositions = true, bool? disableClipping = null)
         {
-            var (gaugeOriginX, gaugeOriginY) = gauge.Origin.Resolve(gauge.Width, gauge.Height, useCachedPositions);
+            var layersToDraw = _gauge.Layers.ToArray().Reverse().ToArray();
 
-            var gaugeConfigPath = !string.IsNullOrEmpty(gaugeRef.Path) ? gaugeRef.Path : PathHelper.GetFilePath("config.json");
+            var (gaugeOriginX, gaugeOriginY) = _gauge.Origin.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
-            var (x, y) = gaugeRef.Position.Resolve(_canvasWidth, _canvasHeight, useCachedPositions);
-            var scale = gaugeRef.Scale;
+            var gaugeConfigPath = !string.IsNullOrEmpty(_gaugeRef.Path) ? _gaugeRef.Path : PathHelper.GetFilePath("config.json");
 
-            if (gaugeRef.Width is double targetWidth && gauge.Width != 0)
+            var (x, y) = _gaugeRef.Position.Resolve(_canvasWidth, _canvasHeight, useCachedPositions);
+            var scale = _gaugeRef.Scale;
+
+            if (_gaugeRef.Width is double targetWidth && _gauge.Width != 0)
             {
-                scale = targetWidth / gauge.Width * gaugeRef.Scale;
+                scale = targetWidth / _gauge.Width * _gaugeRef.Scale;
             }
 
             var gaugeTransform =
@@ -53,24 +57,24 @@ namespace OpenGaugeClient
                 {
                     if (ConfigManager.Debug || _debug == true)
                     {
-                        DrawGaugeDebug(ctx, gauge, x, y);
+                        DrawGaugeDebug(ctx, _gauge, x, y);
                     }
 
                     Geometry? clipGeometry = new RectangleGeometry(new Rect(0, 0, _gauge.Width, _gauge.Height));
 
-                    if (gauge.Clip != null && !string.IsNullOrEmpty(gauge.Clip.Image))
+                    if (_gauge.Clip != null && !string.IsNullOrEmpty(_gauge.Clip.Image))
                     {
-                        if (gauge.Clip.Image == null)
+                        if (_gauge.Clip.Image == null)
                             throw new Exception("Clip must have an image");
 
-                        var clipConfig = gauge.Clip;
+                        var clipConfig = _gauge.Clip;
 
                         var clipImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, clipConfig!.Image!);
                         var absoluteClipImagePath = PathHelper.GetFilePath(clipImagePath);
 
 
-                        var clipWidth = clipConfig.Width ?? gauge.Width;
-                        var clipHeight = clipConfig.Height ?? gauge.Height;
+                        var clipWidth = clipConfig.Width ?? _gauge.Width;
+                        var clipHeight = clipConfig.Height ?? _gauge.Height;
 
                         var skPath = _svgCache.LoadSKPath(
                             absoluteClipImagePath,
@@ -83,7 +87,7 @@ namespace OpenGaugeClient
 
                         var transformedClipGeometry = clipGeometry.Clone();
 
-                        var (clipPosX, clipPosY) = clipConfig.Position.Resolve(gauge.Width, gauge.Height, useCachedPositions);
+                        var (clipPosX, clipPosY) = clipConfig.Position.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
                         var (clipOriginX, clipOriginY) = clipConfig.Origin.Resolve(clipWidth, clipHeight, useCachedPositions);
 
@@ -102,16 +106,16 @@ namespace OpenGaugeClient
 
                     using (clip)
                     {
-                        for (var i = 0; i < layers.Count; i++)
+                        for (var i = 0; i < layersToDraw.Length; i++)
                         {
-                            var layer = layers[i];
+                            var layer = layersToDraw[i];
 
                             if (layer.Skip == true)
                                 continue;
 
-                            var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(layer.Width ?? gauge.Width, layer.Height ?? gauge.Height, useCachedPositions);
+                            var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height, useCachedPositions);
 
-                            var (layerPosX, layerPosY) = layer.Position.Resolve(gauge.Width, gauge.Height, useCachedPositions);
+                            var (layerPosX, layerPosY) = layer.Position.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
                             double rotationAngle = 0;
                             double offsetX = 0;
@@ -191,7 +195,7 @@ namespace OpenGaugeClient
                                 var pathImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, pathConfig!.Image!);
                                 var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
 
-                                pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value, gauge, useCachedPositions);
+                                pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value, _gauge, useCachedPositions);
 
                                 pathValue = $"=>{pathPositionResult}";
 
@@ -286,15 +290,15 @@ namespace OpenGaugeClient
                                         text,
                                         0,
                                         0,
-                                        gauge.Width,
-                                        gauge.Height,
-                                        gauge.Width / 2,
-                                        gauge.Height / 2,
+                                        _gauge.Width,
+                                        _gauge.Height,
+                                        _gauge.Width / 2,
+                                        _gauge.Height / 2,
                                         familyName,
                                         (float)textRef.FontSize,
                                         textRef.Color,
-                                        gauge.Width,
-                                        gauge.Height
+                                        _gauge.Width,
+                                        _gauge.Height
                                     );
 
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
@@ -312,9 +316,9 @@ namespace OpenGaugeClient
                                 {
                                     var imagePath = layer.Image;
 
-                                    if (gauge.Source != null && !Path.IsPathRooted(imagePath))
+                                    if (_gauge.Source != null && !Path.IsPathRooted(imagePath))
                                     {
-                                        var baseDir = Path.GetDirectoryName(gauge.Source);
+                                        var baseDir = Path.GetDirectoryName(_gauge.Source);
 
                                         if (baseDir != null)
                                         {
@@ -367,12 +371,8 @@ namespace OpenGaugeClient
             };
             ctx.DrawRectangle(pen, gaugeRect);
 
-            // DrawDebugText(ctx, $"{x},{y}", Brushes.Pink, new Point(0, 0), 2);
-
-            var canvasWidth = (int)gauge.Width;
-            var canvasHeight = (int)gauge.Height;
-
-            // var panelPos = PanelHelper.GetWindowPositionForPanel(_reactivePanel.ToPanel(), this);
+            var canvasWidth = gauge.Width;
+            var canvasHeight = gauge.Height;
 
             var formattedText = new FormattedText(
                 $"'{gauge.Name}' {x},{y}",

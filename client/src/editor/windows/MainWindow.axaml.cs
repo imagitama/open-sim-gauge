@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using OpenGaugeClient.Shared;
 
 namespace OpenGaugeClient.Editor
 {

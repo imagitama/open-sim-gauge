@@ -11,9 +11,8 @@ namespace OpenGaugeClient
         public static int DefaultPanelWidth = 1024;
         public static int DefaultPanelHeight = 768;
 
-        public static Window CreatePanelWindowFromPanel(Panel panel, bool isWindowBorderVisible = false)
+        public static Window CreatePanelWindowFromPanel(Panel panel)
         {
-            var debug = ConfigManager.Debug || panel.Debug == true;
             var startupLocation = panel.Position is null
                 ? WindowStartupLocation.CenterScreen
                 : WindowStartupLocation.Manual;
@@ -22,10 +21,14 @@ namespace OpenGaugeClient
             {
                 Title = panel.Name,
                 WindowStartupLocation = startupLocation,
-                Topmost = true
+                Topmost = true,
+                CanResize = false,
+                SystemDecorations = SystemDecorations.None,
+                ExtendClientAreaToDecorationsHint = false,
+                ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome
             };
 
-            UpdateWindowForPanel(window, panel, isWindowBorderVisible);
+            UpdateWindowForPanel(window, panel);
 
             return window;
         }
@@ -75,7 +78,7 @@ namespace OpenGaugeClient
             window.InvalidateVisual();
         }
 
-        public static void UpdateWindowForPanel(Window window, Panel panel, bool isWindowBorderVisible = true)
+        public static void UpdateWindowForPanel(Window window, Panel panel)
         {
             var background = new SolidColorBrush(
                 (panel.Background?.ToColor()) ?? Color.FromRgb(0, 0, 0)
@@ -93,8 +96,6 @@ namespace OpenGaugeClient
             {
                 window.TransparencyLevelHint = Array.Empty<WindowTransparencyLevel>();
             }
-
-            SetWindowUsingFrame(window, isWindowBorderVisible);
 
             var screens = window.Screens.All;
             if (panel.Screen != null)
@@ -114,7 +115,7 @@ namespace OpenGaugeClient
 
             if (panel.Position != null)
             {
-                window.Position = GetWindowPositionForPanelWithoutFrame(panel, window);
+                window.Position = GetWindowPositionForPanel(panel, window);
             }
             else
             {
@@ -141,7 +142,7 @@ namespace OpenGaugeClient
     $"\tPosition: {panel.Position} => {window.Position}");
         }
 
-        public static PixelPoint GetWindowPositionForPanelWithoutFrame(Panel panel, Window window)
+        public static PixelPoint GetWindowPositionForPanel(Panel panel, Window window)
         {
             if (window == null || window.Screens == null)
                 throw new Exception("Window or Screens missing");
@@ -165,23 +166,8 @@ namespace OpenGaugeClient
 
             var (originX, originY) = panel.Origin.Resolve(windowWidth, windowHeight);
 
-            double extraHeight = 0;
-
-            // macOS compensation
-            if (OperatingSystem.IsMacOS())
-            {
-                var frame = window.FrameSize;
-
-                if (frame != null && window.SystemDecorations != SystemDecorations.None)
-                {
-                    var frameHeight = window.OffScreenMargin.Top + window.OffScreenMargin.Bottom;
-                    var titleBarHeight = ((Size)frame).Height - window.ClientSize.Height;
-                    extraHeight = titleBarHeight + frameHeight;
-                }
-            }
-
             var dipX = panelX - originX + (screen.Bounds.X / scaling);
-            var dipY = panelY - originY - extraHeight + (screen.Bounds.Y / scaling);
+            var dipY = panelY - originY + (screen.Bounds.Y / scaling);
 
             int x = (int)Math.Round(dipX * scaling);
             int y = (int)Math.Round(dipY * scaling);
@@ -214,29 +200,6 @@ namespace OpenGaugeClient
             double posY = Math.Round(windowDipY - screenDipY + originY, 2);
 
             return new FlexibleVector2 { X = posX, Y = posY };
-        }
-
-        public static void SetWindowUsingFrame(Window window, bool show)
-        {
-            window.CanResize = show;
-
-            // on windows toggling the border changes the window dimensions so we need to fix it
-            var clientWidth = window.ClientSize.Width;
-            var clientHeight = window.ClientSize.Height;
-
-            window.SystemDecorations = show ? SystemDecorations.Full : SystemDecorations.None;
-
-            if (show)
-            {
-                var frame = window.OffScreenMargin;
-                window.Width = clientWidth + frame.Left + frame.Right;
-                window.Height = clientHeight + frame.Top + frame.Bottom;
-            }
-
-            window.ExtendClientAreaToDecorationsHint = !show;
-            window.ExtendClientAreaChromeHints = show
-                ? Avalonia.Platform.ExtendClientAreaChromeHints.Default
-                : Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome;
         }
     }
 }

@@ -8,6 +8,7 @@
     Title="Open Sim Gauge"
     Width="1024"
     Height="768"
+    Background="rgb(25,25,25)"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <ContentControl x:Name="ContentHost" />

@@ -73,7 +73,7 @@ namespace OpenGaugeClient
                     }
 
                     if (gauge == null)
-                        throw new Exception($"Panel '{panel.Name}' has invalid gauge '{gaugeRef.Name}' or path '{gaugeRef.Path}'");
+                        Console.WriteLine($"Panel '{panel.Name}' has invalid gauge '{gaugeRef.Name}' or path '{gaugeRef.Path}'");
 
                     gaugeRef.Gauge = gauge;
                 }

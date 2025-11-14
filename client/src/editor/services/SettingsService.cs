@@ -10,7 +10,7 @@ namespace OpenGaugeClient.Editor.Services
         public class SettingsData
         {
             public bool Snap { get; set; } = true;
-            public int SnapAmount { get; set; } = 10;
+            public int SnapAmount { get; set; } = 50;
             public bool GridVisible { get; set; } = true;
             public bool ClipVisually { get; set; } = true;
             public bool WindowBorderVisible { get; set; } = true;

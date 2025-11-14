@@ -25,9 +25,9 @@ namespace OpenGaugeClient.Editor
 
             AttachedToVisualTree += (_, _) =>
             {
-                var window = VisualRoot as Window;
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
 
-                // TODO: move to helper
                 window.Width = WindowHelper.DefaultWidth;
                 window.Height = WindowHelper.DefaultHeight;
                 window.Background = new SolidColorBrush(WindowHelper.DefaultBackground);
@@ -35,9 +35,8 @@ namespace OpenGaugeClient.Editor
                 window.ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.Default;
                 window.TransparencyLevelHint = [WindowTransparencyLevel.None];
                 window.SystemDecorations = SystemDecorations.Full;
+                window.Background = new SolidColorBrush(Color.FromRgb(25, 25, 25));
                 window.Title = "Open Sim Gauge";
-
-                WindowHelper.CenterWindowWithoutFrame(window);
             };
         }
 
@@ -45,10 +44,11 @@ namespace OpenGaugeClient.Editor
         {
             Console.WriteLine($"[MainMenuView] On create gauge");
 
-            var window = VisualRoot as Window;
+            if (VisualRoot is not Window window)
+                throw new Exception("Window is null");
 
             var dialog = new CreateGaugeDialog();
-            var ok = await dialog.ShowDialog<bool>(window!);
+            var ok = await dialog.ShowDialog<bool>(window);
 
             if (ok)
             {
@@ -106,8 +106,11 @@ namespace OpenGaugeClient.Editor
         {
             Console.WriteLine($"[MainMenuViewViewModel] Delete panel index={panelIndex}");
 
+            if (VisualRoot is not Window window)
+                throw new Exception("Window is null");
+
             var dialog = new ConfirmDialog();
-            var result = await dialog.ShowDialog<bool>(VisualRoot as Window);
+            var result = await dialog.ShowDialog<bool>(window);
 
             if (result)
             {
@@ -122,8 +125,11 @@ namespace OpenGaugeClient.Editor
         {
             Console.WriteLine($"[MainMenuViewViewModel] Delete gauge index={gaugeIndex}");
 
+            if (VisualRoot is not Window window)
+                throw new Exception("Window is null");
+
             var dialog = new ConfirmDialog();
-            var result = await dialog.ShowDialog<bool>(VisualRoot as Window);
+            var result = await dialog.ShowDialog<bool>(window);
 
             if (result)
             {
