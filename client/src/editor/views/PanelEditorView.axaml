@@ -228,6 +228,13 @@
                                 FieldType="Bool"
                                 Label="Transparent" />
                             <components:EditableField
+                                Content="{Binding ViewModel.Panel.OnTop, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="OnTop"
+                                FieldType="Bool"
+                                Hint="If to render this panel above all other desktop windows and apps."
+                                Label="On Top" />
+                            <components:EditableField
                                 Content="{Binding ViewModel.Panel.Debug, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 FieldName="Debug"

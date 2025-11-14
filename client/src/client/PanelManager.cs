@@ -2,7 +2,7 @@ namespace OpenGaugeClient.Client
 {
     public class PanelManager : IDisposable
     {
-        public bool IsReady = false;
+        private bool _isInitialized = false;
         private readonly Dictionary<string, PanelRenderer> _panelRenderers = [];
         private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
@@ -23,12 +23,15 @@ namespace OpenGaugeClient.Client
         {
             Console.WriteLine($"Initializing {config.Panels.Count} panels... (vehicle = {vehicleName})");
 
+            if (_isInitialized)
+                Uninitialize();
+
             if (vehicleName == null)
                 return;
 
             foreach (var panel in config.Panels)
             {
-                if (panel.Vehicle != null && vehicleName != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
+                if (panel.Vehicle != null && vehicleName != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName) && ConfigManager.Config.Debug != true)
                 {
                     if (ConfigManager.Config.Debug)
                         Console.WriteLine($"[PanelManager] Panel vehicle={panel.Vehicle} does not match provided={vehicleName}");
@@ -64,7 +67,16 @@ namespace OpenGaugeClient.Client
                 _panelRenderers[panel.Name] = renderer;
             }
 
-            IsReady = true;
+            _isInitialized = true;
+        }
+
+        private void Uninitialize()
+        {
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[PanelManager] Already initialized, uninitializing...");
+
+            Dispose();
+            _isInitialized = false;
         }
 
         private void UnrenderPanel(Panel panel)
@@ -76,7 +88,6 @@ namespace OpenGaugeClient.Client
             {
                 _panelRenderers[panel.Name].Dispose();
                 _panelRenderers.Remove(panel.Name);
-
 
                 if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[PanelManager] Unrendered panel={panel}'");

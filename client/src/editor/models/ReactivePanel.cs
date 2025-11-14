@@ -116,6 +116,13 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _transparent, value);
         }
 
+        private bool? _onTop;
+        public bool? OnTop
+        {
+            get => _onTop;
+            set => this.RaiseAndSetIfChanged(ref _onTop, value);
+        }
+
         private bool? _debug = false;
         public bool? Debug
         {
@@ -136,6 +143,7 @@ namespace OpenGaugeClient
             Origin = panel.Origin;
             Background = panel.Background;
             Transparent = panel.Transparent;
+            OnTop = panel.OnTop;
             Debug = panel.Debug;
 
             Gauges.Edit(inner =>
@@ -161,6 +169,7 @@ namespace OpenGaugeClient
                 Origin = Origin,
                 Background = Background,
                 Transparent = Transparent,
+                OnTop = OnTop,
                 Debug = Debug
             };
         }

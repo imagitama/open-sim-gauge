@@ -293,6 +293,10 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? Transparent { get; set; }
         /// <summary>
+        /// If to render this panel above all other desktop windows and apps.
+        /// </summary>
+        public bool? OnTop { get; set; }
+        /// <summary>
         /// If to skip rendering this panel.
         /// </summary>
         public bool? Skip { get; set; } = false;
@@ -317,6 +321,7 @@ namespace OpenGaugeClient
                 Background = Background != null
                     ? new ColorDef(Background.R, Background.G, Background.B)
                     : null,
+                OnTop = OnTop,
                 Transparent = Transparent,
                 Debug = Debug
             };

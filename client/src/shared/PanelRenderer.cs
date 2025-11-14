@@ -15,6 +15,7 @@ namespace OpenGaugeClient
         private readonly SvgCache _svgCache;
         private Func<string, string, object?> _getSimVarValue { get; set; }
         private readonly Dictionary<int, GaugeRenderer> _gaugeRenderers = [];
+        private bool? _disableRenderOnTop = false;
         private bool? _isConnected = false;
         private Window _window;
         public Window Window
@@ -51,6 +52,7 @@ namespace OpenGaugeClient
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
             _isConnected = isConnected;
+            _disableRenderOnTop = disableRenderOnTop;
             _gridSize = gridSize;
 
             var canvas = new Canvas
@@ -72,11 +74,10 @@ namespace OpenGaugeClient
             var debug = ConfigManager.Debug || panel.Debug == true;
 
             _window = PanelHelper.CreatePanelWindowFromPanel(_panel);
+            _window.Content = canvas;
 
             if (disableRenderOnTop == true)
                 _window.Topmost = false;
-
-            _window.Content = canvas;
 
             if (ConfigManager.Debug || panel.Debug == true)
             {
@@ -104,6 +105,9 @@ namespace OpenGaugeClient
             _panel = newPanel;
 
             PanelHelper.UpdateWindowForPanel(_window, _panel);
+
+            if (_disableRenderOnTop == true)
+                _window.Topmost = false;
 
             RebuildGaugeRenderers();
         }
@@ -169,7 +173,7 @@ namespace OpenGaugeClient
             if (_gridSize != null && _gridSize > 0)
                 RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (int)_gridSize);
 
-            if (_panel.Debug == true)
+            if (_panel.Debug == true || ConfigManager.Debug == true)
                 RenderDebugText(ctx);
 
             if (_isConnected == false)

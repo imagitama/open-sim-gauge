@@ -134,12 +134,15 @@ namespace OpenGaugeClient
             }
 
             window.Title = panel.Name;
+            window.Topmost = panel.OnTop == true;
 
             if (ConfigManager.Config.Debug)
-                Console.WriteLine($"[PanelHelper] Update window for panel:\n" +
+                Console.WriteLine($"[PanelHelper] Update window for panel '{panel.Name}':\n" +
     $"\tDimensions: {panel.Width}x{panel.Height} => {window.Width}x{window.Height}\n" +
     $"\tOrigin: {panel.Origin}\n" +
-    $"\tPosition: {panel.Position} => {window.Position}");
+    $"\tPosition: {panel.Position} => {window.Position}\n" +
+    $"\tOnTop: {window.Topmost}"
+);
         }
 
         public static PixelPoint GetWindowPositionForPanel(Panel panel, Window window)

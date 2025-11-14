@@ -82,6 +82,9 @@ namespace OpenGaugeClient.Client
 
             _panelManager = new PanelManager();
 
+            if (ConfigManager.Debug)
+                _panelManager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
+
             var client = new ClientHandler(config.Server.IpAddress, config.Server.Port);
 
             Func<Task> TellServerWeWantToInit = async () =>
