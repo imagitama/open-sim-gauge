@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Layout;
+using Avalonia.Input;
 
 namespace OpenGaugeClient
 {
@@ -32,6 +33,7 @@ namespace OpenGaugeClient
         private RenderingHelper _renderer;
         private int? _gridSize = null;
         private int? _debugGaugeIndex = null;
+        public Action<PixelPoint>? OnMove;
 
         public PanelRenderer(
             Panel panel,
@@ -81,12 +83,29 @@ namespace OpenGaugeClient
 
             if (ConfigManager.Debug || panel.Debug == true)
             {
+                _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+
                 _window.PointerPressed += (sender, e) =>
                 {
                     if (e.GetCurrentPoint(_window).Properties.IsLeftButtonPressed)
                     {
+                        _window.Cursor = new Cursor(StandardCursorType.SizeAll);
                         _window.BeginMoveDrag(e);
                     }
+                };
+                _window.PointerEntered += (_, e) =>
+                {
+                    _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+                };
+                _window.PointerReleased += (_, e) =>
+                {
+                    _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+                };
+
+                _window.PositionChanged += (_, _) =>
+                {
+                    var pos = _window.Position;
+                    OnMove?.Invoke(pos);
                 };
             }
 

@@ -58,6 +58,7 @@ namespace OpenGaugeClient.Editor
         private readonly SvgCache _svgCache;
         private PanelRenderer _panelRenderer;
         private int _selectedGaugeRefIndex = -1;
+        private bool _ignorePanelChanges = false;
 
         // for compiled bindings
         public PanelEditorView()
@@ -99,17 +100,7 @@ namespace OpenGaugeClient.Editor
                 SubscribeToPanelChanges();
                 SubscribeToSettings();
 
-                _panelRenderer = new PanelRenderer(
-                    _panel,
-                    _gaugeCache,
-                    _imageCache,
-                    _fontProvider,
-                    _svgCache,
-                    GetSimVarValue,
-                    isConnected: null,
-                    disableRenderOnTop: true,
-                    gridSize: SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null
-                );
+                RebuildPanelRenderer();
 
                 if (VisualRoot is not Window window)
                     throw new Exception("Window is null");
@@ -138,10 +129,45 @@ namespace OpenGaugeClient.Editor
 
         private void RebuildPanelRenderer()
         {
-            _panelRenderer?.DebugGauge(ViewModel.SelectedGaugeRefIndex != -1 ? ViewModel.SelectedGaugeRefIndex : null);
-            var panel = ViewModel.Panel.ToPanel();
-            panel.Debug = true;
-            _panelRenderer?.ReplacePanel(panel);
+            if (_panelRenderer == null)
+            {
+                var panel = ViewModel.Panel.ToPanel();
+                panel.Debug = true;
+
+                _panelRenderer = new PanelRenderer(
+                    panel,
+                    _gaugeCache,
+                    _imageCache,
+                    _fontProvider,
+                    _svgCache,
+                    GetSimVarValue,
+                    isConnected: null,
+                    disableRenderOnTop: true,
+                    gridSize: SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null
+                );
+
+                _panelRenderer.OnMove = (newWindowPos) =>
+                {
+                    _ignorePanelChanges = true;
+
+                    var newPanelPos = PanelHelper.GetPanelPositionFromWindow(ViewModel.Panel.ToPanel(), _panelRenderer.Window);
+
+                    Console.WriteLine($"[PanelEditorView] Panel renderer moved pos={newWindowPos} panelPos={newPanelPos}");
+
+                    ViewModel.Panel.Position = newPanelPos;
+
+                    RebuildPanelRenderer();
+
+                    _ignorePanelChanges = false;
+                };
+            }
+            else
+            {
+                _panelRenderer.DebugGauge(ViewModel.SelectedGaugeRefIndex != -1 ? ViewModel.SelectedGaugeRefIndex : null);
+                var panel = ViewModel.Panel.ToPanel();
+                panel.Debug = true;
+                _panelRenderer.ReplacePanel(panel);
+            }
         }
 
         private void OnCenter()
@@ -231,6 +257,9 @@ namespace OpenGaugeClient.Editor
 
             _reactivePanel.Changed.Subscribe(change =>
             {
+                if (_ignorePanelChanges)
+                    return;
+
                 Console.WriteLine($"[PanelEditorView] Panel changed prop={change.PropertyName}");
                 RebuildPanelRenderer();
             }).DisposeWith(_cleanup);
