@@ -108,7 +108,13 @@ namespace OpenGaugeClient.Client
 
             client.OnConnect += () =>
             {
+                _panelManager.SetConnected(true);
                 TellServerWeWantToInit();
+            };
+
+            client.OnDisconnect += () =>
+            {
+                _panelManager.SetConnected(false);
             };
 
             var hasSentAVar = false;

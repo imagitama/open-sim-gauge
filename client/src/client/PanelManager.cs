@@ -94,6 +94,12 @@ namespace OpenGaugeClient.Client
             }
         }
 
+        public void SetConnected(bool isConnected)
+        {
+            foreach (var (name, renderer) in _panelRenderers)
+                renderer.SetConnected(isConnected);
+        }
+
         public void Dispose()
         {
             foreach (var renderer in _panelRenderers.Values)

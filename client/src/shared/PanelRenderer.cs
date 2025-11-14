@@ -141,6 +141,11 @@ namespace OpenGaugeClient
             _debugGaugeIndex = index;
         }
 
+        public void SetConnected(bool isConnected)
+        {
+            _isConnected = isConnected;
+        }
+
         void RebuildGaugeRenderers()
         {
             for (var i = 0; i < _panel.Gauges.Count; i++)
@@ -193,7 +198,7 @@ namespace OpenGaugeClient
                 RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (int)_gridSize);
 
             if (_panel.Debug == true || ConfigManager.Debug == true)
-                RenderDebugText(ctx);
+                DrawPanelDebugInfo(ctx);
 
             if (_isConnected == false)
                 DrawDebugText(ctx, "Not connected", Brushes.Red, new Point(0, 0));
@@ -212,7 +217,7 @@ namespace OpenGaugeClient
             }
         }
 
-        private void RenderDebugText(DrawingContext ctx)
+        private void DrawPanelDebugInfo(DrawingContext ctx)
         {
             var canvasWidth = (int)_window!.Width;
             var canvasHeight = (int)_window!.Height;

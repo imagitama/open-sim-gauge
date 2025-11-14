@@ -15,8 +15,8 @@ namespace OpenGaugeClient.Client
         public delegate void MessageHandler(ServerMessage<object> message);
         public event MessageHandler? OnMessage;
 
-        public delegate void OnConnectHandler();
-        public event OnConnectHandler? OnConnect;
+        public Action? OnConnect;
+        public Action? OnDisconnect;
 
         public bool IsConnected = false;
 
@@ -45,6 +45,7 @@ namespace OpenGaugeClient.Client
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[Client] Connect failed: {ex.Message}. Retrying in 2 seconds...");
+                    OnDisconnect?.Invoke();
                     await Task.Delay(2000);
                 }
             }
@@ -94,6 +95,7 @@ namespace OpenGaugeClient.Client
                     if (line == null)
                     {
                         IsConnected = false;
+                        OnDisconnect?.Invoke();
                         Console.WriteLine("[Client] Connection lost. Attempting reconnect...");
                         break;
                     }
