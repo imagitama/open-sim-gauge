@@ -183,6 +183,7 @@ namespace OpenGaugeClient.Editor
                 new GaugeRef() { Position = { X = snappedX, Y = snappedY }, Gauge = null, Path = ViewModel.Gauge.Source },
                 (int)Width,
                 (int)Height,
+                renderScaling: window.RenderScaling,
                 _imageCache,
                 _fontProvider,
                 _svgCache,

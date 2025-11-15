@@ -181,6 +181,7 @@ namespace OpenGaugeClient
                     gaugeRef,
                     (int)_window.Width,
                     (int)_window.Height,
+                    renderScaling: _window.RenderScaling,
                     _imageCache,
                     _fontProvider,
                     _svgCache,

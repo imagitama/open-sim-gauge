@@ -22,22 +22,6 @@ namespace OpenGaugeClient.Editor
             _vm.OnCreateGauge = OnCreateGauge;
             _vm.OnDeletePanel = index => _ = OnDeletePanel(index);
             _vm.OnDeleteGauge = index => _ = OnDeleteGauge(index);
-
-            AttachedToVisualTree += (_, _) =>
-            {
-                if (VisualRoot is not Window window)
-                    throw new Exception("Window is null");
-
-                window.Width = WindowHelper.DefaultWidth;
-                window.Height = WindowHelper.DefaultHeight;
-                window.Background = new SolidColorBrush(WindowHelper.DefaultBackground);
-                window.ExtendClientAreaToDecorationsHint = false;
-                window.ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.Default;
-                window.TransparencyLevelHint = [WindowTransparencyLevel.None];
-                window.SystemDecorations = SystemDecorations.Full;
-                window.Background = new SolidColorBrush(Color.FromRgb(25, 25, 25));
-                window.Title = "Open Sim Gauge";
-            };
         }
 
         private async void OnCreateGauge()

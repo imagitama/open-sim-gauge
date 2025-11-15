@@ -10,7 +10,7 @@ namespace OpenGaugeClient
         private readonly Dictionary<(string, double?, double?), Bitmap> _cache = [];
         private bool _disposed;
 
-        public Bitmap Load(string imagePath, Layer layer)
+        public Bitmap Load(string imagePath, Layer layer, double renderScaling)
         {
             string absolutePath = PathHelper.GetFilePath(imagePath);
 
@@ -38,25 +38,31 @@ namespace OpenGaugeClient
 
                 var (viewBoxWidth, viewBoxHeight) = SvgUtils.GetSvgDimensionsFromViewBox(absolutePath);
 
-                var width = layer.Width != null ? layer.Width : viewBoxWidth > 0 ? (int)viewBoxWidth : 0;
-                var height = layer.Height != null ? layer.Height : viewBoxHeight > 0 ? (int)viewBoxHeight : 0;
+                int dipWidth = (int)(layer.Width != null ? layer.Width : viewBoxWidth > 0 ? (int)viewBoxWidth : 0);
+                int dipHeight = (int)(layer.Height != null ? layer.Height : viewBoxHeight > 0 ? (int)viewBoxHeight : 0);
 
-                if (width == 0 || height == 0)
+                if (dipWidth == 0 || dipHeight == 0)
                     throw new Exception("SVG has no dimensions");
 
-                using var skiaBitmap = new SKBitmap((int)width, (int)height);
+                int pxWidth = (int)Math.Ceiling(dipWidth * renderScaling);
+                int pxHeight = (int)Math.Ceiling(dipHeight * renderScaling);
+
+                using var skiaBitmap = new SKBitmap(pxWidth, pxHeight);
                 using var skiaCanvas = new SKCanvas(skiaBitmap);
                 skiaCanvas.Clear(SKColors.Transparent);
 
                 var picBounds = pic.CullRect;
-                float scaleX = (float)(width / picBounds.Width);
-                float scaleY = (float)(height / picBounds.Height);
+                float scaleX = (float)(pxWidth / picBounds.Width);
+                float scaleY = (float)(pxHeight / picBounds.Height);
 
                 skiaCanvas.Scale(scaleX, scaleY);
                 skiaCanvas.DrawPicture(pic);
                 skiaCanvas.Flush();
 
                 using var image = SKImage.FromBitmap(skiaBitmap);
+
+                // if (imagePath.Contains("bg") && imagePath.Contains("manifold"))
+                //     Console.WriteLine($"SVG vb={viewBoxWidth}x{viewBoxHeight} dip={dipWidth}x{dipHeight} scale={renderScaling} px={pxWidth}x{pxHeight}");
 
                 if (image == null)
                     throw new Exception($"Failed to load image '{absolutePath}'");
@@ -66,7 +72,7 @@ namespace OpenGaugeClient
                 var avaloniaBmp = new Bitmap(pngStream);
 
                 if (layer.Debug)
-                    Console.WriteLine($"[ImageCache] Loaded SVG '{imagePath}' {picBounds.Width}x{picBounds.Height} => {width}x{height}");
+                    Console.WriteLine($"[ImageCache] Loaded SVG '{imagePath}' {picBounds.Width}x{picBounds.Height} => {dipWidth}x{dipHeight} => {pxWidth}x{pxHeight}");
 
                 _cache[key] = avaloniaBmp;
 

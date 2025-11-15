@@ -31,6 +31,8 @@ namespace OpenGaugeClient.Client
 
             foreach (var panel in config.Panels)
             {
+                Console.WriteLine($"Panel '{panel.Name}'\n  Vehicle: {panel.Vehicle}");
+
                 if (panel.Vehicle != null && vehicleName != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName) && ConfigManager.Config.Debug != true)
                 {
                     if (ConfigManager.Config.Debug)

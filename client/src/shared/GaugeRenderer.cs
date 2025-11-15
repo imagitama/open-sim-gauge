@@ -12,18 +12,20 @@ namespace OpenGaugeClient
         private GaugeRef _gaugeRef;
         private int _canvasWidth;
         private int _canvasHeight;
+        private double _renderScaling;
         private Func<string, string, object?> _getSimVarValue { get; set; }
         private ImageCache _imageCache;
         private FontProvider _fontProvider;
         private SvgCache _svgCache;
         private bool _debug;
 
-        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
+        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
         {
             _gauge = gauge;
             _gaugeRef = gaugeRef;
             _canvasWidth = canvasWidth;
             _canvasHeight = canvasHeight;
+            _renderScaling = renderScaling;
             _imageCache = imageCache;
             _fontProvider = fontProvider;
             _svgCache = svgCache;
@@ -285,24 +287,47 @@ namespace OpenGaugeClient
                                     if (text == null)
                                         throw new Exception("Text is null");
 
+                                    int pixelWidth = (int)Math.Ceiling(_gauge.Width * _renderScaling);
+                                    int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
+
                                     Bitmap bmp = SvgUtils.RenderTextSvgToBitmap(
                                         _fontProvider,
                                         text,
                                         0,
                                         0,
-                                        _gauge.Width,
-                                        _gauge.Height,
-                                        _gauge.Width / 2,
-                                        _gauge.Height / 2,
+                                        pixelWidth,
+                                        pixelHeight,
+                                        pixelWidth / 2,
+                                        pixelHeight / 2,
                                         familyName,
-                                        (float)textRef.FontSize,
+                                        (float)(textRef.FontSize * _renderScaling),
                                         textRef.Color,
-                                        _gauge.Width,
-                                        _gauge.Height
+                                        pixelWidth,
+                                        pixelHeight,
+                                        _renderScaling
                                     );
 
+                                    //                                     Bitmap bmp = SvgUtils.RenderTextCrisp(
+                                    //                                         text,
+
+                                    //                                         _gauge.Width,
+
+                                    // _gauge.Height,
+                                    // "Arial",
+                                    // (float)textRef.FontSize,
+                                    // textRef.Color
+                                    //                                     );
+
+                                    // var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+                                    // var destRect = new Rect(0, 0, pixelWidth, pixelHeight);
+
+                                    // var dpw = bmp.PixelSize.Width;
+                                    // var dph = bmp.PixelSize.Height;
+
+                                    // Rect destRect = new Rect(0, 0, dpw, dph);
+
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+                                    var destRect = new Rect(0, 0, layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height);
 
                                     ctx.DrawImage(bmp, srcRect, destRect);
 
@@ -327,12 +352,18 @@ namespace OpenGaugeClient
                                         }
                                     }
 
-                                    Bitmap bmp = _imageCache.Load(imagePath, layer);
+                                    Bitmap bmp = _imageCache.Load(imagePath, layer, _renderScaling);
+
+                                    int pixelWidth = (int)Math.Ceiling(_gauge.Width * _renderScaling);
+                                    int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
 
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+                                    var destRect = new Rect(0, 0, layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height);
 
-                                    ctx.DrawImage(bmp, srcRect, destRect);
+                                    using (ctx.PushRenderOptions(new RenderOptions { EdgeMode = EdgeMode.Antialias, BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+                                    {
+                                        ctx.DrawImage(bmp, srcRect, destRect);
+                                    }
 
                                     if (ConfigManager.Debug || layer.Debug == true)
                                     {
@@ -393,8 +424,8 @@ namespace OpenGaugeClient
         {
             var skPath = _svgCache.LoadSKPath(
                 svgPath,
-                pathConfig.Width,
-                pathConfig.Height
+                pathConfig.Width * _renderScaling,
+                pathConfig.Height * _renderScaling
             );
 
             using var pathMeasure = new SKPathMeasure(skPath, false);
