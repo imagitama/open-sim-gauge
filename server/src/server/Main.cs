@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Globalization;
+using OpenGaugeAbstractions;
 
 namespace OpenGaugeServer
 {
@@ -13,6 +14,9 @@ namespace OpenGaugeServer
             var config = await ConfigManager.LoadConfig();
 
             var server = new Server(config.Server.IpAddress, config.Server.Port);
+
+            DataSourceFactory.LoadDataSources(PathHelper.GetFilePath("data-sources", forceToGitRoot: false));
+
             var dataSource = DataSourceFactory.Create(config.Source);
 
             server.OnMessage += (msg) =>
@@ -46,7 +50,7 @@ namespace OpenGaugeServer
                         server.BroadcastInit(dataSource.CurrentVehicleName);
                     }
 
-                    // TODO: Move to SubscriptionManager to handle unsubscribing
+                    // TODO: Handle unsubscribing
 
                     Console.WriteLine($"Subscribing to {payload!.SimVars.Length} SimVars");
 
@@ -122,26 +126,26 @@ namespace OpenGaugeServer
                         cts.Cancel();
                         break;
 
-                    case "set":
-                        if (args.Length < 3)
-                        {
-                            Console.WriteLine("Usage: set <SimVarName> <Value>");
-                            break;
-                        }
+                    // case "set":
+                    //     if (args.Length < 3)
+                    //     {
+                    //         Console.WriteLine("Usage: set <SimVarName> <Value>");
+                    //         break;
+                    //     }
 
-                        if (dataSource != null && dataSource is EmulatorDataSource)
-                        {
-                            var simVar = args[1];
-                            var value = args[2];
-                            Console.WriteLine($"Setting SimVar {simVar} to {value}");
-                            double doubleValue = double.Parse(value, CultureInfo.InvariantCulture);
-                            (dataSource as EmulatorDataSource)!.ForceVarValue(simVar, doubleValue);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Only works in emulator");
-                        }
-                        break;
+                    //     if (dataSource != null && dataSource is EmulatorDataSource)
+                    //     {
+                    //         var simVar = args[1];
+                    //         var value = args[2];
+                    //         Console.WriteLine($"Setting SimVar {simVar} to {value}");
+                    //         double doubleValue = double.Parse(value, CultureInfo.InvariantCulture);
+                    //         dataSource.ForceVarValue(simVar, doubleValue);
+                    //     }
+                    //     else
+                    //     {
+                    //         Console.WriteLine("Only works in emulator");
+                    //     }
+                    //     break;
 
                     case "watch":
                         var varName = args[1];

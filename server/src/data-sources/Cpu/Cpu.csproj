@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Cpu</AssemblyName>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\abstractions\OpenSimGaugeAbstractions.csproj" />
+    </ItemGroup>
+    <Target Name="CopyPluginToServer" AfterTargets="Build">
+        <Copy 
+            SourceFiles="$(TargetDir)$(AssemblyName).dll" 
+            DestinationFolder="../" 
+            OverwriteReadOnlyFiles="true" />
+    </Target>
+</Project>

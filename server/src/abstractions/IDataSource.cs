@@ -1,7 +1,8 @@
-namespace OpenGaugeServer
+namespace OpenGaugeAbstractions
 {
     public interface IDataSource
     {
+        public string Name { get; set; }
         public string? CurrentVehicleName { get; set; }
 
         public void SubscribeToVar(string varName, string unit, Action<object> callback);
@@ -17,6 +18,7 @@ namespace OpenGaugeServer
 
     public abstract class DataSourceBase : IDataSource
     {
+        public required string Name { get; set; }
         public virtual string? CurrentVehicleName { get; set; }
 
         public abstract void SubscribeToVar(string varName, string unit, Action<object> callback);

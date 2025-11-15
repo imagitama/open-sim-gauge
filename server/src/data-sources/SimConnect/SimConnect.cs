@@ -4,9 +4,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.FlightSimulator.SimConnect;
 using System.Runtime.InteropServices;
+using OpenGaugeAbstractions;
 
-namespace OpenGaugeServer
-{
     public class SimConnectDataSource : DataSourceBase
     {
         private static class SIMCONNECT_GROUP_PRIORITY
@@ -41,6 +40,11 @@ namespace OpenGaugeServer
             public required uint ReqId { get; set; }
             public required string VarName { get; set; }
             public required string Unit { get; set; }
+        }
+
+        public SimConnectDataSource()
+        {
+            Name = "SimConnect";
         }
 
         public override void Connect()
@@ -308,5 +312,4 @@ namespace OpenGaugeServer
             });
         }
     }
-}
 #endif
