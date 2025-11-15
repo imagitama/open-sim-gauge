@@ -1,3 +1,12 @@
+# 0.0.5
+
+- moved data sources to plugin architecture
+- even smoother drawing on high PPI displays
+- changed panel editor to 2 separate windows
+- render something if panel gauge not found
+- added `panel.ontop = bool` to have control over render on top
+- if client in debug mode always render all panels (still respects skipping)
+
 # 0.0.4
 
 - added a GUI for editing panels (`editor.exe`)

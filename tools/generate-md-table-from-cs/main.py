@@ -2,7 +2,7 @@
 import sys
 import os
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
     print("Usage: python generate_docs.py <input.cs> <output_dir>")
     sys.exit(1)
 
