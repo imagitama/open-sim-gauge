@@ -10,7 +10,7 @@ public class CpuDataSource : DataSourceBase
     private CancellationTokenSource? _cts;
     private readonly object _lock = new();
 
-    public CpuDataSource()
+    public CpuDataSource(Config config)
     {
         Name = "Cpu";
     }

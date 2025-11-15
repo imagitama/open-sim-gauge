@@ -35,6 +35,8 @@ using OpenGaugeAbstractions;
         private Action<string>? _vehicleCallback;
         private DATA_REQUESTS _requestAircraftTitleReqId;
 
+        private Config _config;
+
         private class SimVarSubscription
         {
             public required uint ReqId { get; set; }
@@ -42,9 +44,10 @@ using OpenGaugeAbstractions;
             public required string Unit { get; set; }
         }
 
-        public SimConnectDataSource()
+        public SimConnectDataSource(Config config)
         {
             Name = "SimConnect";
+            _config = config;
         }
 
         public override void Connect()
@@ -160,7 +163,7 @@ using OpenGaugeAbstractions;
         {
             var eventId = (EVENTS)data.uEventID;
 
-            if (ConfigManager.Debug == true)
+            if (_config.Debug == true)
                 Console.WriteLine($"[SimConnect] Received event '{eventId}'");
 
             switch (eventId)
@@ -191,7 +194,7 @@ using OpenGaugeAbstractions;
 
             _requestAircraftTitleReqId = reqId;
 
-            if (ConfigManager.Debug == true)
+            if (_config.Debug == true)
                 Console.WriteLine("[SimConnect] Requested aircraft title");
         }
 
@@ -234,7 +237,7 @@ using OpenGaugeAbstractions;
 
             _simConnect!.RequestDataOnSimObject(reqId, defId, SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.SIM_FRAME, SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
 
-            if (ConfigManager.Config?.Debug == true)
+            if (_config.Debug == true)
                 Console.WriteLine($"[SimConnect] Subscribed to SimVar '{varName}' ({unit}) type={type} reqId={reqId}");
 
             return reqId;

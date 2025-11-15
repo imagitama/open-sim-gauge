@@ -8,10 +8,22 @@
     <ItemGroup>
         <ProjectReference Include="..\..\abstractions\OpenSimGaugeAbstractions.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <Reference Include="Microsoft.FlightSimulator.SimConnect">
+            <HintPath>libs/Microsoft.FlightSimulator.SimConnect.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <LibFiles Include="libs\**\*" />
+    </ItemGroup>
     <Target Name="CopyPluginToServer" AfterTargets="Build">
         <Copy 
             SourceFiles="$(TargetDir)$(AssemblyName).dll" 
             DestinationFolder="../" 
             OverwriteReadOnlyFiles="true" />
+        <Copy
+      SourceFiles="@(LibFiles)"
+      DestinationFolder="../libs/%(RecursiveDir)"
+      OverwriteReadOnlyFiles="true" />
     </Target>
 </Project>

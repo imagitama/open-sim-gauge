@@ -5,14 +5,14 @@ namespace OpenGaugeServer
 {
     public static class DataSourceLoader
     {
-        public static List<IDataSource> LoadDataSources(string dir)
+        public static List<Type> LoadDataSources(string dir)
         {
             var absolutePath = PathHelper.GetFilePath(dir, forceToGitRoot: false);
 
             if (ConfigManager.Config.Debug)
                 Console.WriteLine($"[DataSourceLoader] Load data sources: {absolutePath}");
 
-            var list = new List<IDataSource>();
+            var list = new List<Type>();
 
             if (!Directory.Exists(dir))
                 throw new Exception($"Data sources directory missing ({absolutePath})");
@@ -33,15 +33,10 @@ namespace OpenGaugeServer
 
                     foreach (var type in types)
                     {
-                        var instance = (IDataSource)Activator.CreateInstance(type)!;
-
-                        if (string.IsNullOrEmpty(instance.Name))
-                            throw new Exception($"Data source name must be set");
-
-                        list.Add(instance);
+                        list.Add(type);
 
                         if (ConfigManager.Config.Debug)
-                            Console.WriteLine($"[DataSourceLoader] Found data source: {dllPath} name={instance.Name}");
+                            Console.WriteLine($"[DataSourceLoader] Found data source: {dllPath}");
                     }
                 }
                 catch (Exception ex)

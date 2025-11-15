@@ -10,11 +10,12 @@ namespace OpenGaugeServer
         {
             var dataSources = DataSourceLoader.LoadDataSources(dir);
 
-            foreach (var dataSource in dataSources)
+            foreach (var type in dataSources)
             {
-                var key = dataSource.Name.ToLower();
+                var instance = (IDataSource)Activator.CreateInstance(type, [ConfigManager.Config])!;
+                var key = instance.Name.ToLower();
 
-                _pluginTypes[key] = dataSource.GetType();
+                _pluginTypes[key] = type;
             }
         }
 
@@ -26,7 +27,7 @@ namespace OpenGaugeServer
                 Console.WriteLine($"[DataSourceFactory] Create data source '{sourceName}' key={key} keys={string.Join(",", _pluginTypes.Keys)}");
 
             if (_pluginTypes.TryGetValue(key, out var type))
-                return (IDataSource)Activator.CreateInstance(type)!;
+                return (IDataSource)Activator.CreateInstance(type, [ConfigManager.Config])!;
 
             throw new NotSupportedException($"Unknown data source: {sourceName} key={key} keys={string.Join(",", _pluginTypes.Keys)}");
         }

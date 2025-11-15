@@ -7,8 +7,7 @@ namespace OpenGaugeAbstractions
     public class Config
     {
         /// <summary>
-        /// Which data source to use.
-        /// <type>'SimConnect' | 'emulator'</type>
+        /// Which data source to use. The default config uses SimConnect.
         /// </summary>
         public required string Source { get; set; }
         /// <summary>

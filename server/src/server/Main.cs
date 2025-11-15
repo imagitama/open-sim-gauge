@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Globalization;
 using OpenGaugeAbstractions;
 
 namespace OpenGaugeServer
@@ -12,6 +11,10 @@ namespace OpenGaugeServer
             Console.WriteLine("Starting up...");
 
             var config = await ConfigManager.LoadConfig();
+
+            var cliArgs = Cli.ParseArgs(args);
+
+            Cli.ApplyArgsToConfig(config, cliArgs);
 
             var server = new Server(config.Server.IpAddress, config.Server.Port);
 

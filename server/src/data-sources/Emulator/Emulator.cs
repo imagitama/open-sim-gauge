@@ -24,7 +24,7 @@ public class EmulatorDataSource : DataSourceBase
 
     private readonly List<CallbackInfo> _simVarCallbacks = [];
 
-    public EmulatorDataSource()
+    public EmulatorDataSource(Config config)
     {
         Name = "Emulator";
     }
