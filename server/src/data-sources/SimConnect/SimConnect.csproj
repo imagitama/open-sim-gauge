@@ -3,7 +3,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>SimConnect</AssemblyName>
+        <AssemblyName>SimConnectDataSource</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\abstractions\OpenSimGaugeAbstractions.csproj" />
@@ -13,17 +13,14 @@
             <HintPath>libs/Microsoft.FlightSimulator.SimConnect.dll</HintPath>
         </Reference>
     </ItemGroup>
-    <ItemGroup>
-        <LibFiles Include="libs\**\*" />
-    </ItemGroup>
     <Target Name="CopyPluginToServer" AfterTargets="Build">
         <Copy 
             SourceFiles="$(TargetDir)$(AssemblyName).dll" 
-            DestinationFolder="../" 
+            DestinationFolder="../../server/data-sources" 
             OverwriteReadOnlyFiles="true" />
-        <Copy
-      SourceFiles="@(LibFiles)"
-      DestinationFolder="../libs/%(RecursiveDir)"
-      OverwriteReadOnlyFiles="true" />
+    </Target>
+    <Target Name="CopySimConnectOnPublish" AfterTargets="Publish">
+        <Copy SourceFiles="libs\Microsoft.FlightSimulator.SimConnect.dll" DestinationFolder="$(PublishDir)" />
+        <Copy SourceFiles="libs\SimConnect.dll" DestinationFolder="$(PublishDir)" />
     </Target>
 </Project>

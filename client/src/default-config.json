@@ -10,6 +10,7 @@
       "debug": false,
       "skip": false,
       "name": "Six Pack Panel",
+      "ontop": true,
       // "vehicle": "*Cessna Skyhawk*",
       // "screen": 0,
       // "fullscreen": false,
@@ -91,6 +92,7 @@
       "debug": false,
       "name": "Piper Seminole Engine Panel",
       "vehicle": "*PA44*",
+      "ontop": true,
       "width": 1024,
       "height": 768,
       "background": [

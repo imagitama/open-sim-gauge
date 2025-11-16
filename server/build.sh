@@ -50,11 +50,7 @@ for projdir in "$DATA_SRC_ROOT"/*/ ; do
     DEST="$DATA_OUT_ROOT"
     mkdir -p "$DEST"
 
-    cp "$OUT_DIR/$name.dll" "$DEST"/
-
-    if [ -d "$projdir/libs" ]; then
-        cp -r "$projdir/libs" "$DEST/libs"
-    fi
+    cp "$OUT_DIR"/*.dll "$DEST"/
 done
 
 echo "Copying..."
@@ -63,8 +59,6 @@ cp ./src/default-config.json "$SCRIPT_DIR/dist/$platform/config.json"
 echo "Zipping..."
 zip_name="server-${version}-${platform}.zip"
 (cd "$SCRIPT_DIR/dist/$platform" && zip -r "$SCRIPT_DIR/dist/$zip_name" .)
-
-# (cd "$SCRIPT_DIR/dist" && zip -r "$SCRIPT_DIR/dist/$zip_name" "data-sources")
 
 echo "Created $SCRIPT_DIR/dist/$zip_name"
 echo "Done"

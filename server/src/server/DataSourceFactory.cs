@@ -24,7 +24,7 @@ namespace OpenGaugeServer
             string key = sourceName.ToLower();
 
             if (ConfigManager.Config.Debug)
-                Console.WriteLine($"[DataSourceFactory] Create data source '{sourceName}' key={key} keys={string.Join(",", _pluginTypes.Keys)}");
+                Console.WriteLine($"[DataSourceFactory] Creating data source '{sourceName}'...");
 
             if (_pluginTypes.TryGetValue(key, out var type))
                 return (IDataSource)Activator.CreateInstance(type, [ConfigManager.Config])!;

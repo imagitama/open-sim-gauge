@@ -18,7 +18,11 @@ namespace OpenGaugeServer
 
             var server = new Server(config.Server.IpAddress, config.Server.Port);
 
+#if DEBUG
+            DataSourceFactory.LoadDataSources(PathHelper.GetFilePath("server/data-sources", forceToGitRoot: false));
+#else
             DataSourceFactory.LoadDataSources(PathHelper.GetFilePath("data-sources", forceToGitRoot: false));
+#endif
 
             var dataSource = DataSourceFactory.Create(config.Source);
 

@@ -11,4 +11,13 @@
   <ItemGroup>
     <ProjectReference Include="..\abstractions\OpenSimGaugeAbstractions.csproj"  />
   </ItemGroup>
+  <ItemGroup>
+    <DataSourceDlls Include="data-sources\**\*.dll" />
+  </ItemGroup>
+  <Target Name="CopyDataSourceDlls" AfterTargets="AfterBuild">
+    <Copy
+      SourceFiles="@(DataSourceDlls)"
+      DestinationFolder="$(OutDir)data-sources\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
 </Project>

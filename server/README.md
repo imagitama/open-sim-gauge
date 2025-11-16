@@ -56,6 +56,12 @@ The existing SimConnect data source is designed this way.
 
 ## Developing
 
+You must build the data sources before they work in development:
+
+```cli
+dotnet build ./src/data-sources/Emulator
+```
+
 ```cli
 dotnet run ./src/server
 ```
