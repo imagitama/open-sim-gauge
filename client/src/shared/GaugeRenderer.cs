@@ -74,7 +74,6 @@ namespace OpenGaugeClient
                         var clipImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, clipConfig!.Image!);
                         var absoluteClipImagePath = PathHelper.GetFilePath(clipImagePath);
 
-
                         var clipWidth = clipConfig.Width ?? _gauge.Width;
                         var clipHeight = clipConfig.Height ?? _gauge.Height;
 
@@ -197,12 +196,12 @@ namespace OpenGaugeClient
                                 var pathImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, pathConfig!.Image!);
                                 var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
 
-                                pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, value, _gauge, useCachedPositions);
+                                pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, layer, value, useCachedPositions);
 
                                 pathValue = $"=>{pathPositionResult}";
 
                                 if (pathConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}°");
+                                    Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}");
                             }
 
                             var initialRotation = layer.Rotate;
@@ -307,25 +306,6 @@ namespace OpenGaugeClient
                                         _renderScaling
                                     );
 
-                                    //                                     Bitmap bmp = SvgUtils.RenderTextCrisp(
-                                    //                                         text,
-
-                                    //                                         _gauge.Width,
-
-                                    // _gauge.Height,
-                                    // "Arial",
-                                    // (float)textRef.FontSize,
-                                    // textRef.Color
-                                    //                                     );
-
-                                    // var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    // var destRect = new Rect(0, 0, pixelWidth, pixelHeight);
-
-                                    // var dpw = bmp.PixelSize.Width;
-                                    // var dph = bmp.PixelSize.Height;
-
-                                    // Rect destRect = new Rect(0, 0, dpw, dph);
-
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
                                     var destRect = new Rect(0, 0, layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height);
 
@@ -420,12 +400,13 @@ namespace OpenGaugeClient
             ctx.DrawText(formattedText, new Point(textX - 10, textY - 10));
         }
 
-        private SKPoint GetPathPosition(string svgPath, PathConfig pathConfig, double value, Gauge gauge, bool useCachedPositions)
+        private SKPoint GetPathPosition(string svgPath, PathConfig pathConfig, Layer layer, double value, bool useCachedPositions)
         {
             var skPath = _svgCache.LoadSKPath(
                 svgPath,
-                pathConfig.Width * _renderScaling,
-                pathConfig.Height * _renderScaling
+                pathConfig.Width,
+                pathConfig.Height,
+                normalizeCenter: true
             );
 
             using var pathMeasure = new SKPathMeasure(skPath, false);
@@ -445,10 +426,17 @@ namespace OpenGaugeClient
             double relativeX = position.X - centerX;
             double relativeY = position.Y - centerY;
 
-            var (offsetX, offsetY) = pathConfig.Position.Resolve(gauge.Width, gauge.Height, useCachedPositions);
+            var layerWidth = layer.Width ?? _gauge.Width;
+            var layerHeight = layer.Height ?? _gauge.Height;
 
-            var x = (float)(relativeX + offsetX);
-            var y = (float)(relativeY + offsetY);
+            var (offsetX, offsetY) =
+                pathConfig.Position.Resolve(layerWidth, layerHeight, useCachedPositions);
+
+            float layerCenterX = (float)layerWidth / 2f;
+            float layerCenterY = (float)layerHeight / 2f;
+
+            float x = (float)(position.X + offsetX - layerCenterX);
+            float y = (float)(position.Y + offsetY - layerCenterY);
 
             return new SKPoint(x, y);
         }

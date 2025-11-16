@@ -1,12 +1,14 @@
+using System.Text.Json;
 using OpenGaugeAbstractions;
 
 public class EmulatorDataSource : DataSourceBase
 {
+    private Config _config;
     private readonly string[] _aircraftTitles =
     {
-            "Cessna Skyhawk",
-            "Piper PA44"
-        };
+        "Cessna Skyhawk",
+        "Piper PA44"
+    };
     private Action<string>? _vehicleCallback;
     private readonly Random _rand = new();
     private readonly Dictionary<string, Func<string?, object>> _simVars = [];
@@ -26,7 +28,9 @@ public class EmulatorDataSource : DataSourceBase
 
     public EmulatorDataSource(Config config)
     {
+        _config = config;
         Name = "Emulator";
+        CurrentVehicleName = _aircraftTitles[0];
     }
 
     public override void WatchVar(string varName)
@@ -116,39 +120,50 @@ public class EmulatorDataSource : DataSourceBase
         _simVars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
         _simVars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
 
-        Task.Run(async () =>
+        if (_config.SourceOptions != null)
         {
-            var remainingTitles = new List<string>(_aircraftTitles);
+            var json = JsonSerializer.SerializeToElement(_config.SourceOptions);
+            bool useRandomVehicles = json.GetProperty("userandomvehicles").GetBoolean();
 
-            while (!_cts.Token.IsCancellationRequested)
+            Console.WriteLine($"[EMULATOR] useRandomVehicles={useRandomVehicles}");
+
+            if (useRandomVehicles)
             {
-                if (remainingTitles.Count == 0)
-                    remainingTitles = new List<string>(_aircraftTitles);
-
-                int index = _rand.Next(remainingTitles.Count);
-                var newName = remainingTitles[index];
-
-                if (newName != CurrentVehicleName)
+                Task.Run(async () =>
                 {
-                    CurrentVehicleName = newName;
+                    var remainingTitles = new List<string>(_aircraftTitles);
 
-                    Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
+                    while (!_cts.Token.IsCancellationRequested)
+                    {
+                        if (remainingTitles.Count == 0)
+                            remainingTitles = new List<string>(_aircraftTitles);
 
-                    _vehicleCallback?.Invoke(CurrentVehicleName);
-                }
+                        int index = _rand.Next(remainingTitles.Count);
+                        var newName = remainingTitles[index];
 
-                remainingTitles.RemoveAt(index);
+                        if (newName != CurrentVehicleName)
+                        {
+                            CurrentVehicleName = newName;
 
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
+                            Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
+
+                            _vehicleCallback?.Invoke(CurrentVehicleName);
+                        }
+
+                        remainingTitles.RemoveAt(index);
+
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            break;
+                        }
+                    }
+                }, _cts.Token);
             }
-        }, _cts.Token);
+        }
 
         Task.Run(async () =>
         {

@@ -24,6 +24,10 @@ namespace OpenGaugeAbstractions
         /// Log extra output to help diagnose issues.
         /// </summary>
         public bool Debug { get; set; } = false;
+        /// <summary>
+        /// Arbitrary options provided to the data source. Currently used for configuring the emulator.
+        /// </summary>
+        public object? SourceOptions { get; set; }
     }
 
     [GenerateMarkdownTable]

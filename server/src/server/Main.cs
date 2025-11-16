@@ -106,10 +106,30 @@ namespace OpenGaugeServer
             var cts = new CancellationTokenSource();
 
             var httpTask = server.StartAsync(cts.Token);
-            var simTask = Task.Run(() => dataSource.Listen(config), cts.Token);
+
+            var simTask = Task.Run(() =>
+            {
+                try
+                {
+                    dataSource.Listen(config);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Listen failed: " + ex);
+                }
+            });
+
             var consoleTask = Task.Run(() => ReadConsoleInput(cts, dataSource, server));
 
-            await Task.WhenAll(httpTask, simTask, consoleTask);
+            try
+            {
+                await Task.WhenAll(httpTask, simTask, consoleTask);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Fatal error: " + ex);
+                cts.Cancel();
+            }
 
             Console.WriteLine("Shutting down...");
             cts.Cancel();

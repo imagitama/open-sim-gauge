@@ -69,6 +69,9 @@ namespace OpenGaugeClient.Client
                 _panelRenderers[panel.Name] = renderer;
             }
 
+            if (_panelRenderers.Count == 0)
+                throw new Exception("No panels were initialized");
+
             _isInitialized = true;
         }
 
