@@ -87,6 +87,10 @@ namespace OpenGaugeClient.Client
 
             var config = await ConfigManager.LoadConfig(configPath);
 
+            var cliArgs = Cli.ParseArgs(Program.StartupArgs);
+
+            Cli.ApplyArgsToConfig(config, cliArgs);
+
             Console.WriteLine($"Loaded {config.Panels.Count} panels and {config.Gauges.Count} gauges");
 
             var persistedState = await PersistanceManager.LoadState();
@@ -99,7 +103,7 @@ namespace OpenGaugeClient.Client
 
             _panelManager = new PanelManager();
 
-            if (ConfigManager.Debug)
+            if (ConfigManager.Config.Debug)
                 _panelManager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
 
             var client = new ClientHandler(config.Server.IpAddress, config.Server.Port);

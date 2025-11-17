@@ -12,7 +12,7 @@ namespace OpenGaugeClient
         {
             string absoluteFilePath = PathHelper.GetFilePath(FileName, forceToGitRoot: false);
 
-            if (ConfigManager.Debug == true)
+            if (ConfigManager.Config.Debug == true)
                 Console.WriteLine($"[PersistanceManager] Loading: {absoluteFilePath}");
 
             if (!File.Exists(absoluteFilePath))
@@ -71,7 +71,7 @@ namespace OpenGaugeClient
             string newJson = JsonSerializer.Serialize(State, options);
             await File.WriteAllTextAsync(absoluteFilePath, newJson);
 
-            if (ConfigManager.Debug == true)
+            if (ConfigManager.Config.Debug == true)
                 Console.WriteLine($"[PersistanceManager] Updated {key}={value} in {absoluteFilePath}");
         }
 
@@ -79,7 +79,7 @@ namespace OpenGaugeClient
         {
             string absoluteFilePath = PathHelper.GetFilePath(FileName);
 
-            if (ConfigManager.Debug == true)
+            if (ConfigManager.Config.Debug == true)
                 Console.WriteLine($"[PersistanceManager] Creating: {absoluteFilePath}");
 
             defaultState ??= new PersistedState();

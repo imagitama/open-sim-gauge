@@ -11,6 +11,7 @@
       "skip": false,
       "name": "Six Pack Panel",
       "ontop": true,
+      // "clip": false,
       // "vehicle": "*Cessna Skyhawk*",
       // "screen": 0,
       // "fullscreen": false,

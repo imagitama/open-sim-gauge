@@ -33,6 +33,27 @@ namespace OpenGaugeClient
             _debug = debug;
         }
 
+        private sealed class LayerRenderData
+        {
+            public Layer Layer { get; set; }
+            public double LayerWidth { get; set; }
+            public double LayerHeight { get; set; }
+            public double LayerOriginX { get; set; }
+            public double LayerOriginY { get; set; }
+            public double LayerPosX { get; set; }
+            public double LayerPosY { get; set; }
+
+            public double OffsetX { get; set; }
+            public double OffsetY { get; set; }
+            public double RotationAngle { get; set; }
+
+            public SKPoint? PathPosition { get; set; }
+
+            public Matrix FinalTransform { get; set; }
+
+            public string DebugText { get; set; } = "";
+        }
+
         public void DrawGaugeLayers(DrawingContext ctx, bool useCachedPositions = true, bool? disableClipping = null)
         {
             var layersToDraw = _gauge.Layers.ToArray().Reverse().ToArray();
@@ -53,11 +74,13 @@ namespace OpenGaugeClient
                 Matrix.CreateScale(scale, scale) *
                 Matrix.CreateTranslation(x, y);
 
+            var layerRenderDatas = new List<LayerRenderData>();
+
             using (ctx.PushTransform(gaugeTransform))
             {
                 using (ctx.PushTransform(Matrix.CreateTranslation(-gaugeOriginX, -gaugeOriginY)))
                 {
-                    if (ConfigManager.Debug || _debug == true)
+                    if (ConfigManager.Config.Debug || _debug == true)
                     {
                         DrawGaugeDebug(ctx, _gauge, x, y);
                     }
@@ -125,11 +148,6 @@ namespace OpenGaugeClient
                             double offsetX = 0;
                             double offsetY = 0;
 
-                            string translateXValue = "";
-                            string translateYValue = "";
-                            string rotationValue = "";
-                            string pathValue = "";
-
                             if (layer.Transform?.Rotate?.Var != null && layer.Transform.Rotate.Skip != true)
                             {
                                 var rotateConfig = layer.Transform.Rotate;
@@ -138,10 +156,6 @@ namespace OpenGaugeClient
                                 var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
 
                                 rotationAngle = ComputeValue(rotateConfig, varValue, layer);
-
-                                rotationValue = varValue == null
-                                    ? "null"
-                                    : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(rotationAngle * 10) / 10:F1}";
 
                                 if (rotateConfig.Debug == true)
                                     Console.WriteLine($"[PanelRenderer] Rotate '{simVarName}' ({simVarUnit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
@@ -156,10 +170,6 @@ namespace OpenGaugeClient
 
                                 offsetX = ComputeValue(translateConfig, varValue);
 
-                                translateXValue = varValue == null
-                                    ? "null"
-                                    : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(offsetX * 10) / 10:F1}";
-
                                 if (translateConfig.Debug == true)
                                     Console.WriteLine($"[PanelRenderer] TranslateX '{simVarName}' ({simVarUnit}) {varValue} => {offsetX}°");
                             }
@@ -172,10 +182,6 @@ namespace OpenGaugeClient
                                 var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
 
                                 offsetY = ComputeValue(translateConfig, varValue);
-
-                                translateYValue = varValue == null
-                                    ? "null"
-                                    : $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(offsetY * 10) / 10:F1}";
 
                                 if (translateConfig.Debug == true)
                                     Console.WriteLine($"[PanelRenderer] TranslateY '{simVarName}' ({simVarUnit}) {varValue} => {offsetY}°");
@@ -200,8 +206,6 @@ namespace OpenGaugeClient
                                 var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
 
                                 pathPositionResult = SvgUtils.GetPathPosition(_svgCache, absolutePathImagePath, pathConfig, layerWidth, layerHeight, value, useCachedPositions);
-
-                                pathValue = $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(pathPositionResult.Value.X)},{Math.Truncate(pathPositionResult.Value.Y)}";
 
                                 if (pathConfig.Debug == true)
                                     Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}");
@@ -286,11 +290,6 @@ namespace OpenGaugeClient
                                     var destRect = new Rect(0, 0, layerWidth, layerHeight);
 
                                     ctx.DrawImage(bmp, srcRect, destRect);
-
-                                    if (ConfigManager.Debug || layer.Debug == true)
-                                    {
-                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 2), destRect);
-                                    }
                                 }
 
                                 if (layer.Image != null)
@@ -320,48 +319,54 @@ namespace OpenGaugeClient
                                     {
                                         ctx.DrawImage(bmp, srcRect, destRect);
                                     }
-
-                                    if (ConfigManager.Debug || layer.Debug == true)
-                                    {
-                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 1), destRect);
-                                    }
                                 }
                             }
 
-                            if (layer.Debug == true)
+                            if (layer.Debug || ConfigManager.Config.Debug)
                             {
-                                var debugX = layerPosX + offsetX;
-                                var debugY = layerPosY + offsetY;
-
-                                var transformedOrigin = Matrix.CreateTranslation(debugX, debugY);
-
-                                using (ctx.PushTransform(transformedOrigin))
+                                layerRenderDatas.Add(new LayerRenderData
                                 {
-                                    const int crossSize = 10;
-                                    ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(-crossSize, 0), new Point(crossSize, 0));
-                                    ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(0, -crossSize), new Point(0, crossSize));
+                                    Layer = layer,
+                                    LayerWidth = layerWidth,
+                                    LayerHeight = layerHeight,
+                                    LayerOriginX = layerOriginX,
+                                    LayerOriginY = layerOriginY,
+                                    LayerPosX = layerPosX,
+                                    LayerPosY = layerPosY,
+                                    OffsetX = offsetX,
+                                    OffsetY = offsetY,
+                                    RotationAngle = rotationAngle,
+                                    PathPosition = pathPositionResult,
+                                    FinalTransform = layerTransform
+                                });
+                            }
+                        }
 
-                                    var strings = new List<string>();
+                        foreach (var layerRenderData in layerRenderDatas)
+                        {
+                            using (ctx.PushTransform(layerRenderData.FinalTransform))
+                            {
+                                const int crossSize = 10;
+                                ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(-crossSize, 0), new Point(crossSize, 0));
+                                ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(0, -crossSize), new Point(0, crossSize));
 
-                                    if (!string.IsNullOrEmpty(rotationValue))
-                                    {
-                                        strings.Add($"{rotationValue}°");
-                                    }
-                                    if (!string.IsNullOrEmpty(translateXValue))
-                                    {
-                                        strings.Add($"{translateXValue}px");
-                                    }
-                                    if (!string.IsNullOrEmpty(translateYValue))
-                                    {
-                                        strings.Add($"{translateYValue}px");
-                                    }
-                                    if (!string.IsNullOrEmpty(pathValue))
-                                    {
-                                        strings.Add($"{pathValue}");
-                                    }
+                                var strings = new List<string>();
 
-                                    DrawDebugText(ctx, string.Join(",", strings), Brushes.LightBlue, new Point(2, 0), 1);
-                                }
+                                if (layerRenderData.RotationAngle != 0)
+                                    strings.Add($"rot={Math.Truncate(layerRenderData.RotationAngle)}°");
+
+                                if (layerRenderData.OffsetX != 0)
+                                    strings.Add($"x={Math.Truncate(layerRenderData.OffsetX)}px");
+
+                                if (layerRenderData.OffsetY != 0)
+                                    strings.Add($"y={Math.Truncate(layerRenderData.OffsetY)}px");
+
+                                if (layerRenderData.PathPosition != null)
+                                    strings.Add($"path={Math.Truncate(layerRenderData.PathPosition.Value.X)},{Math.Truncate(layerRenderData.PathPosition.Value.Y)}");
+
+                                DrawDebugText(ctx, string.Join("\n", strings), Brushes.LightBlue, new Point(2, 0), 1);
+
+                                ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 1), new Rect(0, 0, layerRenderData.LayerWidth, layerRenderData.LayerHeight));
                             }
                         }
                     }
@@ -387,7 +392,7 @@ namespace OpenGaugeClient
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Arial"),
-                14,
+                16,
                 Brushes.White
             );
 

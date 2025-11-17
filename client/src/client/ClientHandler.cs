@@ -62,7 +62,7 @@ namespace OpenGaugeClient.Client
                 Payload = payload
             };
 
-            if (ConfigManager.Debug)
+            if (ConfigManager.Config.Debug)
             {
                 Console.WriteLine($"[Client] Send message {message.ToString()}");
             }

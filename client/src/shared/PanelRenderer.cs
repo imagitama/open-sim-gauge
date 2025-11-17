@@ -73,7 +73,7 @@ namespace OpenGaugeClient
             Canvas.SetTop(_imageControl, 0);
             canvas.Children.Add(_imageControl);
 
-            var debug = ConfigManager.Debug || panel.Debug == true;
+            var debug = ConfigManager.Config.Debug || panel.Debug == true;
 
             _window = PanelHelper.CreatePanelWindowFromPanel(_panel);
             _window.Content = canvas;
@@ -81,7 +81,7 @@ namespace OpenGaugeClient
             if (disableRenderOnTop == true)
                 _window.Topmost = false;
 
-            if (ConfigManager.Debug || panel.Debug == true)
+            if (ConfigManager.Config.Debug || panel.Debug == true)
             {
                 _window.Cursor = new Cursor(StandardCursorType.SizeAll);
 
@@ -200,7 +200,7 @@ namespace OpenGaugeClient
             if (gridSize != null)
                 RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (double)gridSize);
 
-            if (_panel.Debug == true || ConfigManager.Debug == true)
+            if (_panel.Debug == true || ConfigManager.Config.Debug == true)
                 DrawPanelDebugInfo(ctx);
 
             if (_isConnected == false)

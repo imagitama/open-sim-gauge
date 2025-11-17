@@ -262,8 +262,6 @@ namespace OpenGaugeClient
                 throw;
             }
         }
-
-        public static bool Debug => Config?.Debug == true;
     }
 
     [GenerateMarkdownTable]

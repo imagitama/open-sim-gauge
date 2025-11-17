@@ -44,11 +44,7 @@ namespace OpenGaugeServer
                         Console.WriteLine($"[DataSourceLoader] Load DLL: {dllPath}");
 
                     var alc = new AssemblyLoadContext(dllPath, isCollectible: true);
-                    var asm = alc.LoadFromAssemblyPath(Path.GetFullPath(dllPath));
-
-                    if (asm == null)
-                        Console.WriteLine($"[DataSourceLoader] DLL is invalid (null)");
-
+                    var asm = alc.LoadFromAssemblyPath(Path.GetFullPath(dllPath)) ?? throw new Exception($"Failed to load DLL {dllPath}");
                     var types = asm.GetTypes()
                         .Where(t => typeof(IDataSource).IsAssignableFrom(t)
                                     && !t.IsAbstract
