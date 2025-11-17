@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../shared/OpenSimGaugeShared.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="TUnit" Version="1.2.3" />
+    </ItemGroup>
+    <Target Name="CopyConfigForRunOrDebug" AfterTargets="Build">
+        <Copy SourceFiles="single-path-line.svg" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    </Target>
+</Project>

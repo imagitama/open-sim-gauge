@@ -151,5 +151,42 @@ namespace OpenGaugeClient
             using var outStream = new MemoryStream(data.ToArray());
             return new Bitmap(outStream);
         }
+
+        public static SKPoint GetPathPosition(SvgCache svgCache, string svgPath, PathConfig pathConfig, double containerWidth, double containerHeight, double value, bool useCachedPositions)
+        {
+            var skPath = svgCache.LoadSKPath(
+                svgPath,
+                pathConfig.Width,
+                pathConfig.Height
+            );
+
+            using var pathMeasure = new SKPathMeasure(skPath, false);
+            float totalLength = pathMeasure.Length;
+
+            value = Math.Clamp(value, -1.0, 1.0);
+            double t = (value + 1.0) / 2.0;
+            float distance = (float)(t * totalLength);
+
+            if (!pathMeasure.GetPositionAndTangent(distance, out var position, out _))
+                return SKPoint.Empty;
+
+            var bounds = skPath.Bounds;
+            float centerX = bounds.MidX;
+            float centerY = bounds.MidY;
+
+            double relativeX = position.X - centerX;
+            double relativeY = position.Y - centerY;
+
+            var (offsetX, offsetY) =
+                pathConfig.Position.Resolve(containerWidth, containerHeight, useCachedPositions);
+
+            float containerCenterX = (float)containerWidth / 2f;
+            float containerCenterY = (float)containerHeight / 2f;
+
+            float x = (float)(position.X + offsetX - containerCenterX);
+            float y = (float)(position.Y + offsetY - containerCenterY);
+
+            return new SKPoint(x, y);
+        }
     }
 }
