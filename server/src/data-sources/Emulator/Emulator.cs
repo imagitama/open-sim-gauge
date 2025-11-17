@@ -213,7 +213,7 @@ public class EmulatorDataSource : DataSourceBase
                     }
                     else
                     {
-                        Console.WriteLine($"Unknown SimVar: {info.name}");
+                        Console.WriteLine($"Unknown SimVar: {info.name} ({string.Join(",", _simVars.Keys)})");
                     }
                 }
 

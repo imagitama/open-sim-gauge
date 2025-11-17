@@ -11,12 +11,17 @@ namespace OpenGaugeClient.Client
 {
     public class Program
     {
+        public static string[] StartupArgs = Array.Empty<string>();
+        public static StreamWriter FileLogger;
+
         public static void Main(string[] args)
         {
+            StartupArgs = args;
+
             string logPath = Path.Combine(AppContext.BaseDirectory, "client.log");
-            var fileWriter = new StreamWriter(logPath, append: true) { AutoFlush = true };
-            Console.SetOut(new TeeTextWriter(Console.Out, fileWriter));
-            Console.SetError(new TeeTextWriter(Console.Error, fileWriter));
+            FileLogger = new StreamWriter(logPath, append: true) { AutoFlush = true };
+            Console.SetOut(new TeeTextWriter(Console.Out, FileLogger));
+            Console.SetError(new TeeTextWriter(Console.Error, FileLogger));
 
             Console.WriteLine("Starting up...");
             Console.Out.Flush();
@@ -55,11 +60,21 @@ namespace OpenGaugeClient.Client
         {
             AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
-                Console.WriteLine($"[Global] Unhandled exception: {e.ExceptionObject}");
+                var msg = $"[Global] Unhandled exception: {e.ExceptionObject}";
+#if DEBUG
+                Console.WriteLine(msg);
+#else
+                Program.FileLogger.WriteLine(msg);
+#endif
             };
             Dispatcher.UIThread.UnhandledException += (_, e) =>
             {
-                Console.WriteLine($"[UI Thread] {e.Exception}");
+                var msg = $"[UI Thread] {e.Exception}";
+#if DEBUG
+                Console.WriteLine(msg);
+#else
+                Program.FileLogger.WriteLine(msg);
+#endif
                 e.Handled = true;
             };
 
@@ -68,7 +83,9 @@ namespace OpenGaugeClient.Client
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             }
 
-            var config = await ConfigManager.LoadConfig();
+            var configPath = GetConfigPathFromArgs();
+
+            var config = await ConfigManager.LoadConfig(configPath);
 
             Console.WriteLine($"Loaded {config.Panels.Count} panels and {config.Gauges.Count} gauges");
 
@@ -179,6 +196,21 @@ namespace OpenGaugeClient.Client
             await Task.WhenAll(connectTask);
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private static string? GetConfigPathFromArgs()
+        {
+            var args = Program.StartupArgs;
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--config" && i + 1 < args.Length)
+                {
+                    return args[i + 1];
+                }
+            }
+
+            return null;
         }
 
         // TODO: Move to some helper

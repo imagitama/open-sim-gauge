@@ -114,7 +114,10 @@ namespace OpenGaugeClient
                             if (layer.Skip == true)
                                 continue;
 
-                            var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height, useCachedPositions);
+                            var layerWidth = layer.Width ?? _gauge.Width;
+                            var layerHeight = layer.Height ?? _gauge.Height;
+
+                            var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(layerWidth, layerHeight, useCachedPositions);
 
                             var (layerPosX, layerPosY) = layer.Position.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
@@ -196,9 +199,9 @@ namespace OpenGaugeClient
                                 var pathImagePath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, pathConfig!.Image!);
                                 var absolutePathImagePath = PathHelper.GetFilePath(pathImagePath);
 
-                                pathPositionResult = GetPathPosition(absolutePathImagePath, pathConfig, layer, value, useCachedPositions);
+                                pathPositionResult = SvgUtils.GetPathPosition(_svgCache, absolutePathImagePath, pathConfig, layerWidth, layerHeight, value, useCachedPositions);
 
-                                pathValue = $"=>{pathPositionResult}";
+                                pathValue = $"{Math.Truncate(Convert.ToDouble(varValue) * 10) / 10:F1}=>{Math.Truncate(pathPositionResult.Value.X)},{Math.Truncate(pathPositionResult.Value.Y)}";
 
                                 if (pathConfig.Debug == true)
                                     Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}");
@@ -221,33 +224,6 @@ namespace OpenGaugeClient
                             if (pathPositionResult != null)
                             {
                                 layerTransform *= Matrix.CreateTranslation(pathPositionResult.Value.X, pathPositionResult.Value.Y);
-                            }
-
-                            if (ConfigManager.Debug == true || layer.Debug == true)
-                            {
-                                var debugTransform =
-                                    Matrix.CreateTranslation(-layerOriginX, -layerOriginY) *
-                                    Matrix.CreateTranslation(layerPosX + offsetX, layerPosY + offsetY);
-
-                                using (ctx.PushTransform(debugTransform))
-                                {
-                                    var strings = new List<string>();
-
-                                    if (!string.IsNullOrEmpty(rotationValue))
-                                    {
-                                        strings.Add($"{rotationValue}°");
-                                    }
-                                    if (!string.IsNullOrEmpty(translateXValue))
-                                    {
-                                        strings.Add($"{translateXValue}px");
-                                    }
-                                    if (!string.IsNullOrEmpty(translateYValue))
-                                    {
-                                        strings.Add($"{translateYValue}px");
-                                    }
-
-                                    DrawDebugText(ctx, string.Join(",", strings), Brushes.LightBlue, new Point(0, 0), 3);
-                                }
                             }
 
                             using (ctx.PushTransform(layerTransform))
@@ -307,7 +283,7 @@ namespace OpenGaugeClient
                                     );
 
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height);
+                                    var destRect = new Rect(0, 0, layerWidth, layerHeight);
 
                                     ctx.DrawImage(bmp, srcRect, destRect);
 
@@ -338,7 +314,7 @@ namespace OpenGaugeClient
                                     int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
 
                                     var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, layer.Width ?? _gauge.Width, layer.Height ?? _gauge.Height);
+                                    var destRect = new Rect(0, 0, layerWidth, layerHeight);
 
                                     using (ctx.PushRenderOptions(new RenderOptions { EdgeMode = EdgeMode.Antialias, BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
                                     {
@@ -347,7 +323,7 @@ namespace OpenGaugeClient
 
                                     if (ConfigManager.Debug || layer.Debug == true)
                                     {
-                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 2), destRect);
+                                        ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 1), destRect);
                                     }
                                 }
                             }
@@ -364,6 +340,27 @@ namespace OpenGaugeClient
                                     const int crossSize = 10;
                                     ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(-crossSize, 0), new Point(crossSize, 0));
                                     ctx.DrawLine(new Pen(Brushes.LightBlue, 4), new Point(0, -crossSize), new Point(0, crossSize));
+
+                                    var strings = new List<string>();
+
+                                    if (!string.IsNullOrEmpty(rotationValue))
+                                    {
+                                        strings.Add($"{rotationValue}°");
+                                    }
+                                    if (!string.IsNullOrEmpty(translateXValue))
+                                    {
+                                        strings.Add($"{translateXValue}px");
+                                    }
+                                    if (!string.IsNullOrEmpty(translateYValue))
+                                    {
+                                        strings.Add($"{translateYValue}px");
+                                    }
+                                    if (!string.IsNullOrEmpty(pathValue))
+                                    {
+                                        strings.Add($"{pathValue}");
+                                    }
+
+                                    DrawDebugText(ctx, string.Join(",", strings), Brushes.LightBlue, new Point(2, 0), 1);
                                 }
                             }
                         }
@@ -378,7 +375,7 @@ namespace OpenGaugeClient
 
             var pen = new Pen(Brushes.Pink, 1)
             {
-                DashStyle = new DashStyle(new double[] { 6, 4 }, 0)
+                DashStyle = new DashStyle([6, 4], 0)
             };
             ctx.DrawRectangle(pen, gaugeRect);
 
@@ -390,55 +387,17 @@ namespace OpenGaugeClient
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Arial"),
-                16,
+                14,
                 Brushes.White
             );
 
-            var textX = canvasWidth - formattedText.Width;
-            var textY = canvasHeight - formattedText.Height;
+            var textX = canvasWidth - formattedText.Width - 5;
+            var textY = canvasHeight + 5;
 
-            ctx.DrawText(formattedText, new Point(textX - 10, textY - 10));
-        }
+            ctx.DrawText(formattedText, new Point(textX, textY));
 
-        private SKPoint GetPathPosition(string svgPath, PathConfig pathConfig, Layer layer, double value, bool useCachedPositions)
-        {
-            var skPath = _svgCache.LoadSKPath(
-                svgPath,
-                pathConfig.Width,
-                pathConfig.Height,
-                normalizeCenter: true
-            );
-
-            using var pathMeasure = new SKPathMeasure(skPath, false);
-            float totalLength = pathMeasure.Length;
-
-            value = Math.Clamp(value, -1.0, 1.0);
-            double t = (value + 1.0) / 2.0;
-            float distance = (float)(t * totalLength);
-
-            if (!pathMeasure.GetPositionAndTangent(distance, out var position, out _))
-                return SKPoint.Empty;
-
-            var bounds = skPath.Bounds;
-            float centerX = bounds.MidX;
-            float centerY = bounds.MidY;
-
-            double relativeX = position.X - centerX;
-            double relativeY = position.Y - centerY;
-
-            var layerWidth = layer.Width ?? _gauge.Width;
-            var layerHeight = layer.Height ?? _gauge.Height;
-
-            var (offsetX, offsetY) =
-                pathConfig.Position.Resolve(layerWidth, layerHeight, useCachedPositions);
-
-            float layerCenterX = (float)layerWidth / 2f;
-            float layerCenterY = (float)layerHeight / 2f;
-
-            float x = (float)(position.X + offsetX - layerCenterX);
-            float y = (float)(position.Y + offsetY - layerCenterY);
-
-            return new SKPoint(x, y);
+            if (gauge.Grid != null && gauge.Grid > 0)
+                RenderingHelper.DrawGrid(ctx, gauge.Width, gauge.Height, (double)gauge.Grid);
         }
 
         static double ComputeValue(TransformConfig config, object? varValue, Layer? layer = null)

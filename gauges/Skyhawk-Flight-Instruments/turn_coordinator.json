@@ -26,15 +26,27 @@
     {
       "name": "ball",
       "image": "svg/turn_ball.svg",
-      "translateY": -3,
+      "translateY": -59,
+      "width": 400,
+      "height": 400,
       "transform": {
         "path": {
           "image": "svg/turn_ball_path.svg",
-          "min": -1, // NOTE: assumes "position" is normalized to -1 to 1
-          "max": 1,
           "var": [
             "TURN COORDINATOR BALL",
             "position"
+          ],
+          "min": -1, // NOTE: assumes "position" is normalized to -1 to 1
+          "max": 1,
+          "width": 400,
+          "height": 400,
+          "position": [
+            0,
+            0
+          ],
+          "origin": [
+            0,
+            0
           ]
         }
       }

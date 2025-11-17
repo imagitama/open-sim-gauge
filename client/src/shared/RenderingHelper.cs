@@ -130,7 +130,7 @@ namespace OpenGaugeClient
             _target = null;
         }
 
-        public static void DrawGrid(DrawingContext ctx, int width, int height, int cellSize)
+        public static void DrawGrid(DrawingContext ctx, int width, int height, double cellSize)
         {
             var pen = new Pen(new SolidColorBrush(Color.FromRgb(60, 60, 60)), 1);
 

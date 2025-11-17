@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -51,9 +52,9 @@ namespace OpenGaugeClient
             await SaveConfig();
         }
 
-        public static async Task<Config> LoadConfig()
+        public static async Task<Config> LoadConfig(string? overridePath = null)
         {
-            var newConfig = await LoadTypedJson<Config>("config.json", forceToGitRoot: false);
+            var newConfig = await LoadTypedJson<Config>(overridePath ?? "config.json", forceToGitRoot: false);
 
             var _gaugeCache = new GaugeCache();
 
@@ -121,6 +122,85 @@ namespace OpenGaugeClient
             await File.WriteAllTextAsync(absoluteFilePath, newJson);
         }
 
+        private static string GetKnownProperties<T>()
+        {
+            return string.Join(", ",
+                typeof(T).GetProperties()
+                          .Select(p => p.Name)
+            );
+        }
+
+        private static string ExtractPropertyName(string message)
+        {
+            int start = message.IndexOf('\'');
+            int end = message.IndexOf('\'', start + 1);
+
+            if (start >= 0 && end > start)
+                return message.Substring(start + 1, end - start - 1);
+
+            return "unknown";
+        }
+
+
+        private static Type? ResolveTypeAtJsonPath(Type rootType, string fullPath)
+        {
+            // Remove '$.' prefix if present
+            string path = fullPath.StartsWith("$.") ? fullPath.Substring(2) : fullPath;
+
+            // Remove the final segment (the unknown property name)
+            int lastDot = path.LastIndexOf('.');
+            if (lastDot > 0)
+                path = path.Substring(0, lastDot);
+
+            Type currentType = rootType;
+
+            if (string.IsNullOrWhiteSpace(path))
+                return currentType;
+
+            var segments = path.Split('.');
+
+            foreach (var segment in segments)
+            {
+                // Handle array/list indexes: panels[0] → "panels"
+                string propName = segment;
+                int bracket = segment.IndexOf('[');
+                if (bracket >= 0)
+                    propName = segment.Substring(0, bracket);
+
+                // Look for property on the current type
+                var prop = currentType.GetProperty(propName,
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                if (prop == null)
+                    return null;
+
+                Type propType = prop.PropertyType;
+
+                // If it's List<T> or T[]
+                if (typeof(System.Collections.IEnumerable).IsAssignableFrom(propType)
+                    && propType != typeof(string))
+                {
+                    if (propType.IsArray)
+                        currentType = propType.GetElementType()!;
+                    else if (propType.IsGenericType)
+                        currentType = propType.GetGenericArguments()[0];
+                    else
+                        return null;
+                }
+                else
+                {
+                    currentType = propType;
+                }
+            }
+
+            return currentType;
+        }
+
+        private static bool IsUnknownPropertyError(string msg)
+        {
+            return msg.Contains("could not be mapped to any .NET member");
+        }
+
         public static async Task<T> LoadTypedJson<T>(string filePath, bool forceToGitRoot = false)
         {
             string absoluteFilePath = PathHelper.GetFilePath(filePath, forceToGitRoot);
@@ -132,25 +212,53 @@ namespace OpenGaugeClient
 
             try
             {
-                var reader = new Utf8JsonReader(Encoding.UTF8.GetBytes(json), new JsonReaderOptions
-                {
-                    CommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true
-                });
+                var reader = new Utf8JsonReader(
+                    Encoding.UTF8.GetBytes(json),
+                    new JsonReaderOptions
+                    {
+                        CommentHandling = JsonCommentHandling.Skip,
+                        AllowTrailingCommas = true
+                    }
+                );
 
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true
+                    AllowTrailingCommas = true,
+                    UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
                 };
 
                 var result = JsonSerializer.Deserialize<T>(ref reader, options);
                 return result!;
             }
-            catch
+            catch (JsonException ex)
             {
-                Console.WriteLine(json);
+                string unknown = ExtractPropertyName(ex.Message);
+                string path = ex.Path ?? "";
+                path = path.StartsWith("$.") ? path.Substring(2) : path;
+
+                if (IsUnknownPropertyError(ex.Message))
+                {
+                    var targetType = ResolveTypeAtJsonPath(typeof(T), path);
+
+                    string available = targetType != null
+                        ? string.Join(", ", targetType.GetProperties().Select(p => p.Name))
+                        : "unknown";
+
+                    Console.WriteLine(
+                        $"Failed to load config file {absoluteFilePath}:\n" +
+                        $"JSON property '{unknown}' at {path} is not recognized.\n" +
+                        $"Available properties: {available}"
+                    );
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"JSON property at {path} has unexpected value"
+                    );
+                }
+
                 throw;
             }
         }
@@ -297,6 +405,14 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? OnTop { get; set; }
         /// <summary>
+        /// Renders a grid with the provided cell size.
+        /// </summary>
+        public double? Grid { get; set; }
+        /// <summary>
+        /// If to clip all gauges.
+        /// </summary>
+        public bool? Clip { get; set; } = true;
+        /// <summary>
         /// If to skip rendering this panel.
         /// </summary>
         public bool? Skip { get; set; } = false;
@@ -434,7 +550,7 @@ namespace OpenGaugeClient
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// 
+        /// Replace this gauge with another gauge in another file. Does not merge anything.
         /// </summary>
         public string? Path { get; set; }
         /// <summary>
@@ -464,6 +580,10 @@ namespace OpenGaugeClient
         /// How to clip the layers of the gauge. Useful for gauges like an attitude indicator that translates outside of the gauge bounds.
         /// </summary>
         public ClipConfig? Clip { get; set; }
+        /// <summary>
+        /// Renders a grid with the provided cell size.
+        /// </summary>
+        public double? Grid { get; set; }
         public override string ToString()
         {
             return $"Gauge(" +
@@ -874,6 +994,7 @@ namespace OpenGaugeClient
         /// <default>SVG viewbox height or 100%</default>
         /// </summary>
         public double? Height { get; set; }
+        [JsonConverter(typeof(FlexibleVector2Converter))]
         /// <summary>
         /// The origin of the SVG for positioning.
         /// <type>[double|string, double|string]</type>

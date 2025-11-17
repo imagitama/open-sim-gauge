@@ -1,0 +1,129 @@
+{
+  "debug": true,
+  "panels": [
+    {
+      "name": "Test Panel",
+      "width": 1000,
+      "height": 1000,
+      "gauges": [
+        {
+          "name": "Gauge With Path Transform",
+          "position": [
+            50,
+            50
+          ]
+        }
+      ]
+    }
+  ],
+  "gauges": [
+    {
+      "name": "Gauge With Path Transform",
+      "width": 500,
+      "height": 500,
+      "grid": 50,
+      "origin": [
+        0,
+        0
+      ],
+      "layers": [
+        {
+          "debug": true,
+          "image": "client/src/tests/dot.svg",
+          "width": 25,
+          "height": 25,
+          "origin": [
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0
+          ],
+          "transform": {
+            "path": {
+              "var": [
+                "TURN COORDINATOR BALL",
+                "position"
+              ],
+              // "debug": true,
+              "image": "client/src/tests/single-path-line.svg",
+              // "override": 0,
+              "width": 250,
+              "height": 250,
+              "origin": [
+                0,
+                0
+              ],
+              "position": [
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "image": "client/src/tests/single-path-line.svg",
+          "width": 250,
+          "height": 250,
+          "origin": [
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0
+          ]
+        },
+        {
+          "debug": true,
+          "image": "client/src/tests/dot.svg",
+          "width": 25,
+          "height": 25,
+          "origin": [
+            0,
+            0
+          ],
+          "position": [
+            250,
+            250
+          ],
+          "transform": {
+            "path": {
+              "var": [
+                "TURN COORDINATOR BALL",
+                "position"
+              ],
+              // "debug": true,
+              "image": "client/src/tests/single-path-semicircle.svg",
+              // "override": 0,
+              "width": 250,
+              "height": 250,
+              // "origin": [
+              //     0,
+              //     0
+              // ],
+              "position": [
+                0,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "image": "client/src/tests/single-path-semicircle.svg",
+          "width": 250,
+          "height": 250,
+          "origin": [
+            0,
+            0
+          ],
+          "position": [
+            250,
+            250
+          ]
+        }
+      ]
+    }
+  ]
+}

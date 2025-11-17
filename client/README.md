@@ -1,10 +1,8 @@
 # Client & Editor
 
-## Configuring
+## Config
 
-Edit `config.json`:
-
-### Config
+### Root-level
 
 | Property  | Type           | Default | Description                                                                                                        |
 | --------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |

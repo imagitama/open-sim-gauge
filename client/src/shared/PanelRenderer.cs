@@ -195,8 +195,10 @@ namespace OpenGaugeClient
 
         private async Task RenderFrameAsync(DrawingContext ctx)
         {
-            if (_gridSize != null && _gridSize > 0)
-                RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (int)_gridSize);
+            var gridSize = _gridSize != null && _gridSize > 0 ? _gridSize : _panel.Grid != null && _panel.Grid > 0 ? _panel.Grid : null;
+
+            if (gridSize != null)
+                RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (double)gridSize);
 
             if (_panel.Debug == true || ConfigManager.Debug == true)
                 DrawPanelDebugInfo(ctx);
@@ -214,7 +216,7 @@ namespace OpenGaugeClient
                 var gaugeRenderer = _gaugeRenderers[i];
 
                 if (gaugeRenderer != null)
-                    gaugeRenderer.DrawGaugeLayers(ctx);
+                    gaugeRenderer.DrawGaugeLayers(ctx, disableClipping: _panel.Clip == false);
             }
         }
 

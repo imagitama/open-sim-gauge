@@ -20,7 +20,7 @@ namespace OpenGaugeClient
             return parsed.D;
         }
 
-        public SKPath LoadSKPath(string svgPath, double? configWidth = null, double? configHeight = null, bool normalizeCenter = false)
+        public SKPath LoadSKPath(string svgPath, double? configWidth = null, double? configHeight = null)
         {
             var key = (svgPath, configWidth, configHeight);
 
@@ -36,13 +36,6 @@ namespace OpenGaugeClient
             {
                 var scaleMatrix = SKMatrix.CreateScale(parsed.ScaleX, parsed.ScaleY);
                 skPath.Transform(scaleMatrix);
-            }
-
-            if (normalizeCenter)
-            {
-                var bounds = skPath.Bounds;
-                var boundsMatrix = SKMatrix.CreateTranslation(-bounds.MidX, -bounds.MidY);
-                skPath.Transform(boundsMatrix);
             }
 
             _skPathCache[key] = skPath;
