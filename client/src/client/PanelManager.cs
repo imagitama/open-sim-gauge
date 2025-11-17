@@ -26,9 +26,6 @@ namespace OpenGaugeClient.Client
             if (_isInitialized)
                 Uninitialize();
 
-            if (vehicleName == null)
-                return;
-
             foreach (var panel in config.Panels)
             {
                 if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))

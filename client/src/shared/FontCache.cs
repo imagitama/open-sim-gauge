@@ -42,17 +42,23 @@ namespace OpenGaugeClient
             using var stream = File.OpenRead(absolutePath);
             var typeface = SKTypeface.FromStream(stream);
 
-            var actual = typeface.FamilyName;
+            var actualFamilyName = typeface.FamilyName;
 
             if (familyName == null)
-                familyName = actual;
-
-            _cache[actual] = typeface;
-
-            _aliases[familyName] = actual;
-            _aliases[actual] = actual;
+                familyName = actualFamilyName;
 
             var key = familyName.Trim();
+
+            if (_aliases.TryGetValue(key, out var realName))
+                key = realName;
+
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+
+            _cache[actualFamilyName] = typeface;
+
+            _aliases[familyName] = actualFamilyName;
+            _aliases[actualFamilyName] = actualFamilyName;
 
             if (ConfigManager.Config?.Debug == true)
                 Console.WriteLine($"[FontProvider] Loaded font '{key}' family name '{_cache[key].FamilyName}'");
@@ -74,7 +80,7 @@ namespace OpenGaugeClient
             {
                 foreach (var ext in new[] { ".ttf", ".otf" })
                 {
-                    var absolutePath = PathHelper.GetFilePath(Path.Combine("fonts", familyName + ext));
+                    var absolutePath = PathHelper.GetFilePath(Path.Combine("fonts", familyName + ext), forceToGitRoot: false);
 
                     if (File.Exists(absolutePath))
                     {

@@ -54,7 +54,12 @@ namespace OpenGaugeClient
 
         public static async Task<Config> LoadConfig(string? overridePath = null)
         {
-            var newConfig = await LoadTypedJson<Config>(overridePath ?? "config.json", forceToGitRoot: false);
+            var configPath = overridePath ?? PathHelper.GetFilePath("config.json", forceToGitRoot: false);
+
+            var newConfig = await LoadTypedJson<Config>(configPath);
+
+            if (_config?.Debug == true || newConfig.Debug)
+                Console.WriteLine($"[ConfigManager] Loaded config from {configPath}");
 
             var _gaugeCache = new GaugeCache();
 
@@ -233,7 +238,7 @@ namespace OpenGaugeClient
                         : "unknown";
 
                     Console.WriteLine(
-                        $"Failed to load config file {absoluteFilePath}:\n" +
+                        $"Failed to load JSON file {absoluteFilePath}:\n" +
                         $"JSON property '{unknown}' at {path} is not recognized.\n" +
                         $"Available properties: {available}"
                     );
@@ -411,7 +416,6 @@ namespace OpenGaugeClient
                 Name = Name,
                 Vehicle = Vehicle,
                 Gauges = [.. Gauges.Select(g => g.Clone())],
-                Skip = Skip,
                 Screen = Screen,
                 Width = Width,
                 Height = Height,
@@ -422,9 +426,31 @@ namespace OpenGaugeClient
                     ? new ColorDef(Background.R, Background.G, Background.B)
                     : null,
                 OnTop = OnTop,
+                Grid = Grid,
+                Clip = Clip,
                 Transparent = Transparent,
+                Skip = Skip,
                 Debug = Debug
             };
+        }
+        public override string ToString()
+        {
+            return $"Panel(" +
+                $"Name={Name}," +
+                $"Vehicle={Vehicle}," +
+                $"Gauges=\n{string.Join("\n", Gauges.Select(l => $"  {l}"))}\n," +
+                $"Skip={Skip}," +
+                $"Screen={Screen}," +
+                $"Width={Width}," +
+                $"Height={Height}," +
+                $"Fullscreen={Fullscreen}," +
+                $"Position={Position}," +
+                $"Origin={Origin}," +
+                $"Background={Background}," +
+                $"OnTop={OnTop}," +
+                $"Transparent={Transparent}," +
+                $"Debug={Debug}" +
+                ")";
         }
     }
 
@@ -463,11 +489,6 @@ namespace OpenGaugeClient
             }
         }
 
-        public override string ToString()
-        {
-            return $"GaugeRef={Label}";
-        }
-
         /// <summary>
         /// The name of the gauge to use. Optional if you specify a path.
         /// </summary>
@@ -498,6 +519,7 @@ namespace OpenGaugeClient
         /// If to skip rendering this gauge.
         /// </summary>
         public bool Skip { get; set; } = false;
+
         public GaugeRef Clone()
         {
             return new GaugeRef
@@ -516,6 +538,17 @@ namespace OpenGaugeClient
             };
         }
 
+        public override string ToString()
+        {
+            return $"GaugeRef(" +
+                   $"Name={Name ?? "null"}," +
+                   $"Path={Path ?? "null"}," +
+                   $"Position={Position}," +
+                   $"Scale={Scale}," +
+                   $"Width={Width}," +
+                   $"Skip={Skip}" +
+                ")";
+        }
     }
 
     public class InternalGauge
@@ -568,6 +601,7 @@ namespace OpenGaugeClient
         /// Renders a grid with the provided cell size.
         /// </summary>
         public double? Grid { get; set; }
+
         public override string ToString()
         {
             return $"Gauge(" +
@@ -577,9 +611,11 @@ namespace OpenGaugeClient
                    $"Origin={Origin}," +
                    $"Layers=\n{string.Join("\n", Layers.Select(l => $"  {l}"))}\n," +
                    $"Clip={Clip}," +
+                   $"Grid={Grid}," +
                    $"Source={Source}" +
                 ")";
         }
+
         public void Replace(Gauge newGauge)
         {
             Name = newGauge.Name;
