@@ -122,14 +122,6 @@ namespace OpenGaugeClient
             await File.WriteAllTextAsync(absoluteFilePath, newJson);
         }
 
-        private static string GetKnownProperties<T>()
-        {
-            return string.Join(", ",
-                typeof(T).GetProperties()
-                          .Select(p => p.Name)
-            );
-        }
-
         private static string ExtractPropertyName(string message)
         {
             int start = message.IndexOf('\'');
@@ -141,13 +133,10 @@ namespace OpenGaugeClient
             return "unknown";
         }
 
-
         private static Type? ResolveTypeAtJsonPath(Type rootType, string fullPath)
         {
-            // Remove '$.' prefix if present
-            string path = fullPath.StartsWith("$.") ? fullPath.Substring(2) : fullPath;
+            string path = fullPath.StartsWith("$.") ? fullPath[2..] : fullPath;
 
-            // Remove the final segment (the unknown property name)
             int lastDot = path.LastIndexOf('.');
             if (lastDot > 0)
                 path = path.Substring(0, lastDot);
@@ -161,13 +150,11 @@ namespace OpenGaugeClient
 
             foreach (var segment in segments)
             {
-                // Handle array/list indexes: panels[0] → "panels"
                 string propName = segment;
                 int bracket = segment.IndexOf('[');
                 if (bracket >= 0)
                     propName = segment.Substring(0, bracket);
 
-                // Look for property on the current type
                 var prop = currentType.GetProperty(propName,
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
@@ -176,7 +163,6 @@ namespace OpenGaugeClient
 
                 Type propType = prop.PropertyType;
 
-                // If it's List<T> or T[]
                 if (typeof(System.Collections.IEnumerable).IsAssignableFrom(propType)
                     && propType != typeof(string))
                 {
@@ -236,7 +222,7 @@ namespace OpenGaugeClient
             {
                 string unknown = ExtractPropertyName(ex.Message);
                 string path = ex.Path ?? "";
-                path = path.StartsWith("$.") ? path.Substring(2) : path;
+                path = path.StartsWith("$.") ? path[2..] : path;
 
                 if (IsUnknownPropertyError(ex.Message))
                 {
@@ -467,7 +453,7 @@ namespace OpenGaugeClient
                 if (!string.IsNullOrEmpty(Name))
                     return Name;
 
-                if (Gauge != null)
+                if (!string.IsNullOrEmpty(Gauge?.Name))
                     return Gauge.Name;
 
                 if (!string.IsNullOrEmpty(Path))
@@ -546,7 +532,7 @@ namespace OpenGaugeClient
         /// <summary>
         /// The name of the gauge. Used for referencing it from a panel and for debugging.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Replace this gauge with another gauge in another file. Does not merge anything.
         /// </summary>

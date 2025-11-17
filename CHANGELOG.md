@@ -4,6 +4,8 @@
 - added `panel.grid = number` and `gauge.grid = number` to render a grid
 - fixed `layer.transform.path.origin` throwing error
 - validate JSON and show nice error message
+- override config with CLI args
+- render debugging info in 2nd pass to avoid overlapping
 
 # 0.0.5
 

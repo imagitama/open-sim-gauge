@@ -21,7 +21,7 @@ namespace OpenGaugeClient.Client
 
         public void Initialize(Config config, Func<string, string, object?> _getSimVarValue, string? vehicleName)
         {
-            Console.WriteLine($"Initializing {config.Panels.Count} panels... (vehicle = {vehicleName})");
+            Console.WriteLine($"Initializing panels...{(vehicleName != null ? $" (vehicle '{vehicleName}')" : "")}");
 
             if (_isInitialized)
                 Uninitialize();
@@ -31,9 +31,7 @@ namespace OpenGaugeClient.Client
 
             foreach (var panel in config.Panels)
             {
-                Console.WriteLine($"Panel '{panel.Name}'\n  Vehicle: {panel.Vehicle}");
-
-                if (panel.Vehicle != null && vehicleName != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName) && ConfigManager.Config.Debug != true)
+                if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))
                 {
                     if (ConfigManager.Config.Debug)
                         Console.WriteLine($"[PanelManager] Panel vehicle={panel.Vehicle} does not match provided={vehicleName}");
@@ -53,6 +51,8 @@ namespace OpenGaugeClient.Client
 
                 if (_panelRenderers.ContainsKey(panel.Name))
                     continue;
+
+                Console.WriteLine($"Panel '{panel.Name}' (vehicle: {panel.Vehicle ?? "all"})");
 
                 var renderer = new PanelRenderer(
                     panel,

@@ -35,7 +35,7 @@ namespace OpenGaugeClient
 
         private sealed class LayerRenderData
         {
-            public Layer Layer { get; set; }
+            public required Layer Layer { get; set; }
             public double LayerWidth { get; set; }
             public double LayerHeight { get; set; }
             public double LayerOriginX { get; set; }

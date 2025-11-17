@@ -204,5 +204,10 @@ namespace OpenGaugeClient
 
             return new FlexibleVector2 { X = posX, Y = posY };
         }
+
+        public static bool GetIsPanelVisible(Panel panel, string? vehicleName)
+        {
+            return panel.Vehicle == null || vehicleName == null || Utils.GetIsVehicle(panel.Vehicle, vehicleName) || ConfigManager.Config.Debug;
+        }
     }
 }

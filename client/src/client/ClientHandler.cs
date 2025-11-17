@@ -63,16 +63,14 @@ namespace OpenGaugeClient.Client
             };
 
             if (ConfigManager.Config.Debug)
-            {
                 Console.WriteLine($"[Client] Send message {message.ToString()}");
-            }
 
             var options = new JsonSerializerOptions
             {
                 Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
             };
 
-            var json = JsonSerializer.Serialize(message, options) + "\n"; // must have NL
+            var json = JsonSerializer.Serialize(message, options) + "\n"; // must end in NL
             var bytes = Encoding.UTF8.GetBytes(json);
 
             await _stream!.WriteAsync(bytes, 0, bytes.Length);

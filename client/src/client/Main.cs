@@ -12,7 +12,9 @@ namespace OpenGaugeClient.Client
     public class Program
     {
         public static string[] StartupArgs = Array.Empty<string>();
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         public static StreamWriter FileLogger;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
         public static void Main(string[] args)
         {
@@ -113,15 +115,14 @@ namespace OpenGaugeClient.Client
                 if (config.Debug)
                     Console.WriteLine($"[Main] Tell server to initialize (vehicle '{lastKnownVehicleName}')...");
 
-                simVarValues = await GetEmptySimVarValues(config, lastKnownVehicleName);
-                var simVarDefs = await GetSimVarDefsToSubscribeTo(config, lastKnownVehicleName);
+                var simVarsToSubscribeTo = SimVarHelper.GetSimVarDefsToSubscribeTo(config, lastKnownVehicleName);
 
                 if (config.Debug)
-                    Console.WriteLine($"[Main] Sim vars: {string.Join(", ", simVarDefs.Select(x => $"{x.Name} ({x.Unit})"))}");
+                    Console.WriteLine($"[Main] Sim vars: {string.Join(", ", simVarsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
 
                 await client.SendInitMessage(
                     lastKnownVehicleName,
-                    simVarDefs.ToArray(),
+                    simVarsToSubscribeTo.ToArray(),
                     // TODO: finish events
                     new string[] { }
                 );
@@ -215,143 +216,6 @@ namespace OpenGaugeClient.Client
             }
 
             return null;
-        }
-
-        // TODO: Move to some helper
-        public async Task<List<SimVarDef>> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName)
-        {
-            var simVarDefs = new List<SimVarDef>();
-
-            if (config.Panels == null || config.Panels.Count == 0)
-                throw new Exception("No panels");
-
-            foreach (var panel in config.Panels)
-            {
-                if (vehicleName != null && panel.Vehicle != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
-                    continue;
-
-                if (panel.Skip == true)
-                    continue;
-
-                var gauges = await GetGaugesByNames(panel.Gauges, config);
-
-                foreach (var gauge in gauges)
-                {
-                    var layers = gauge.Layers;
-
-                    foreach (var layer in layers)
-                    {
-                        void AddSimVar(VarConfig varConfig)
-                        {
-                            simVarDefs.Add(new SimVarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
-                        }
-
-                        if (layer.Text?.Var is not null)
-                            AddSimVar(layer.Text.Var!);
-
-                        if (layer.Transform is { } transform)
-                        {
-                            if (transform.Rotate?.Var is not null)
-                                AddSimVar(transform.Rotate.Var!);
-
-                            if (transform.TranslateX?.Var is not null)
-                                AddSimVar(transform.TranslateX.Var!);
-
-                            if (transform.TranslateY?.Var is not null)
-                                AddSimVar(transform.TranslateY.Var!);
-
-                            if (transform.Path?.Var is not null)
-                                AddSimVar(transform.Path.Var!);
-                        }
-                    }
-                }
-            }
-
-            return simVarDefs;
-        }
-
-        // TODO: Move to some helper
-        public async Task<Dictionary<(string, string), object?>> GetEmptySimVarValues(Config config, string? vehicleName)
-        {
-            Dictionary<(string, string), object?> simVarValues = new();
-
-            foreach (var panel in config.Panels)
-            {
-                if (vehicleName != null && panel.Vehicle != null && !Utils.GetIsVehicle(panel.Vehicle, vehicleName))
-                    continue;
-
-                if (panel.Skip == true)
-                    continue;
-
-                var gauges = await GetGaugesByNames(panel.Gauges, config);
-
-                foreach (var gauge in gauges)
-                {
-                    var layers = gauge.Layers;
-
-                    foreach (var layer in layers)
-                    {
-                        if (layer.Skip == true)
-                            continue;
-
-                        var transform = layer.Transform;
-
-                        if (transform != null)
-                        {
-                            var varConfigs = new List<VarConfig>();
-
-                            if (transform.Rotate?.Var != null)
-                                varConfigs.Add(transform.Rotate.Var);
-
-                            if (transform.TranslateX?.Var != null)
-                                varConfigs.Add(transform.TranslateX.Var);
-
-                            if (transform.TranslateY?.Var != null)
-                                varConfigs.Add(transform.TranslateY.Var);
-
-                            if (transform.Path?.Var != null)
-                                varConfigs.Add(transform.Path.Var);
-
-                            foreach (var varConfig in varConfigs)
-                            {
-                                var key = (varConfig.Name, varConfig.Unit);
-                                simVarValues[key] = null;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return simVarValues;
-        }
-
-        // TODO: Move to some helper
-        public async Task<List<Gauge>> GetGaugesByNames(List<GaugeRef> gaugeRefs, Config config)
-        {
-            var gauges = new List<Gauge>();
-
-            foreach (var gaugeRef in gaugeRefs)
-            {
-                Gauge? gauge;
-
-                if (!string.IsNullOrEmpty(gaugeRef.Path))
-                {
-                    gauge = await ConfigManager.LoadTypedJson<Gauge>(gaugeRef.Path, forceToGitRoot: true);
-                }
-                else
-                {
-                    gauge = config.Gauges.Find(g => g.Name == gaugeRef.Name);
-                }
-
-                if (gauge == null)
-                {
-                    throw new Exception($"Gauge '{gaugeRef.Name ?? gaugeRef.Path}' not found");
-                }
-
-                gauges.Add(gauge);
-            }
-
-            return gauges;
         }
     }
 }
