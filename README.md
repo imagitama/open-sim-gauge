@@ -30,6 +30,11 @@ Inspired by
 To create a custom panel and/or gauge you must define everything inside of
 `config.json`.
 
+## Config
+
+See [client/README.md](./client/README.md) or See
+[server/README.md](./server/README.md).
+
 ## Example gauge
 
 This gauge is provided in the default config but skipped. It assumes the server
@@ -150,5 +155,3 @@ Yes - you just need to creae a new data source in the server and change your
 
 - send `config.json` to clients to remote update
 - Android/iOS app
-- add JSON validation for better UX
-- visual editor for panels/gauge

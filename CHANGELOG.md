@@ -1,3 +1,10 @@
+# 0.0.6
+
+- fixed unique path transforms not working
+- added `panel.grid = number` and `gauge.grid = number` to render a grid
+- fixed `layer.transform.path.origin` throwing error
+- validate JSON and show nice error message
+
 # 0.0.5
 
 - moved data sources to plugin architecture

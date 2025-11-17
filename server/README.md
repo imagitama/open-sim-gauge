@@ -1,10 +1,8 @@
 # Server
 
-## Configuring
+## Config
 
-Edit `config.json`:
-
-### Config
+### Root-level
 
 Configuration of the server application that runs on the host machine.
 
