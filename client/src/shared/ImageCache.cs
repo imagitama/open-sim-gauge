@@ -4,17 +4,17 @@ using Avalonia.Media.Imaging;
 
 namespace OpenGaugeClient
 {
-    public class ImageCache(FontProvider fontProvider) : IDisposable
+    public class ImageCache(SKFontProvider skFontProvider) : IDisposable
     {
-        private readonly FontProvider _fontProvider = fontProvider;
+        private readonly SKFontProvider _skFontProvider = skFontProvider;
         private readonly Dictionary<(string, double?, double?), Bitmap> _cache = [];
         private bool _disposed;
 
-        public Bitmap Load(string imagePath, Layer layer, double renderScaling)
+        public Bitmap Load(string imagePath, double? imageWidth, double? imageHeight, double renderScaling)
         {
             string absolutePath = PathHelper.GetFilePath(imagePath);
 
-            var key = (absolutePath, layer.Width, layer.Height);
+            var key = (absolutePath, imageWidth, imageHeight);
 
             if (_cache.TryGetValue(key, out var cached))
                 return cached;
@@ -25,7 +25,7 @@ namespace OpenGaugeClient
             {
                 var svg = new SKSvg();
 
-                if (_fontProvider is { } provider && svg?.Settings?.TypefaceProviders != null)
+                if (_skFontProvider is { } provider && svg?.Settings?.TypefaceProviders != null)
                     svg.Settings.TypefaceProviders.Insert(0, provider);
 
                 using var fileStream = File.OpenRead(absolutePath);
@@ -38,8 +38,8 @@ namespace OpenGaugeClient
 
                 var (viewBoxWidth, viewBoxHeight) = SvgUtils.GetSvgDimensionsFromViewBox(absolutePath);
 
-                int dipWidth = (int)(layer.Width != null ? layer.Width : viewBoxWidth > 0 ? (int)viewBoxWidth : 0);
-                int dipHeight = (int)(layer.Height != null ? layer.Height : viewBoxHeight > 0 ? (int)viewBoxHeight : 0);
+                int dipWidth = (int)(imageWidth != null ? imageWidth : viewBoxWidth > 0 ? (int)viewBoxWidth : 0);
+                int dipHeight = (int)(imageHeight != null ? imageHeight : viewBoxHeight > 0 ? (int)viewBoxHeight : 0);
 
                 if (dipWidth == 0 || dipHeight == 0)
                     throw new Exception("SVG has no dimensions");
@@ -61,9 +61,6 @@ namespace OpenGaugeClient
 
                 using var image = SKImage.FromBitmap(skiaBitmap);
 
-                // if (imagePath.Contains("bg") && imagePath.Contains("manifold"))
-                //     Console.WriteLine($"SVG vb={viewBoxWidth}x{viewBoxHeight} dip={dipWidth}x{dipHeight} scale={renderScaling} px={pxWidth}x{pxHeight}");
-
                 if (image == null)
                     throw new Exception($"Failed to load image '{absolutePath}'");
 
@@ -71,7 +68,7 @@ namespace OpenGaugeClient
                 using var pngStream = png.AsStream();
                 var avaloniaBmp = new Bitmap(pngStream);
 
-                if (layer.Debug)
+                if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[ImageCache] Loaded SVG '{imagePath}' {picBounds.Width}x{picBounds.Height} => {dipWidth}x{dipHeight} => {pxWidth}x{pxHeight}");
 
                 _cache[key] = avaloniaBmp;
@@ -83,7 +80,7 @@ namespace OpenGaugeClient
                 using var s = File.OpenRead(absolutePath);
                 var bmp = new Bitmap(s);
 
-                if (layer.Debug)
+                if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[ImageCache] Loaded PNG '{absolutePath}'");
 
                 _cache[key] = bmp;

@@ -56,7 +56,8 @@ namespace OpenGaugeClient.Editor.Components
             if (owner == null)
                 throw new Exception("Cannot pick without owner");
 
-            var startColor = Value ?? Colors.White;
+            // TODO: fix defaulting to transparent
+            var startColor = Value ?? Color.FromArgb(0, 255, 255, 255);
             var dialog = new ColorPickerDialog(startColor);
             var ok = await dialog.ShowDialog<bool>(owner);
 

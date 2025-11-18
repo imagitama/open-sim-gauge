@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Avalonia.Layout;
 
 namespace OpenGaugeClient
 {
@@ -340,12 +341,12 @@ namespace OpenGaugeClient
         /// </summary>
         public int? Screen { get; set; } = 0;
         /// <summary>
-        /// The width of the panel in pixels or a percent of the screen.
+        /// The width of the panel in pixels.
         /// Optional if you use fullscreen.
         /// </summary>
         public double? Width { get; set; }
         /// <summary>
-        /// The width of the panel in pixels or a percent of the screen.
+        /// The width of the panel in pixels.
         /// Optional if you use fullscreen.
         /// </summary>
         public double? Height { get; set; }
@@ -512,7 +513,7 @@ namespace OpenGaugeClient
         /// </summary>
         public double Scale { get; set; } = 1.0;
         /// <summary>
-        /// Force the width of the gauge in pixels before scaling.
+        /// Force the width (and height) of the gauge in pixels before scaling.
         /// </summary>
         public double? Width { get; set; }
         /// <summary>
@@ -601,6 +602,10 @@ namespace OpenGaugeClient
         /// Renders a grid with the provided cell size.
         /// </summary>
         public double? Grid { get; set; }
+        /// <summary>
+        /// Extra logging. Beware of console spam!
+        /// </summary>
+        public bool? Debug { get; set; }
 
         public override string ToString()
         {
@@ -640,12 +645,12 @@ namespace OpenGaugeClient
         public required string Image { get; set; }
         /// <summary>
         /// The width of the SVG (in pixels).
-        /// <default>SVG viewbox width or 100%</default>
+        /// <default>SVG viewbox width or gauge width</default>
         /// </summary>
         public double? Width { get; set; }
         /// <summary>
         /// The width of the SVG (in pixels).
-        /// <default>SVG viewbox height or 100%</default>
+        /// <default>SVG viewbox height or gauge height</default>
         /// </summary>
         public double? Height { get; set; }
         [JsonConverter(typeof(FlexibleVector2Converter))]
@@ -704,19 +709,21 @@ namespace OpenGaugeClient
         /// </summary>
         public TextDef? Text { get; set; }
         /// <summary>
-        /// A path to an image to render as this layer. PNG and SVG supported. If provided then `text` will be ignored.
+        /// A path to an image to render as this layer. PNG and SVG supported.
         /// </summary>
         public string? Image { get; set; }
+        [JsonConverter(typeof(FlexibleDimensionConverter))]
         /// <summary>
         /// The width of the layer (in pixels).
+        /// <default>Gauge width</default>
         /// </summary>
-        /// <default>SVG viewbox width or PNG width or 100%</default>
-        public double? Width { get; set; }
+        public FlexibleDimension? Width { get; set; }
+        [JsonConverter(typeof(FlexibleDimensionConverter))]
         /// <summary>
         /// The height of the layer (in pixels).
+        /// <default>Gauge height</default>
         /// </summary>
-        /// <default>SVG viewbox height or PNG height or 100%</default>
-        public double? Height { get; set; }
+        public FlexibleDimension? Height { get; set; }
         [JsonConverter(typeof(FlexibleVector2Converter))]
         /// <summary>
         /// The origin of the layer (in pixels) for all transformations to be based on.
@@ -757,6 +764,11 @@ namespace OpenGaugeClient
         /// </summary>
         public double TranslateY { get; set; } = 0;
         /// <summary>
+        /// A color to fill with (behind any image you specify).
+        /// </summary>
+        [JsonConverter(typeof(ColorDefConverter))]
+        public ColorDef? Fill { get; set; }
+        /// <summary>
         /// Render useful debugging visuals such as bounding box.
         /// Note: If you subscribe to a SimVar in this layer and debugging is enabled it is sent to the server for extra logging.
         /// </summary>
@@ -790,8 +802,8 @@ namespace OpenGaugeClient
             return $"Layer(" +
                    $"Name={Name ?? "null"}," +
                    $"Image={Image ?? "null"}," +
-                   $"Width={Width.ToString() ?? "null"}," +
-                   $"Height={Height.ToString() ?? "null"}," +
+                   $"Width={Width?.ToString() ?? "null"}," +
+                   $"Height={Height?.ToString() ?? "null"}," +
                    $"Origin={Origin}," +
                    $"Position={Position}," +
                    $"Transform={Transform}," +
@@ -799,6 +811,20 @@ namespace OpenGaugeClient
                    $"Skip={Skip}" +
             ")";
         }
+    }
+
+    public enum TextHorizontalAlignment
+    {
+        Left,
+        Center,
+        Right
+    }
+
+    public enum TextVerticalAlignment
+    {
+        Top,
+        Center,
+        Bottom
     }
 
     [GenerateMarkdownTable]
@@ -829,8 +855,8 @@ namespace OpenGaugeClient
         /// <summary>
         /// The family of the text. Supports any system font plus any inside the `fonts/` directory (currently only "Gordon").
         /// If you specify a font path this lets you choose a family inside it.
-        /// </summary>
         /// <default>OS default ("Segoe UI" on Windows)<default>
+        /// </summary>
         public string? FontFamily { get; set; }
         /// <summary>
         /// Path to a font file to use. Relative to the config JSON file.
@@ -840,9 +866,25 @@ namespace OpenGaugeClient
         /// <summary>
         /// The color of the text as a CSS-like value.
         /// eg. "rgb(255, 255, 255)" or "#FFF" or "white"
-        /// </summary>
         /// <default>rgb(255, 255, 255)</default>
+        /// </summary>
         public ColorDef? Color { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        /// <summary>
+        /// How to align the text horizontally.
+        /// "Left" would be the text starts at the layer X position, going right.
+        /// "Right" would be the text starts at the layer X position, going left.
+        /// <default>Center</Default>
+        /// </summary>
+        public TextHorizontalAlignment Horizontal { get; set; } = TextHorizontalAlignment.Center;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        /// <summary>
+        /// How to align the text vertically.
+        /// "Top" would be the text starts at the layer Y position, going down.
+        /// "Bottom" would be the text starts at the layer Y position, going up.
+        /// <default>Center</Default>
+        /// </summary>
+        public TextVerticalAlignment Vertical { get; set; } = TextVerticalAlignment.Center;
     }
 
     [GenerateMarkdownTable]
@@ -1006,12 +1048,12 @@ namespace OpenGaugeClient
         public required string Image { get; set; }
         /// <summary>
         /// The width of the SVG (in pixels).
-        /// <default>SVG viewbox width or 100%</default>
+        /// <default>SVG viewbox width or layer width</default>
         /// </summary>
         public double? Width { get; set; }
         /// <summary>
         /// The width of the SVG (in pixels).
-        /// <default>SVG viewbox height or 100%</default>
+        /// <default>SVG viewbox height or layer height</default>
         /// </summary>
         public double? Height { get; set; }
         [JsonConverter(typeof(FlexibleVector2Converter))]

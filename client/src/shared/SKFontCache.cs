@@ -2,7 +2,7 @@ using SkiaSharp;
 
 namespace OpenGaugeClient
 {
-    public class FontCache : IDisposable
+    public class SKFontCache : IDisposable
     {
         private readonly Dictionary<string, SKTypeface> _cache = [];
         private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);

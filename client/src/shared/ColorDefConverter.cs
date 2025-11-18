@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Avalonia.Media;
 
 namespace OpenGaugeClient
 {
@@ -17,36 +18,13 @@ namespace OpenGaugeClient
             {
                 var str = reader.GetString()!.Trim();
 
-                if (str.StartsWith("#"))
-                    return ColorDef.FromHex(str);
-
-                var rgbaMatch = RgbaRegex.Match(str);
-                if (rgbaMatch.Success)
+                if (Color.TryParse(str, out var avaloniaColor))
                 {
-                    double alpha = 1.0;
-                    if (rgbaMatch.Groups[4].Success)
-                        alpha = double.Parse(rgbaMatch.Groups[4].Value, CultureInfo.InvariantCulture);
-
                     return new ColorDef(
-                        int.Parse(rgbaMatch.Groups[1].Value),
-                        int.Parse(rgbaMatch.Groups[2].Value),
-                        int.Parse(rgbaMatch.Groups[3].Value),
-                        alpha
-                    );
-                }
-
-                var hslaMatch = HslaRegex.Match(str);
-                if (hslaMatch.Success)
-                {
-                    double alpha = 1.0;
-                    if (hslaMatch.Groups[4].Success)
-                        alpha = double.Parse(hslaMatch.Groups[4].Value, CultureInfo.InvariantCulture);
-
-                    return ColorDef.FromHsl(
-                        double.Parse(hslaMatch.Groups[1].Value, CultureInfo.InvariantCulture),
-                        double.Parse(hslaMatch.Groups[2].Value, CultureInfo.InvariantCulture),
-                        double.Parse(hslaMatch.Groups[3].Value, CultureInfo.InvariantCulture),
-                        alpha
+                        avaloniaColor.R,
+                        avaloniaColor.G,
+                        avaloniaColor.B,
+                        avaloniaColor.A / 255.0
                     );
                 }
 

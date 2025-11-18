@@ -1,6 +1,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using Avalonia.Controls;
 using DynamicData;
 using ReactiveUI;
 
@@ -20,6 +21,7 @@ namespace OpenGaugeClient
             Origin = gauge.Origin;
             Clip = gauge.Clip != null ? new ReactiveClipConfig(gauge.Clip) : null;
             OldClip = Clip;
+            Grid = gauge.Grid;
             Source = gauge.Source;
 
             Layers.Edit(inner =>
@@ -113,6 +115,14 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _source, value);
         }
 
+
+        private double? _grid;
+        public double? Grid
+        {
+            get => _height;
+            set => this.RaiseAndSetIfChanged(ref _grid, value);
+        }
+
         public void Replace(Gauge newGauge)
         {
             if (newGauge == null)
@@ -165,20 +175,6 @@ namespace OpenGaugeClient
                    $"Layers=[{string.Join(", ", Layers.Items)}] " +
                    $"Source='{Source}', " +
                 "}}";
-        }
-
-        // subscribed by gauge editor window to rebuild gauge renderer
-        public IObservable<string> WhenAnyChange()
-        {
-            var nameChanged = this.WhenAnyValue(x => x.Name);
-
-            var layerChanges = Layers.Connect()
-                .AutoRefresh()
-                .MergeMany(layer =>
-                    layer.Changed.Select(args =>
-                        $"[Layer:{layer.Name}] {args.PropertyName} changed"));
-
-            return nameChanged.Merge(layerChanges);
         }
 
         private ReactiveClipConfig? OldClip;

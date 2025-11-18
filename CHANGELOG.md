@@ -1,3 +1,15 @@
+# 0.0.7
+
+- improved performance when using text
+- fixed text rendering under image
+- fixed layer width/height not accepting percentage
+- added `layer.fill = color`
+- fixed negative position
+- changed all color values to support anything CSS-like (eg. "red")
+- fixed text rendering using font files (and supplied font file)
+- added `gauge.debug = bool`
+- fixed gauge editor not refreshing properly
+
 # 0.0.6
 
 - fixed unique path transforms not working

@@ -22,6 +22,7 @@ namespace OpenGaugeClient
             Rotate = layer.Rotate;
             TranslateX = layer.TranslateX;
             TranslateY = layer.TranslateY;
+            Fill = layer.Fill;
             Debug = layer.Debug;
             Skip = layer.Skip;
 
@@ -47,15 +48,17 @@ namespace OpenGaugeClient
                 .DisposeWith(_cleanup);
 
 
-            this.WhenAnyValue(x => x.Name, x => x.Image)
+            this.WhenAnyValue(x => x.Name, x => x.Image, x => x.Text)
                      .Select(tuple =>
                      {
-                         var (name, image) = tuple;
+                         var (name, image, text) = tuple;
 
                          if (!string.IsNullOrEmpty(name))
                              return name!;
                          if (!string.IsNullOrEmpty(image))
                              return $"{Path.GetFileName(image)}".Replace("_", "__");
+                         if (text != null)
+                             return $"Text Layer";
                          return "(unnamed)";
                      })
                      .ToProperty(this, x => x.Label, out _label, initialValue: "(unnamed)")
@@ -85,15 +88,15 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _image, value);
         }
 
-        private double? _width;
-        public double? Width
+        private FlexibleDimension? _width;
+        public FlexibleDimension? Width
         {
             get => _width;
             set => this.RaiseAndSetIfChanged(ref _width, value);
         }
 
-        private double? _height;
-        public double? Height
+        private FlexibleDimension? _height;
+        public FlexibleDimension? Height
         {
             get => _height;
             set => this.RaiseAndSetIfChanged(ref _height, value);
@@ -141,6 +144,13 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _translateY, value);
         }
 
+        private ColorDef? _fill;
+        public ColorDef? Fill
+        {
+            get => _fill;
+            set => this.RaiseAndSetIfChanged(ref _fill, value);
+        }
+
         private bool _debug;
         public bool Debug
         {
@@ -173,6 +183,7 @@ namespace OpenGaugeClient
                 Rotate = Rotate,
                 TranslateX = TranslateX,
                 TranslateY = TranslateY,
+                Fill = Fill,
                 Debug = Debug,
                 Skip = Skip
             });
@@ -193,6 +204,7 @@ namespace OpenGaugeClient
                 Rotate = Rotate,
                 TranslateX = TranslateX,
                 TranslateY = TranslateY,
+                Fill = Fill,
                 Debug = Debug,
                 Skip = Skip
             };
@@ -203,8 +215,8 @@ namespace OpenGaugeClient
             return $"ReactiveLayer {{ " +
                    $"Name = '{Name}', " +
                    $"Image = '{Image ?? "null"}', " +
-                   $"Width = {Width.ToString() ?? "null"}, " +
-                   $"Height = {Height.ToString() ?? "null"}, " +
+                   $"Width = {Width?.ToString() ?? "null"}, " +
+                   $"Height = {Height?.ToString() ?? "null"}, " +
                    $"Origin = {Origin}, " +
                    $"Position = {Position}, " +
                    $"Transform = {Transform} " +

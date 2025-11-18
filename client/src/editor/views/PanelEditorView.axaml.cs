@@ -7,14 +7,12 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
-using Avalonia.Threading;
 using DynamicData;
 using OpenGaugeClient.Editor.Services;
 using System.Reflection;
 using OpenGaugeClient.Editor.Components;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Disposables;
-using System.Globalization;
 
 namespace OpenGaugeClient.Editor
 {
@@ -53,7 +51,8 @@ namespace OpenGaugeClient.Editor
         private RenderingHelper? _renderer;
         private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
-        private readonly FontCache _fontCache;
+        private readonly SKFontCache _skFontCache;
+        private readonly SKFontProvider _skFontProvider;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
         private PanelRenderer _panelRenderer;
@@ -90,10 +89,11 @@ namespace OpenGaugeClient.Editor
             };
 
             _gaugeCache = new GaugeCache();
-            _fontCache = new FontCache();
-            _fontProvider = new FontProvider(_fontCache);
+            _skFontCache = new SKFontCache();
+            _skFontProvider = new SKFontProvider(_skFontCache);
             _svgCache = new SvgCache();
-            _imageCache = new ImageCache(_fontProvider);
+            _fontProvider = new FontProvider();
+            _imageCache = new ImageCache(_skFontProvider);
 
             AttachedToVisualTree += (_, _) =>
             {
@@ -138,6 +138,7 @@ namespace OpenGaugeClient.Editor
                     panel,
                     _gaugeCache,
                     _imageCache,
+                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     GetSimVarValue,

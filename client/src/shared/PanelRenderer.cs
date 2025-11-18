@@ -12,6 +12,7 @@ namespace OpenGaugeClient
         private Panel _panel;
         private readonly ImageCache _imageCache;
         private readonly GaugeCache _gaugeCache;
+        private readonly SKFontProvider _skFontProvider;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
         private Func<string, string, object?> _getSimVarValue { get; set; }
@@ -34,11 +35,13 @@ namespace OpenGaugeClient
         private int? _gridSize = null;
         private int? _debugGaugeIndex = null;
         public Action<PixelPoint>? OnMove;
+        private bool _isDisposed = false;
 
         public PanelRenderer(
             Panel panel,
             GaugeCache gaugeCache,
             ImageCache imageCache,
+            SKFontProvider skFontProvider,
             FontProvider fontProvider,
             SvgCache svgCache,
             Func<string, string, object?> getSimVarValue,
@@ -50,6 +53,7 @@ namespace OpenGaugeClient
             _panel = panel;
             _gaugeCache = gaugeCache;
             _imageCache = imageCache;
+            _skFontProvider = skFontProvider;
             _fontProvider = fontProvider;
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
@@ -183,6 +187,7 @@ namespace OpenGaugeClient
                     (int)_window.Height,
                     renderScaling: _window.RenderScaling,
                     _imageCache,
+                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     _getSimVarValue,
@@ -195,6 +200,9 @@ namespace OpenGaugeClient
 
         private async Task RenderFrameAsync(DrawingContext ctx)
         {
+            if (_isDisposed)
+                return;
+
             var gridSize = _gridSize != null && _gridSize > 0 ? _gridSize : _panel.Grid != null && _panel.Grid > 0 ? _panel.Grid : null;
 
             if (gridSize != null)
@@ -220,6 +228,18 @@ namespace OpenGaugeClient
             }
         }
 
+        public static string GetScreenSummary(Window w)
+        {
+            var screen = w.Screens.ScreenFromWindow(w);
+            if (screen == null)
+                return "unknown 0x0 1.0";
+
+            var b = screen.Bounds;
+            string screenId = $"{b.X},{b.Y}";
+
+            return $"Screen {screenId} {b.Width}x{b.Height} {screen.Scaling:0.##}x";
+        }
+
         private void DrawPanelDebugInfo(DrawingContext ctx)
         {
             var canvasWidth = (int)_window!.Width;
@@ -228,7 +248,8 @@ namespace OpenGaugeClient
             var formattedText = new FormattedText(
                 $"'{_panel.Name}'\n" +
                 $"{_panel.Position.X},{_panel.Position.Y} => {_window.Position.X},{_window.Position.Y}\n" +
-                $"{_panel.Width}x{_panel.Height} => {_window.Width}x{_window.Height}",
+                $"{_panel.Width}x{_panel.Height} => {_window.Width}x{_window.Height}\n" +
+                GetScreenSummary(_window),
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Arial"),
@@ -244,6 +265,8 @@ namespace OpenGaugeClient
 
         public void Dispose()
         {
+            _isDisposed = true;
+
             _svgCache.Dispose();
             _window?.Close();
 

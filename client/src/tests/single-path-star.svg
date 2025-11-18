@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 200 200"
+     xmlns="http://www.w3.org/2000/svg">
+   <path
+    d="M 100,10
+       L 123.511,67.639
+       L 185.595,72.188
+       L 138.042,112.361
+       L 152.901,172.812
+       L 100,140
+       L 47.099,172.812
+       L 61.958,112.361
+       L 14.405,72.188
+       L 76.489,67.639
+       Z"
+    fill="none"
+    stroke="red"
+    stroke-width="1" />
+   <!-- <rect stroke="orange" fill="none" width="100%" height="100%" /> -->
+</svg>

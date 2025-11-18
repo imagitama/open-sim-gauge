@@ -25,7 +25,8 @@ namespace OpenGaugeClient.Editor.Components
         ImageFile,
         SvgFile,
         FontFile,
-        VarConfig
+        VarConfig,
+        FlexibleDimension
     }
 
     public partial class EditableField : UserControl
@@ -324,6 +325,23 @@ namespace OpenGaugeClient.Editor.Components
                         else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
                     };
                     editor = nb;
+                    break;
+
+                case FieldType.FlexibleDimension:
+                    var flexibleDimensionTextBox = new TextBox { MinWidth = 100 };
+                    flexibleDimensionTextBox.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                    {
+                        Mode = BindingMode.TwoWay,
+                        Source = this,
+                        Converter = Converters.FlexibleDimensionConverter.Instance
+                    });
+                    flexibleDimensionTextBox.Watermark = "(dimension)";
+                    flexibleDimensionTextBox.KeyDown += (_, e) =>
+                    {
+                        if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
+                        else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
+                    };
+                    editor = flexibleDimensionTextBox;
                     break;
 
                 case FieldType.Color:

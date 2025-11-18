@@ -10,6 +10,9 @@ namespace OpenGaugeClient.Editor.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
+            if (value is string s && string.IsNullOrWhiteSpace(s))
+                return null;
+
             if (value is ColorDef def)
             {
                 byte a = (byte)(def.A * 255);
@@ -23,6 +26,9 @@ namespace OpenGaugeClient.Editor.Converters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
+            if (value is string s && string.IsNullOrWhiteSpace(s))
+                return null;
+
             if (value is Color color)
             {
                 return new ColorDef

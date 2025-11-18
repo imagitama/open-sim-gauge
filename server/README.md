@@ -57,11 +57,19 @@ The existing SimConnect data source is designed this way.
 You must build the data sources before they work in development:
 
 ```cli
+bash ./build.sh osx-arm64
+```
+
+or
+
+```cli
 dotnet build ./src/data-sources/Emulator
 ```
 
+Then run the server:
+
 ```cli
-dotnet run ./src/server
+dotnet run --project ./src/server
 ```
 
 ## Publishing

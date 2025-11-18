@@ -15,11 +15,12 @@ namespace OpenGaugeClient
         private double _renderScaling;
         private Func<string, string, object?> _getSimVarValue { get; set; }
         private ImageCache _imageCache;
+        private SKFontProvider _skFontProvider;
         private FontProvider _fontProvider;
         private SvgCache _svgCache;
         private bool _debug;
 
-        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
+        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, SKFontProvider skFontProvider, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
         {
             _gauge = gauge;
             _gaugeRef = gaugeRef;
@@ -27,6 +28,7 @@ namespace OpenGaugeClient
             _canvasHeight = canvasHeight;
             _renderScaling = renderScaling;
             _imageCache = imageCache;
+            _skFontProvider = skFontProvider;
             _fontProvider = fontProvider;
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
@@ -62,7 +64,8 @@ namespace OpenGaugeClient
 
             var gaugeConfigPath = !string.IsNullOrEmpty(_gaugeRef.Path) ? _gaugeRef.Path : PathHelper.GetFilePath("config.json");
 
-            var (x, y) = _gaugeRef.Position.Resolve(_canvasWidth, _canvasHeight, useCachedPositions);
+            var (gaugeX, gaugeY) = _gaugeRef.Position.Resolve(_canvasWidth, _canvasHeight, useCachedPositions);
+
             var scale = _gaugeRef.Scale;
 
             if (_gaugeRef.Width is double targetWidth && _gauge.Width != 0)
@@ -72,7 +75,7 @@ namespace OpenGaugeClient
 
             var gaugeTransform =
                 Matrix.CreateScale(scale, scale) *
-                Matrix.CreateTranslation(x, y);
+                Matrix.CreateTranslation(gaugeX, gaugeY);
 
             var layerRenderDatas = new List<LayerRenderData>();
 
@@ -80,9 +83,9 @@ namespace OpenGaugeClient
             {
                 using (ctx.PushTransform(Matrix.CreateTranslation(-gaugeOriginX, -gaugeOriginY)))
                 {
-                    if (ConfigManager.Config.Debug || _debug == true)
+                    if (ConfigManager.Config.Debug || _debug == true || _gauge.Debug == true)
                     {
-                        DrawGaugeDebug(ctx, _gauge, x, y);
+                        DrawGaugeDebug(ctx, gaugeX, gaugeY, scale);
                     }
 
                     Geometry? clipGeometry = new RectangleGeometry(new Rect(0, 0, _gauge.Width, _gauge.Height));
@@ -137,10 +140,10 @@ namespace OpenGaugeClient
                             if (layer.Skip == true)
                                 continue;
 
-                            var layerWidth = layer.Width ?? _gauge.Width;
-                            var layerHeight = layer.Height ?? _gauge.Height;
+                            var layerWidth = layer.Width != null ? layer.Width.Resolve(_gauge.Width) : _gauge.Width;
+                            var layerHeight = layer.Height != null ? layer.Height.Resolve(_gauge.Height) : _gauge.Height;
 
-                            var (layerOriginX, layerOriginY) = layer.Origin!.Resolve(layerWidth, layerHeight, useCachedPositions);
+                            var (layerOriginX, layerOriginY) = layer.Origin.Resolve(layerWidth, layerHeight, useCachedPositions);
 
                             var (layerPosX, layerPosY) = layer.Position.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
@@ -232,20 +235,61 @@ namespace OpenGaugeClient
 
                             using (ctx.PushTransform(layerTransform))
                             {
+                                if (layer.Fill != null)
+                                {
+                                    var rect = new Rect(0, 0, layerWidth, layerHeight);
+                                    ctx.FillRectangle(new SolidColorBrush(layer.Fill.ToColor()), rect);
+                                }
+
+                                if (layer.Image != null)
+                                {
+                                    var imagePath = layer.Image;
+
+                                    if (_gauge.Source != null && !Path.IsPathRooted(imagePath))
+                                    {
+                                        var baseDir = Path.GetDirectoryName(_gauge.Source);
+
+                                        if (baseDir != null)
+                                        {
+                                            var newPath = Path.Combine(baseDir, imagePath);
+                                            imagePath = newPath;
+                                        }
+                                    }
+
+                                    Bitmap bmp = _imageCache.Load(imagePath, layer.Width != null ? layer.Width.Resolve(_gauge.Width) : null, layer.Height != null ? layer.Height.Resolve(_gauge.Height) : null, _renderScaling);
+
+                                    int pixelWidth = (int)Math.Ceiling(_gauge.Width * _renderScaling);
+                                    int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
+
+                                    var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
+                                    var destRect = new Rect(0, 0, layerWidth, layerHeight);
+
+                                    using (ctx.PushRenderOptions(new RenderOptions { EdgeMode = EdgeMode.Antialias, BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
+                                    {
+                                        ctx.DrawImage(bmp, srcRect, destRect);
+                                    }
+                                }
+
                                 if (layer.Text != null)
                                 {
                                     var textRef = layer.Text;
                                     var familyName = textRef.FontFamily;
 
-                                    // TODO: if static text then add to imagecache to save on performance
+                                    var typeface = new Typeface("Arial");
+
                                     if (textRef.Font != null)
                                     {
                                         var fontPath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, textRef.Font);
                                         var fontAbsolutePath = PathHelper.GetFilePath(fontPath);
-                                        familyName = _fontProvider.AddFontFileAndGetFamilyName(fontAbsolutePath);
+
+                                        typeface = _fontProvider.GetTypefaceFromPath(fontAbsolutePath);
+                                    }
+                                    else if (familyName != null)
+                                    {
+                                        typeface = _fontProvider.GetTypefaceFromFamilyName(familyName);
                                     }
 
-                                    string text = textRef.Default != null ? textRef.Default : "(no text)";
+                                    string text = textRef.Default ?? "(no text)";
 
                                     if (textRef.Var != null)
                                     {
@@ -266,63 +310,25 @@ namespace OpenGaugeClient
                                     if (text == null)
                                         throw new Exception("Text is null");
 
-                                    int pixelWidth = (int)Math.Ceiling(_gauge.Width * _renderScaling);
-                                    int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
-
-                                    Bitmap bmp = SvgUtils.RenderTextSvgToBitmap(
-                                        _fontProvider,
+                                    var formattedText = new FormattedText(
                                         text,
-                                        0,
-                                        0,
-                                        pixelWidth,
-                                        pixelHeight,
-                                        pixelWidth / 2,
-                                        pixelHeight / 2,
-                                        familyName,
-                                        (float)(textRef.FontSize * _renderScaling),
-                                        textRef.Color,
-                                        pixelWidth,
-                                        pixelHeight,
-                                        _renderScaling
+                                        CultureInfo.InvariantCulture,
+                                        FlowDirection.LeftToRight,
+                                        typeface,
+                                        textRef.FontSize,
+                                        new SolidColorBrush(textRef.Color != null ? textRef.Color.ToColor() : Colors.White)
                                     );
 
-                                    var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, layerWidth, layerHeight);
+                                    var textX = TextUtils.GetHorizontalOffset(layerWidth, formattedText.Width, textRef.Horizontal);
+                                    var textY = TextUtils.GetVerticalOffset(layerHeight, formattedText.Height, textRef.Vertical);
 
-                                    ctx.DrawImage(bmp, srcRect, destRect);
-                                }
+                                    ctx.DrawText(formattedText, new Point(textX, textY));
 
-                                if (layer.Image != null)
-                                {
-                                    var imagePath = layer.Image;
-
-                                    if (_gauge.Source != null && !Path.IsPathRooted(imagePath))
-                                    {
-                                        var baseDir = Path.GetDirectoryName(_gauge.Source);
-
-                                        if (baseDir != null)
-                                        {
-                                            var newPath = Path.Combine(baseDir, imagePath);
-                                            imagePath = newPath;
-                                        }
-                                    }
-
-                                    Bitmap bmp = _imageCache.Load(imagePath, layer, _renderScaling);
-
-                                    int pixelWidth = (int)Math.Ceiling(_gauge.Width * _renderScaling);
-                                    int pixelHeight = (int)Math.Ceiling(_gauge.Height * _renderScaling);
-
-                                    var srcRect = new Rect(0, 0, bmp.PixelSize.Width, bmp.PixelSize.Height);
-                                    var destRect = new Rect(0, 0, layerWidth, layerHeight);
-
-                                    using (ctx.PushRenderOptions(new RenderOptions { EdgeMode = EdgeMode.Antialias, BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
-                                    {
-                                        ctx.DrawImage(bmp, srcRect, destRect);
-                                    }
+                                    // ctx.DrawText(formattedText, new Point(textX, textY));
                                 }
                             }
 
-                            if (layer.Debug || ConfigManager.Config.Debug)
+                            if (layer.Debug == true || (ConfigManager.Config.Debug && layer.Debug != false))
                             {
                                 layerRenderDatas.Add(new LayerRenderData
                                 {
@@ -374,9 +380,9 @@ namespace OpenGaugeClient
             }
         }
 
-        private void DrawGaugeDebug(DrawingContext ctx, Gauge gauge, double x, double y)
+        private void DrawGaugeDebug(DrawingContext ctx, double x, double y, double scale)
         {
-            var gaugeRect = new Rect(0, 0, gauge.Width, gauge.Height);
+            var gaugeRect = new Rect(0, 0, _gauge.Width, _gauge.Height);
 
             var pen = new Pen(Brushes.Pink, 1)
             {
@@ -384,11 +390,13 @@ namespace OpenGaugeClient
             };
             ctx.DrawRectangle(pen, gaugeRect);
 
-            var canvasWidth = gauge.Width;
-            var canvasHeight = gauge.Height;
+            var canvasWidth = _gauge.Width;
+            var canvasHeight = _gauge.Height;
 
             var formattedText = new FormattedText(
-                $"'{gauge.Name}' {x},{y}",
+                $"'{_gauge.Name}'\n" +
+                $"{_gaugeRef.Position.X},{_gaugeRef.Position.Y} => {x},{y}\n" +
+                $"{_gauge.Width}x{_gauge.Height} => {_gauge.Width * scale}x{_gauge.Height * scale}",
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Arial"),
@@ -401,8 +409,8 @@ namespace OpenGaugeClient
 
             ctx.DrawText(formattedText, new Point(textX, textY));
 
-            if (gauge.Grid != null && gauge.Grid > 0)
-                RenderingHelper.DrawGrid(ctx, gauge.Width, gauge.Height, (double)gauge.Grid);
+            if (_gauge.Grid != null && _gauge.Grid > 0)
+                RenderingHelper.DrawGrid(ctx, _gauge.Width, _gauge.Height, (double)_gauge.Grid);
         }
 
         static double ComputeValue(TransformConfig config, object? varValue, Layer? layer = null)

@@ -90,14 +90,14 @@
                         Content="{Binding Width}"
                         EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                         FieldName="Width"
-                        FieldType="Number"
+                        FieldType="FlexibleDimension"
                         Label="Width"
                         OriginalObj="{Binding}" />
                     <components:EditableField
                         Content="{Binding Height}"
                         EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                         FieldName="Height"
-                        FieldType="Number"
+                        FieldType="FlexibleDimension"
                         Label="Height"
                         OriginalObj="{Binding}" />
                     <StackPanel Orientation="Horizontal">
@@ -540,6 +540,13 @@
                         Label="Translate Y"
                         OriginalObj="{Binding}" />
                     <components:EditableField
+                        Content="{Binding Fill}"
+                        EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                        FieldName="Fill"
+                        FieldType="Color"
+                        Label="Fill"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
                         Content="{Binding Debug}"
                         EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                         FieldName="Debug"
@@ -615,12 +622,18 @@
                                         Label="Height"
                                         OriginalObj="{Binding}" />
                                     <components:EditableField
+                                        Content="{Binding Gauge.Grid}"
+                                        EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
+                                        FieldName="Grid"
+                                        FieldType="Number"
+                                        Label="Grid"
+                                        OriginalObj="{Binding}" />
+                                    <components:EditableField
                                         Content="{Binding Gauge.Origin}"
                                         EditCommittedCommand="{Binding ViewModel.EditGaugeCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                         FieldName="Origin"
                                         FieldType="FlexibleVector2"
-                                        Label="Origin"
-                                        OriginalObj="{Binding}" />
+                                        Label="Origin" />
                                     <StackPanel>
                                         <CheckBox Content="Clip" IsChecked="{Binding Gauge.HasClip}" />
                                         <StackPanel

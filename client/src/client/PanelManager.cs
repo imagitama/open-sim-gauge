@@ -6,17 +6,19 @@ namespace OpenGaugeClient.Client
         private readonly Dictionary<string, PanelRenderer> _panelRenderers = [];
         private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
-        private readonly FontCache _fontCache;
+        private readonly SKFontCache _fontCache;
+        private readonly SKFontProvider _skFontProvider;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
 
         public PanelManager()
         {
             _gaugeCache = new GaugeCache();
-            _fontCache = new FontCache();
-            _fontProvider = new FontProvider(_fontCache);
+            _fontCache = new SKFontCache();
+            _skFontProvider = new SKFontProvider(_fontCache);
+            _fontProvider = new FontProvider();
             _svgCache = new SvgCache();
-            _imageCache = new ImageCache(_fontProvider);
+            _imageCache = new ImageCache(_skFontProvider);
         }
 
         public void Initialize(Config config, Func<string, string, object?> _getSimVarValue, string? vehicleName)
@@ -55,6 +57,7 @@ namespace OpenGaugeClient.Client
                     panel,
                     _gaugeCache,
                     _imageCache,
+                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     _getSimVarValue

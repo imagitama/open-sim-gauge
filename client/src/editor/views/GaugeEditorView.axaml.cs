@@ -39,13 +39,12 @@ namespace OpenGaugeClient.Editor
         private Gauge _gauge;
         private int? _gaugeIndex;
         private ReactiveGauge _reactiveGauge;
-        private readonly Image _imageControl;
         private RenderingHelper? _renderer;
         private GaugeRenderer? _gaugeRenderer;
-        private bool _isRendering;
         private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
-        private readonly FontCache _fontCache;
+        private readonly SKFontCache _skFontCache;
+        private readonly SKFontProvider _skFontProvider;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
         private readonly CompositeDisposable _cleanup = new();
@@ -71,10 +70,11 @@ namespace OpenGaugeClient.Editor
             DataContext = ViewModel;
 
             _gaugeCache = new GaugeCache();
-            _fontCache = new FontCache();
-            _fontProvider = new FontProvider(_fontCache);
+            _skFontCache = new SKFontCache();
+            _skFontProvider = new SKFontProvider(_skFontCache);
+            _fontProvider = new FontProvider();
             _svgCache = new SvgCache();
-            _imageCache = new ImageCache(_fontProvider);
+            _imageCache = new ImageCache(_skFontProvider);
 
             var image = this.FindControl<Image>("RenderTargetImage") ?? throw new Exception("No image");
             _renderer = new RenderingHelper(image, RenderFrameAsync, ConfigManager.Config!.Fps, VisualRoot as Window);
@@ -89,6 +89,7 @@ namespace OpenGaugeClient.Editor
                 RebuildGaugeRenderer();
 
                 SubscribeToGaugeChanges();
+                SubscribeToSettings();
 
                 _renderer.Start();
             };
@@ -106,11 +107,29 @@ namespace OpenGaugeClient.Editor
             ViewModel.OnOpenSource += OnOpenSource;
         }
 
+        private void SubscribeToSettings()
+        {
+            SettingsService.Instance
+                    .WhenAnyValue(x => x.GridVisible, x => x.SnapAmount)
+                    .Subscribe(vals =>
+                    {
+                        var (gridVisible, snapAmount) = vals;
+
+                        Console.WriteLine($"[GaugeEditorView] Settings changed grid={gridVisible} amount={snapAmount}");
+
+                        RebuildGaugeRenderer();
+                    })
+                    .DisposeWith(_cleanup);
+        }
+
         private void SubscribeToGaugeChanges()
         {
-            _reactiveGauge
-                .WhenAnyChange()
-                .ObserveOn(RxApp.MainThreadScheduler)
+            _reactiveGauge.Changed
+                .Subscribe(_ => RebuildGaugeRenderer())
+                .DisposeWith(_cleanup);
+
+            _reactiveGauge.Layers
+                .Connect()
                 .Subscribe(_ => RebuildGaugeRenderer())
                 .DisposeWith(_cleanup);
 
@@ -167,24 +186,30 @@ namespace OpenGaugeClient.Editor
             if (VisualRoot is not Window window)
                 return;
 
-            var halfX = window.Bounds.Width / 2;
-            var halfY = window.Bounds.Height / 2;
-            var snappedX = Math.Round(halfX / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
-            var snappedY = Math.Round(halfY / SettingsService.Instance.SnapAmount) * SettingsService.Instance.SnapAmount;
-
-            Console.WriteLine($"[GaugeEditorView] Rebuild renderer at {snappedX},{snappedY}");
 
             var gaugeToRender = ViewModel.Gauge.ToModel();
 
+            gaugeToRender.Grid = SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null;
+
             gaugeToRender.Layers = gaugeToRender.Layers.Select((x, i) => { x.Debug = ViewModel.SelectedLayerIndex == i; return x; }).ToList();
+
+            // TODO: merge with actual origin
+            gaugeToRender.Origin = new FlexibleVector2()
+            {
+                X = "50%",
+                Y = "50%"
+            };
+
+            Console.WriteLine($"[GaugeEditorView] Rebuild renderer");
 
             _gaugeRenderer = new GaugeRenderer(
                 gaugeToRender,
-                new GaugeRef() { Position = { X = snappedX, Y = snappedY }, Gauge = null, Path = ViewModel.Gauge.Source },
-                (int)Width,
-                (int)Height,
+                new GaugeRef() { Position = { X = "50%", Y = "50%" }, Gauge = null, Path = ViewModel.Gauge.Source },
+                (int)window.Width,
+                (int)window.Height,
                 renderScaling: window.RenderScaling,
                 _imageCache,
+                _skFontProvider,
                 _fontProvider,
                 _svgCache,
                 GetSimVarValue,
@@ -197,9 +222,6 @@ namespace OpenGaugeClient.Editor
             // handle unmount
             if (VisualRoot is not Window window)
                 return;
-
-            if (SettingsService.Instance.GridVisible)
-                RenderingHelper.DrawGrid(ctx, (int)window.Width, (int)window.Height, SettingsService.Instance.SnapAmount);
 
             if (_gaugeRenderer == null)
                 return;
@@ -649,8 +671,8 @@ namespace OpenGaugeClient.Editor
             {
                 case TransformActionType.Upsize:
                 case TransformActionType.Downsize:
-                    var width = layer.Width ?? _gauge.Width;
-                    var height = layer.Height ?? _gauge.Height;
+                    var width = layer.Width != null ? layer.Width.Resolve(_gauge.Width) : _gauge.Width;
+                    var height = layer.Height != null ? layer.Height.Resolve(_gauge.Height) : _gauge.Height;
                     var newWidth = width;
                     var newHeight = height;
                     double sizeStep = snapEnabled ? snapAmount : 1;
@@ -667,8 +689,8 @@ namespace OpenGaugeClient.Editor
                             break;
                     }
 
-                    layer.Width = newWidth;
-                    layer.Height = newHeight;
+                    layer.Width = new FlexibleDimension(width);
+                    layer.Height = new FlexibleDimension(height);
 
                     Console.WriteLine($"[GaugeEditorViewViewModel] Scale layer={layer} {width}x{height} => {newWidth}x{newHeight}");
                     break;
