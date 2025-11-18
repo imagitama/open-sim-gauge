@@ -13,6 +13,11 @@
             <ColorPicker x:Name="Picker" />
             <TextBlock FontSize="24" Text="Enter Color" />
             <TextBox Text="{Binding OverrideColor}" />
+            <Button
+                Width="80"
+                HorizontalContentAlignment="Center"
+                Click="OnClear"
+                Content="Clear" />
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"

@@ -21,7 +21,11 @@ namespace OpenGaugeClient.Editor.Converters
                 byte b = (byte)Math.Clamp(def.B, 0, 255);
                 return Color.FromArgb(a, r, g, b);
             }
-            return Colors.Transparent;
+
+            if (value == null)
+                return null;
+
+            return Color.FromArgb(255, 255, 255, 255);
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

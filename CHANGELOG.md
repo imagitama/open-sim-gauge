@@ -1,11 +1,13 @@
 # 0.0.7
 
+- added "connect" button to editor for live editing
 - improved performance when using text
 - fixed text rendering under image
 - fixed layer width/height not accepting percentage
 - added `layer.fill = color`
 - fixed negative position
 - changed all color values to support anything CSS-like (eg. "red")
+- added manual input and clear button to color picker dialog
 - fixed text rendering using font files (and supplied font file)
 - added `gauge.debug = bool`
 - fixed gauge editor not refreshing properly

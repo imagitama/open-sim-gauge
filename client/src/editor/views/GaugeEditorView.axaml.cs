@@ -176,9 +176,10 @@ namespace OpenGaugeClient.Editor
 
         private object? GetSimVarValue(string name, string unit)
         {
-            // simVarValues.TryGetValue((name, unit), out var v);
-            // return v;
-            return null;
+            if (ConnectionService.Instance == null)
+                return null;
+
+            return ConnectionService.Instance.GetSimVarValue(name, unit);
         }
 
         private void RebuildGaugeRenderer()

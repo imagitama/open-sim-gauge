@@ -2,7 +2,7 @@ namespace OpenGaugeClient.Client
 {
     public static class SimVarHelper
     {
-        public static List<SimVarDef> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName)
+        public static List<SimVarDef> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName, bool includeSkipped = false)
         {
             var simVarDefs = new List<SimVarDef>();
 
@@ -14,7 +14,7 @@ namespace OpenGaugeClient.Client
                 if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))
                     continue;
 
-                if (panel.Skip == true)
+                if (panel.Skip == true && includeSkipped != true)
                     continue;
 
                 var gaugeRefs = panel.Gauges;

@@ -9,16 +9,28 @@
         Margin="50"
         ColumnDefinitions="*,*"
         RowDefinitions="1*,3*">
-        <TextBlock
+        <Grid
             Grid.Row="0"
             Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Margin="5,0"
-            VerticalAlignment="Center"
-            FontSize="32"
-            Foreground="White"
-            Text="OpenSimGauge"
-            TextAlignment="Center" />
+            Grid.ColumnSpan="2">
+            <StackPanel>
+                <TextBlock
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    FontSize="32"
+                    Foreground="White"
+                    Text="OpenSimGauge"
+                    TextAlignment="Center" />
+                <components:PrimaryButton
+                    x:Name="ConnectToServer"
+                    Command="{Binding DataContext.ConnectToServerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Label="Connect To Server" />
+                <TextBlock
+                    Margin="0,10,0,0"
+                    Foreground="White"
+                    Text="{Binding ConnectionStatus}" />
+            </StackPanel>
+        </Grid>
         <ScrollViewer
             Grid.Row="1"
             Grid.Column="0"

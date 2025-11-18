@@ -4,8 +4,6 @@ using ReactiveUI;
 using System.Reactive;
 using OpenGaugeClient.Editor.Services;
 using System.Text.RegularExpressions;
-using OpenGaugeClient.Shared;
-using Avalonia.Media;
 
 namespace OpenGaugeClient.Editor
 {
@@ -154,6 +152,13 @@ namespace OpenGaugeClient.Editor
 
     public class MainMenuViewViewModel : ReactiveObject
     {
+        private string _connectionStatus = GetConnectionStatus();
+        public string ConnectionStatus
+        {
+            get => _connectionStatus;
+            set => this.RaiseAndSetIfChanged(ref _connectionStatus, value);
+        }
+
         public ObservableCollection<PanelEntry> PanelsWithIndex { get; } = [];
         public ReactiveCommand<int, Unit> OpenPanelEditorCommand { get; }
         public ReactiveCommand<int, Unit> DeletePanelCommand { get; }
@@ -165,6 +170,7 @@ namespace OpenGaugeClient.Editor
         public ReactiveCommand<int, Unit> DeleteGaugeCommand { get; }
         public ReactiveCommand<object, Unit> OpenGaugeEditorCommand { get; }
         public ReactiveCommand<Unit, Unit> CreateGaugeCommand { get; }
+        public ReactiveCommand<Unit, Unit> ConnectToServerCommand { get; }
         public Action? OnCreateGauge;
         public Action<int>? OnDeletePanel;
         public Action<int>? OnDeleteGauge;
@@ -178,8 +184,46 @@ namespace OpenGaugeClient.Editor
             DeleteGaugeCommand = ReactiveCommand.Create<int>(DeleteGauge);
             OpenGaugeEditorCommand = ReactiveCommand.CreateFromTask<object>(OpenGaugeEditor);
             CreateGaugeCommand = ReactiveCommand.Create(CreateGauge);
+            ConnectToServerCommand = ReactiveCommand.Create(ConnectToServer);
 
             Refresh();
+        }
+
+        private void ConnectToServer()
+        {
+            Console.WriteLine($"[MainMenuViewModel] Connect to server");
+
+            ConnectionStatus = GetConnectionStatus();
+
+            Action OnConnect = () =>
+            {
+                Console.WriteLine("[MainMenuViewModel] We connected");
+
+                ConnectionStatus = GetConnectionStatus();
+            };
+
+            Action<Exception?> OnDisconnect = (reason) =>
+            {
+                Console.WriteLine("[MainMenuViewModel] We disconnected");
+
+                ConnectionStatus = GetConnectionStatus();
+            };
+
+            _ = ConnectionService.Instance.Connect(OnConnect, OnDisconnect);
+        }
+
+        private static string GetConnectionStatus()
+        {
+            if (ConnectionService.Instance.IsConnected)
+                return "Connected successfully";
+
+            if (ConnectionService.Instance.IsConnecting)
+                return "Connecting..."; ;
+
+            if (ConnectionService.Instance.LastFailReason != null)
+                return $"Failed to connect: {ConnectionService.Instance.LastFailReason.Message}";
+
+            return "";
         }
 
         public void Refresh()

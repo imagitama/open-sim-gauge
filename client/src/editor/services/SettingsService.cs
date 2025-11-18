@@ -16,6 +16,7 @@ namespace OpenGaugeClient.Editor.Services
             public bool WindowBorderVisible { get; set; } = true;
             public bool SyncingWithWindow { get; set; } = true;
             public bool OverlayVisible { get; set; } = false;
+            public bool AutoConnectToServer { get; set; } = false;
         }
 
         private static readonly string SettingsPath = PathHelper.GetFilePath("settings.json", true);
@@ -71,6 +72,13 @@ namespace OpenGaugeClient.Editor.Services
             set => this.RaiseAndSetIfChanged(ref _overlayVisible, value);
         }
 
+        private bool _autoConnectToServer = false;
+        public bool AutoConnectToServer
+        {
+            get => _autoConnectToServer;
+            set => this.RaiseAndSetIfChanged(ref _autoConnectToServer, value);
+        }
+
         public ReactiveCommand<Unit, Unit> ToggleSnapCommand { get; }
         public ReactiveCommand<int, Unit> SetSnapAmountCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleGridVisibleCommand { get; }
@@ -78,6 +86,7 @@ namespace OpenGaugeClient.Editor.Services
         public ReactiveCommand<Unit, Unit> ToggleWindowBorderVisibleCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleSyncingWithWindowCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleOverlayVisibleCommand { get; }
+        public ReactiveCommand<Unit, Unit> ToggleAutoConnectToServerCommand { get; }
 
         private SettingsService()
         {
@@ -88,6 +97,7 @@ namespace OpenGaugeClient.Editor.Services
             ToggleWindowBorderVisibleCommand = ReactiveCommand.Create(() => { WindowBorderVisible = !WindowBorderVisible; });
             ToggleSyncingWithWindowCommand = ReactiveCommand.Create(() => { SyncingWithWindow = !SyncingWithWindow; });
             ToggleOverlayVisibleCommand = ReactiveCommand.Create(() => { OverlayVisible = !OverlayVisible; });
+            ToggleAutoConnectToServerCommand = ReactiveCommand.Create(() => { AutoConnectToServer = !AutoConnectToServer; });
 
             this.WhenAnyPropertyChanged()
                 .Throttle(TimeSpan.FromMilliseconds(300))

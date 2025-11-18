@@ -56,13 +56,14 @@ namespace OpenGaugeClient.Editor.Components
             if (owner == null)
                 throw new Exception("Cannot pick without owner");
 
-            // TODO: fix defaulting to transparent
+            // TODO: fix defaulting to transparent even when we set it otherwise (probably a binding issue)
             var startColor = Value ?? Color.FromArgb(0, 255, 255, 255);
             var dialog = new ColorPickerDialog(startColor);
             var ok = await dialog.ShowDialog<bool>(owner);
 
             if (ok)
             {
+                Console.WriteLine($"[ColorPickerField] Dialog success color={(dialog.SelectedColor != null ? dialog.SelectedColor : "(null)")}");
                 Value = dialog.SelectedColor;
                 ColorCommitted?.Invoke(dialog.SelectedColor);
             }

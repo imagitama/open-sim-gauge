@@ -16,8 +16,9 @@ namespace OpenGaugeClient.Client
         public event MessageHandler? OnMessage;
 
         public Action? OnConnect;
-        public Action? OnDisconnect;
+        public Action<Exception?> OnDisconnect;
 
+        public bool IsConnecting = false;
         public bool IsConnected = false;
 
         public ClientHandler(string host, int port)
@@ -33,9 +34,11 @@ namespace OpenGaugeClient.Client
             {
                 try
                 {
+                    IsConnecting = true;
                     Console.WriteLine($"Connecting to server {_host}:{_port}...");
                     await _tcp.ConnectAsync(_host, _port);
                     _stream = _tcp.GetStream();
+                    IsConnecting = false;
                     IsConnected = true;
                     Console.WriteLine("Connected to server");
                     OnConnect?.Invoke();
@@ -45,7 +48,8 @@ namespace OpenGaugeClient.Client
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[Client] Connect failed: {ex.Message}. Retrying in 2 seconds...");
-                    OnDisconnect?.Invoke();
+                    IsConnecting = false;
+                    OnDisconnect?.Invoke(ex);
                     await Task.Delay(2000);
                 }
             }
@@ -93,7 +97,7 @@ namespace OpenGaugeClient.Client
                     if (line == null)
                     {
                         IsConnected = false;
-                        OnDisconnect?.Invoke();
+                        OnDisconnect?.Invoke(null);
                         Console.WriteLine("[Client] Connection lost. Attempting reconnect...");
                         break;
                     }

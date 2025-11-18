@@ -8,14 +8,17 @@ using OpenGaugeClient.Editor.Services;
 using OpenGaugeClient.Shared;
 using ReactiveUI;
 using System.Reactive;
-using System.Reactive.Concurrency;
 
 namespace OpenGaugeClient.Editor
 {
     public class Program
     {
+        public static string[] StartupArgs = Array.Empty<string>();
+
         static void Main(string[] args)
         {
+            StartupArgs = args;
+
             string logPath = Path.Combine(AppContext.BaseDirectory, "editor.log");
             var fileWriter = new StreamWriter(logPath, append: true) { AutoFlush = true };
             Console.SetOut(new TeeTextWriter(Console.Out, fileWriter));
@@ -31,7 +34,6 @@ namespace OpenGaugeClient.Editor
             .UsePlatformDetect()
             .UseReactiveUI()
              .LogToTrace(Avalonia.Logging.LogEventLevel.Verbose);
-        // .LogToTrace();
     }
 
     public partial class App : Application
@@ -56,7 +58,9 @@ namespace OpenGaugeClient.Editor
             {
                 desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-                var config = await ConfigManager.LoadConfig();
+                var configPath = Cli.GetConfigPathFromArgs(Program.StartupArgs);
+
+                var config = await ConfigManager.LoadConfig(configPath);
 
                 var persistedState = await PersistanceManager.LoadState();
 

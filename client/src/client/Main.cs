@@ -85,7 +85,7 @@ namespace OpenGaugeClient.Client
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             }
 
-            var configPath = GetConfigPathFromArgs();
+            var configPath = Cli.GetConfigPathFromArgs(Program.StartupArgs);
 
             var config = await ConfigManager.LoadConfig(configPath);
 
@@ -134,7 +134,7 @@ namespace OpenGaugeClient.Client
                 TellServerWeWantToInit();
             };
 
-            client.OnDisconnect += () =>
+            client.OnDisconnect += (reason) =>
             {
                 _panelManager.SetConnected(false);
             };
@@ -201,21 +201,6 @@ namespace OpenGaugeClient.Client
             await Task.WhenAll(connectTask);
 
             base.OnFrameworkInitializationCompleted();
-        }
-
-        private static string? GetConfigPathFromArgs()
-        {
-            var args = Program.StartupArgs;
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "--config" && i + 1 < args.Length)
-                {
-                    return args[i + 1];
-                }
-            }
-
-            return null;
         }
     }
 }

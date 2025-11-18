@@ -7,7 +7,7 @@ namespace OpenGaugeClient.Editor
 {
     public partial class ColorPickerDialog : Window
     {
-        public Color SelectedColor { get; private set; }
+        public Color? SelectedColor { get; private set; }
 
         public ColorPickerDialog(Color initial)
         {
@@ -37,6 +37,15 @@ namespace OpenGaugeClient.Editor
         {
             Console.WriteLine($"[ColorPickerDialog] Clicked cancel");
             Close(false);
+        }
+
+        private void OnClear(object? sender, RoutedEventArgs e)
+        {
+            Console.WriteLine($"[ColorPickerDialog] Clicked clear");
+
+            SelectedColor = null;
+
+            Close(true);
         }
     }
 
