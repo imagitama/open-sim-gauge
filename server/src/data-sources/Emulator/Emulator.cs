@@ -4,7 +4,8 @@ using OpenGaugeAbstractions;
 public class EmulatorDataSource : DataSourceBase
 {
     private Config _config;
-    private readonly string[] _aircraftTitles =
+    private EmulatorOptions? _options;
+    private readonly string[] _aircraftNames =
     {
         "Cessna Skyhawk",
         "Piper PA44"
@@ -26,11 +27,45 @@ public class EmulatorDataSource : DataSourceBase
 
     private readonly List<CallbackInfo> _simVarCallbacks = [];
 
+    public class EmulatorOptions
+    {
+        public string? InitialVehicle { get; set; }
+        public bool? UseRandomVehicles { get; set; }
+        public List<string>? VehicleNames { get; set; }
+    }
+
     public EmulatorDataSource(Config config)
     {
         _config = config;
         Name = "Emulator";
-        CurrentVehicleName = _aircraftTitles[0];
+        CurrentVehicleName = _aircraftNames[0];
+
+        Console.WriteLine($"Config {config.SourceOptions}");
+
+        if (config.SourceOptions is not null)
+        {
+            var jsonOptions = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            };
+
+            _options = config.SourceOptions.Value.Deserialize<EmulatorOptions>(jsonOptions);
+
+            if (_options is null)
+                throw new InvalidOperationException("Invalid SourceOptions");
+
+            if (_options.VehicleNames != null)
+                _aircraftNames = _options.VehicleNames.ToArray();
+
+            if (_options.InitialVehicle != null)
+                CurrentVehicleName = _options.InitialVehicle;
+            else
+                CurrentVehicleName = _aircraftNames[0];
+        }
+
+        Console.WriteLine($"[EMULATOR] Initial vehicle '{CurrentVehicleName}'");
     }
 
     public override void WatchVar(string varName)
@@ -120,49 +155,43 @@ public class EmulatorDataSource : DataSourceBase
         _simVars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
         _simVars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
 
-        if (_config.SourceOptions != null)
+        if (_options != null && _options.UseRandomVehicles == true)
         {
-            var json = JsonSerializer.SerializeToElement(_config.SourceOptions);
-            bool useRandomVehicles = json.GetProperty("userandomvehicles").GetBoolean();
+            Console.WriteLine($"[EMULATOR] Using random vehicles");
 
-            Console.WriteLine($"[EMULATOR] useRandomVehicles={useRandomVehicles}");
-
-            if (useRandomVehicles)
+            Task.Run(async () =>
             {
-                Task.Run(async () =>
+                var remainingTitles = new List<string>(_aircraftNames);
+
+                while (!_cts.Token.IsCancellationRequested)
                 {
-                    var remainingTitles = new List<string>(_aircraftTitles);
+                    if (remainingTitles.Count == 0)
+                        remainingTitles = new List<string>(_aircraftNames);
 
-                    while (!_cts.Token.IsCancellationRequested)
+                    int index = _rand.Next(remainingTitles.Count);
+                    var newName = remainingTitles[index];
+
+                    if (newName != CurrentVehicleName)
                     {
-                        if (remainingTitles.Count == 0)
-                            remainingTitles = new List<string>(_aircraftTitles);
+                        CurrentVehicleName = newName;
 
-                        int index = _rand.Next(remainingTitles.Count);
-                        var newName = remainingTitles[index];
+                        Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
 
-                        if (newName != CurrentVehicleName)
-                        {
-                            CurrentVehicleName = newName;
-
-                            Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
-
-                            _vehicleCallback?.Invoke(CurrentVehicleName);
-                        }
-
-                        remainingTitles.RemoveAt(index);
-
-                        try
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            break;
-                        }
+                        _vehicleCallback?.Invoke(CurrentVehicleName);
                     }
-                }, _cts.Token);
-            }
+
+                    remainingTitles.RemoveAt(index);
+
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
+                }
+            }, _cts.Token);
         }
 
         Task.Run(async () =>

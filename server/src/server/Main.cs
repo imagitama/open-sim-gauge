@@ -10,6 +10,8 @@ namespace OpenGaugeServer
         {
             Console.WriteLine("Starting up...");
 
+            var configPath = Cli.GetConfigPathFromArgs(args);
+
             var config = await ConfigManager.LoadConfig();
 
             var cliArgs = Cli.ParseArgs(args);
@@ -30,7 +32,7 @@ namespace OpenGaugeServer
             {
                 if (msg.Type == MessageType.Init)
                 {
-                    if (ConfigManager.Debug)
+                    if (ConfigManager.Config.Debug)
                         Console.WriteLine($"Client wants to initialize: {msg}");
 
                     var payload = ((JsonElement)msg.Payload).Deserialize<InitPayload>();

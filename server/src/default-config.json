@@ -6,4 +6,13 @@
     // "port": 1234
   },
   // "rate": 16.7
+  // emulator:
+  // "sourceOptions": {
+  //   "useRandomVehicles": true,
+  //   "vehicleNames": [
+  //     "abc",
+  //     "def"
+  //   ],
+  //   "initialVehicle": "abc"
+  // }
 }

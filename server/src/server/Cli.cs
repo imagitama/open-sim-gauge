@@ -92,5 +92,17 @@ namespace OpenGaugeServer
             prop.SetValue(target, converted);
         }
 
+        public static string? GetConfigPathFromArgs(string[] args)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "--config" && i + 1 < args.Length)
+                {
+                    return args[i + 1];
+                }
+            }
+
+            return null;
+        }
     }
 }

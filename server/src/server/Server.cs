@@ -136,7 +136,7 @@ namespace OpenGaugeServer
                 Payload = payload
             };
 
-            if (ConfigManager.Debug)
+            if (ConfigManager.Config.Debug)
                 Console.WriteLine($"[Server] Broadcast {message}");
 
             var json = JsonSerializer.Serialize(message) + "\n";

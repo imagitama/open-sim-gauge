@@ -22,16 +22,9 @@ namespace OpenGaugeServer
             string configAbsolutePath = PathHelper.GetFilePath("config.json", forceToGitRoot: false);
 
             if (!File.Exists(configAbsolutePath))
-            {
                 throw new Exception($"Config file not found: {configAbsolutePath}");
-            }
 
-            string json = await File.ReadAllTextAsync(configAbsolutePath);
-
-            if (json is null)
-            {
-                throw new Exception($"Config file is invalid: {configAbsolutePath}");
-            }
+            string json = await File.ReadAllTextAsync(configAbsolutePath) ?? throw new Exception($"Config file is invalid: {configAbsolutePath}");
 
             try
             {
@@ -41,10 +34,7 @@ namespace OpenGaugeServer
                     AllowTrailingCommas = true
                 });
 
-                var newConfig = JsonSerializer.Deserialize<Config>(json, _options);
-
-                if (newConfig == null)
-                    throw new InvalidOperationException("Failed to load config.");
+                var newConfig = JsonSerializer.Deserialize<Config>(json, _options) ?? throw new InvalidOperationException("Failed to load config.");
 
                 _config = newConfig;
 
@@ -56,7 +46,5 @@ namespace OpenGaugeServer
                 throw;
             }
         }
-
-        public static bool Debug => Config.Debug;
     }
 }

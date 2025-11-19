@@ -10,7 +10,7 @@ namespace OpenGaugeServer
         {
             var absolutePath = PathHelper.GetFilePath(dir, forceToGitRoot: false);
 
-            if (ConfigManager.Debug)
+            if (ConfigManager.Config.Debug)
                 Console.WriteLine($"[DataSourceLoader] Load data sources: {absolutePath}");
 
             var list = new List<Type>();
@@ -26,7 +26,7 @@ namespace OpenGaugeServer
             {
                 var dllPath = Path.Combine(AppContext.BaseDirectory, "data-sources", name.Name + ".dll");
 
-                if (ConfigManager.Debug)
+                if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[DataSourceLoader] Resolve DLL: {dllPath}");
 
                 if (File.Exists(dllPath))
@@ -40,7 +40,7 @@ namespace OpenGaugeServer
             {
                 try
                 {
-                    if (ConfigManager.Debug)
+                    if (ConfigManager.Config.Debug)
                         Console.WriteLine($"[DataSourceLoader] Load DLL: {dllPath}");
 
                     var alc = new AssemblyLoadContext(dllPath, isCollectible: true);
@@ -57,7 +57,7 @@ namespace OpenGaugeServer
                     {
                         list.Add(type);
 
-                        if (ConfigManager.Debug)
+                        if (ConfigManager.Config.Debug)
                             Console.WriteLine($"[DataSourceLoader] Found data source: {dllPath}");
                     }
                 }
@@ -65,7 +65,7 @@ namespace OpenGaugeServer
                 {
                     Console.WriteLine($"Failed to load data source {dllPath}: {ex.Message}");
 
-                    if (ConfigManager.Debug)
+                    if (ConfigManager.Config.Debug)
                         throw;
                 }
             }

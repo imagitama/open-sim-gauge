@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace OpenGaugeAbstractions
 {
     [GenerateMarkdownTable]
@@ -27,7 +29,7 @@ namespace OpenGaugeAbstractions
         /// <summary>
         /// Arbitrary options provided to the data source. Currently used for configuring the emulator.
         /// </summary>
-        public object? SourceOptions { get; set; }
+        public JsonElement? SourceOptions { get; set; }
     }
 
     [GenerateMarkdownTable]
