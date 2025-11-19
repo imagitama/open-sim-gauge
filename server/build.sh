@@ -2,6 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(realpath "$SCRIPT_DIR/..")"
 
 version=$(<"$SCRIPT_DIR/../VERSION.txt")
 default_platform="win-x64" # "osx-arm64" "linux-x64"
@@ -14,7 +15,18 @@ fi
 echo "Build $platform $version"
 
 echo "Cleaning..."
-rm -rf ./dist
+rm -rf "$SCRIPT_DIR/dist"
+
+generate_readme()
+{
+    echo "Generating README..."
+
+    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/abstractions/Config.cs"
+
+    python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/Config.md
+}
+
+generate_readme
 
 echo "Building server..."
 dotnet publish "$SCRIPT_DIR/src/server/server.csproj" -c Release -r "$platform" --self-contained false /p:PublishSingleFile=false /p:PublishDir="$SCRIPT_DIR"/dist/"$platform"
@@ -54,7 +66,8 @@ for projdir in "$DATA_SRC_ROOT"/*/ ; do
 done
 
 echo "Copying..."
-cp ./src/default-config.json "$SCRIPT_DIR/dist/$platform/config.json"
+cp "$SCRIPT_DIR"/src/default-config.json "$SCRIPT_DIR/dist/$platform/config.json"
+cp "$SCRIPT_DIR"/README.md "$SCRIPT_DIR/dist/$platform"
 
 echo "Zipping..."
 zip_name="server-${version}-${platform}.zip"

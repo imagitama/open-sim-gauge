@@ -13,10 +13,10 @@
     <UseAvalonia>true</UseAvalonia>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.7" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.8" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.7" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.*" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.8" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="ReactiveUI" Version="22.2.1" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="11.3.8" />

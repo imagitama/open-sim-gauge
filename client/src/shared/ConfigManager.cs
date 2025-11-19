@@ -257,6 +257,9 @@ namespace OpenGaugeClient
     }
 
     [GenerateMarkdownTable]
+    /// <summary>
+    /// The config for your client.
+    /// </summary>
     public class Config
     {
         /// <summary>
@@ -314,6 +317,9 @@ namespace OpenGaugeClient
     }
 
     [GenerateMarkdownTable]
+    /// <summary>
+    /// Configure the server IP and port.
+    /// </summary>
     public class ServerConfig
     {
         public string IpAddress { get; set; } = "127.0.0.1";
@@ -321,6 +327,9 @@ namespace OpenGaugeClient
     }
 
     [GenerateMarkdownTable]
+    /// <summary>
+    /// An object that describes a panel.
+    /// </summary>
     public class Panel
     {
         /// <summary>
@@ -467,29 +476,6 @@ namespace OpenGaugeClient
     /// </summary>
     public class GaugeRef : InternalGaugeRef
     {
-        public bool Equals(GaugeRef otherGaugeRef)
-        {
-            return Name != null && otherGaugeRef.Name == Name || Path != null && otherGaugeRef.Path == Path;
-        }
-
-        [JsonIgnore]
-        public string Label
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(Name))
-                    return Name;
-
-                if (!string.IsNullOrEmpty(Gauge?.Name))
-                    return Gauge.Name;
-
-                if (!string.IsNullOrEmpty(Path))
-                    return System.IO.Path.GetFileNameWithoutExtension(Path) ?? string.Empty;
-
-                return string.Empty;
-            }
-        }
-
         /// <summary>
         /// The name of the gauge to use. Optional if you specify a path.
         /// </summary>
@@ -520,6 +506,29 @@ namespace OpenGaugeClient
         /// If to skip rendering this gauge.
         /// </summary>
         public bool Skip { get; set; } = false;
+
+        public bool Equals(GaugeRef otherGaugeRef)
+        {
+            return Name != null && otherGaugeRef.Name == Name || Path != null && otherGaugeRef.Path == Path;
+        }
+
+        [JsonIgnore]
+        public string Label
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(Name))
+                    return Name;
+
+                if (!string.IsNullOrEmpty(Gauge?.Name))
+                    return Gauge.Name;
+
+                if (!string.IsNullOrEmpty(Path))
+                    return System.IO.Path.GetFileNameWithoutExtension(Path) ?? string.Empty;
+
+                return string.Empty;
+            }
+        }
 
         public GaugeRef Clone()
         {
@@ -874,7 +883,7 @@ namespace OpenGaugeClient
         /// How to align the text horizontally.
         /// "Left" would be the text starts at the layer X position, going right.
         /// "Right" would be the text starts at the layer X position, going left.
-        /// <default>Center</Default>
+        /// <default>Center</default>
         /// </summary>
         public TextHorizontalAlignment Horizontal { get; set; } = TextHorizontalAlignment.Center;
         [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -882,7 +891,7 @@ namespace OpenGaugeClient
         /// How to align the text vertically.
         /// "Top" would be the text starts at the layer Y position, going down.
         /// "Bottom" would be the text starts at the layer Y position, going up.
-        /// <default>Center</Default>
+        /// <default>Center</default>
         /// </summary>
         public TextVerticalAlignment Vertical { get; set; } = TextVerticalAlignment.Center;
     }
@@ -909,28 +918,15 @@ namespace OpenGaugeClient
     }
 
     [GenerateMarkdownTable]
+    /// <summary>
+    /// An object that describes how to "map" a SimVar value into a specific degrees.
+    /// Useful for non-linear gauges like a C172 airspeed indicator.
+    /// When rendering the actual degrees is interpolated between calibration points.
+    /// </summary>
     public class CalibrationPoint
     {
         public required double Value { get; set; }
         public required double Degrees { get; set; }
-    }
-
-    public class VarConfig
-    {
-        /// <summary>
-        /// The name of the SimVar straight from the data source eg. "AIRSPEED INDICATED".
-        /// Full list: https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variables.htm
-        /// </summary>
-        public required string Name { get; set; }
-        /// <summary>
-        /// The unit of the SimVar straight from the data source. eg. "knot" or "degrees".
-        /// Full list: https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
-        /// </summary>
-        public required string Unit { get; set; }
-        public override string ToString()
-        {
-            return $"VarConfig(Name={Name ?? "null"},Unit={Unit ?? "null"})";
-        }
     }
 
     [GenerateMarkdownTable]

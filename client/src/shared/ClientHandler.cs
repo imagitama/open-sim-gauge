@@ -16,10 +16,11 @@ namespace OpenGaugeClient.Client
         public event MessageHandler? OnMessage;
 
         public Action? OnConnect;
-        public Action<Exception?> OnDisconnect;
+        public Action<Exception?>? OnDisconnect;
 
         public bool IsConnecting = false;
         public bool IsConnected = false;
+        public Exception? LastFailReason;
 
         public ClientHandler(string host, int port)
         {
@@ -49,6 +50,7 @@ namespace OpenGaugeClient.Client
                 {
                     Console.WriteLine($"[Client] Connect failed: {ex.Message}. Retrying in 2 seconds...");
                     IsConnecting = false;
+                    LastFailReason = ex;
                     OnDisconnect?.Invoke(ex);
                     await Task.Delay(2000);
                 }

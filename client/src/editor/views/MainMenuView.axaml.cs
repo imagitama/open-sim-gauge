@@ -204,16 +204,33 @@ namespace OpenGaugeClient.Editor
 
             Action<Exception?> OnDisconnect = (reason) =>
             {
-                Console.WriteLine("[MainMenuViewModel] We disconnected");
+                Console.WriteLine($"[MainMenuViewModel] We disconnected: {reason}");
 
                 ConnectionStatus = GetConnectionStatus();
             };
 
-            _ = ConnectionService.Instance.Connect(OnConnect, OnDisconnect);
+            Action<string?> OnVehicle = (vehicleName) =>
+            {
+                Console.WriteLine($"[MainMenuViewModel] New vehicle '{vehicleName}'");
+
+                ConnectionStatus = GetConnectionStatus(vehicleName);
+            };
+
+            ConnectionService.Instance.OnConnect += OnConnect;
+            ConnectionService.Instance.OnDisconnect += OnDisconnect;
+            ConnectionService.Instance.OnVehicle += OnVehicle;
+
+            _ = ConnectionService.Instance.Connect();
         }
 
-        private static string GetConnectionStatus()
+        private static string GetConnectionStatus(string? vehicleName = null)
         {
+            if (ConnectionService.Instance.IsConnected && vehicleName != null)
+                return $"Aircraft: {vehicleName}";
+
+            if (ConnectionService.Instance.IsConnected && ConnectionService.Instance.LastKnownVehicleName is { } name)
+                return $"Aircraft: {name}";
+
             if (ConnectionService.Instance.IsConnected)
                 return "Connected successfully";
 

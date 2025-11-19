@@ -2,6 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(realpath "$SCRIPT_DIR/..")"
 
 version=$(<"$SCRIPT_DIR/../VERSION.txt")
 default_platforms=("win-x64" "osx-arm64" "linux-x64")
@@ -13,7 +14,16 @@ if [ ${#platforms[@]} -eq 0 ]; then
 fi
 
 echo "Cleaning..."
-rm -rf ./dist
+rm -rf "$SCRIPT_DIR/dist"
+
+generate_readme()
+{
+    echo "Generating README..."
+
+    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/shared/ConfigManager.cs"
+
+    python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/ConfigManager.md
+}
 
 build_project() {
     local project_path=$1
@@ -44,6 +54,8 @@ build_project() {
         cp -R "$SCRIPT_DIR/src/fonts" "$SCRIPT_DIR/dist/$platform"
         cp -R "$SCRIPT_DIR/../gauges" "$SCRIPT_DIR/dist/$platform"
 
+        cp "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/dist/$platform"
+
         echo "Zipping..."
         zip_name="OpenSimGauge-${version}-${platform}.zip"
         (
@@ -52,6 +64,8 @@ build_project() {
         )
     done
 }
+
+generate_readme
 
 build_project "$SCRIPT_DIR/src/client/OpenSimGaugeClient.csproj" "OpenSimGaugeClient" "OpenGaugeClient.Client.Program" client
 

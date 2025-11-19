@@ -1,26 +1,31 @@
 # Server
 
-## Config
+## Configuration
 
-### Root-level
+<!-- START_SECTION:config -->
+
+### Config
 
 Configuration of the server application that runs on the host machine.
 
-| Property | Type           | Default        | Description                                                                                                    |
-| -------- | -------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
-| `source` | `string`       |                | Which data source to use. The default config uses SimConnect.                                                  |
-| `server` | `ServerConfig` | `ServerConfig` | Override the default IP address and port of the server.                                                        |
-| `rate`   | `double`       | `16.7`         | Override the default poll rate the data source should use (which is also network send rate).<br>16.7ms = 60Hz. |
-| `debug`  | `bool`         | `false`        | Log extra output to help diagnose issues.                                                                      |
+| Property | Type | Default | Description |
+|-----------|------|----------|--------------|
+| `source` | `string` |  | Which data source to use. The default config uses SimConnect. |
+| `server` | `ServerConfig` | `ServerConfig` | Override the default IP address and port of the server. |
+| `rate` | `double` | `16.7` | Override the default poll rate the data source should use (which is also network send rate).<br>16.7ms = 60Hz. |
+| `debug` | `bool` | `false` | Log extra output to help diagnose issues. |
+| `sourceOptions` | `JsonElement?` |  | Arbitrary options provided to the data source. Currently used for configuring the emulator. |
 
 ### ServerConfig
 
 Override the default IP address and port of the server.
 
-| Property    | Type     | Default     | Description |
-| ----------- | -------- | ----------- | ----------- |
-| `ipAddress` | `string` | `"0.0.0.0"` |             |
-| `port`      | `int`    | `1234`      |             |
+| Property | Type | Default | Description |
+|-----------|------|----------|--------------|
+| `ipAddress` | `string` | `"0.0.0.0"` |  |
+| `port` | `int` | `1234` |  |
+
+<!-- END_SECTION:config -->
 
 ## Creating data sources
 

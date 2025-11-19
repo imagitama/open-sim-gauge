@@ -9,11 +9,15 @@ namespace OpenGaugeClient.Editor.Services
         public static ConnectionService Instance { get; } = new();
 
         private ClientHandler? _client;
-        private string? lastKnownVehicleName;
+        private string? _lastKnownVehicleName;
+        public string? LastKnownVehicleName => _lastKnownVehicleName;
         private Dictionary<(string, string), object?> simVarValues = new Dictionary<(string, string), object?>();
         public bool IsConnecting => _client != null && _client.IsConnecting;
         public bool IsConnected => _client != null && _client.IsConnected;
-        public Exception? LastFailReason;
+        public Exception? LastFailReason => _client != null ? _client.LastFailReason : null;
+        public Action? OnConnect;
+        public Action<Exception?>? OnDisconnect;
+        public Action<string?>? OnVehicle;
 
         public object? GetSimVarValue(string name, string unit)
         {
@@ -21,7 +25,7 @@ namespace OpenGaugeClient.Editor.Services
             return v;
         }
 
-        public async Task Connect(Action OnConnect, Action<Exception?> OnDisconnect)
+        public async Task Connect()
         {
             Console.WriteLine($"[ConnectionService] Connect");
 
@@ -51,7 +55,7 @@ namespace OpenGaugeClient.Editor.Services
                     Console.WriteLine($"[ConnectionService] Sim vars: {string.Join(", ", simVarsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
 
                 await _client.SendInitMessage(
-                    lastKnownVehicleName,
+                    _lastKnownVehicleName,
                     simVarsToSubscribeTo.ToArray(),
                     // TODO: finish events
                     new string[] { }
@@ -61,16 +65,10 @@ namespace OpenGaugeClient.Editor.Services
             _client.OnConnect += () =>
             {
                 TellServerWeWantToInit();
-
-                OnConnect.Invoke();
+                OnConnect?.Invoke();
             };
 
-            _client.OnDisconnect += (reason) =>
-            {
-                LastFailReason = reason;
-
-                OnDisconnect.Invoke(reason);
-            };
+            _client.OnDisconnect += OnDisconnect;
 
             var hasSentAVar = false;
             _client.OnMessage += async (msg) =>
@@ -91,7 +89,12 @@ namespace OpenGaugeClient.Editor.Services
 
                         var initPayload = ((JsonElement)msg.Payload).Deserialize<InitPayload>() ?? throw new Exception("Payload is null");
 
-                        lastKnownVehicleName = initPayload.VehicleName;
+                        var newVehicleName = initPayload.VehicleName;
+
+                        if (newVehicleName != _lastKnownVehicleName)
+                            OnVehicle?.Invoke(newVehicleName);
+
+                        _lastKnownVehicleName = newVehicleName;
 
                         if (msg.Type == MessageType.ReInit)
                         {

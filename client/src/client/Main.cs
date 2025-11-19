@@ -85,6 +85,8 @@ namespace OpenGaugeClient.Client
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             }
 
+            Console.WriteLine("Loading config...");
+
             var configPath = Cli.GetConfigPathFromArgs(Program.StartupArgs);
 
             var config = await ConfigManager.LoadConfig(configPath);

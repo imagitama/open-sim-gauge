@@ -3,11 +3,11 @@ import sys
 import os
 
 if len(sys.argv) < 2:
-    print("Usage: python generate_docs.py <input.cs> <output_dir>")
+    print("Usage: python generate_docs.py <input.cs> <output_dir> (defaults to same directory as script)")
     sys.exit(1)
 
 input_path = sys.argv[1]
-output_dir = sys.argv[2] if len(sys.argv) > 2 else os.getcwd()
+output_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(os.path.abspath(__file__))
 
 if not os.path.exists(input_path):
     print(f"Input file not found: {input_path}")
@@ -20,7 +20,7 @@ if not os.path.isdir(output_dir):
 base_name = os.path.splitext(os.path.basename(input_path))[0]
 output_path = os.path.join(output_dir, base_name + ".md")
 
-def parse_file(lines):
+def parse_file(path, lines):
     classes = []
     current_class = None
     class_summary = []
@@ -31,6 +31,8 @@ def parse_file(lines):
     recording_value = False
     attr_generate = False
 
+    print(f"Parse file {path}")
+
     def flush_class():
         nonlocal current_class, class_summary, current_properties
         if current_class:
@@ -39,6 +41,7 @@ def parse_file(lines):
                 "desc": " ".join(class_summary).strip(),
                 "props": current_properties.copy()
             })
+            print(f"Added class {current_class}")
             current_class = None
             class_summary = []
             current_properties = []
@@ -80,6 +83,7 @@ def parse_file(lines):
                 current_properties = []
                 attr_generate = False
                 prop_summary = []
+                print(f"  Class {current_class} --- {class_summary}")
             continue
 
         if current_class and line.startswith("public ") and " get; " in line:
@@ -114,6 +118,8 @@ def parse_file(lines):
                 final_type = type_override or type_
                 final_default = default_override if default_override is not None else default
 
+                print(f"    {name} --- default_override={default_override} final_default={default}")
+
                 current_properties.append((name, final_type, final_default, desc))
                 prop_summary = []
                 prop_value = []
@@ -145,7 +151,7 @@ def generate_markdown(classes):
 with open(input_path, encoding="utf-8") as f:
     lines = f.readlines()
 
-classes = parse_file(lines)
+classes = parse_file(input_path, lines)
 
 if not classes:
     print("No classes found with [GenerateMarkdownTable].")
