@@ -25,7 +25,8 @@ namespace OpenGaugeClient
                 CanResize = false,
                 SystemDecorations = SystemDecorations.None,
                 ExtendClientAreaToDecorationsHint = false,
-                ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome
+                ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.NoChrome,
+                SizeToContent = SizeToContent.Manual, // fix weird high DPI dynamic resizing
             };
 
             UpdateWindowForPanel(window, panel);
@@ -110,8 +111,9 @@ namespace OpenGaugeClient
             var width = panel.Width ?? bounds.Width;
             var height = panel.Height ?? bounds.Height;
 
-            window.Width = width;
-            window.Height = height;
+            // try to fix high DPI scaling issues...
+            window.Width = window.MinWidth = window.MaxWidth = width;
+            window.Height = window.MinHeight = window.MaxHeight = height;
 
             if (panel.Position != null)
             {

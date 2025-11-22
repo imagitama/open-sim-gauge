@@ -1,3 +1,8 @@
+# 0.0.9
+
+- fixed client crash
+- fixed high DPI issues and panel sizes (may cause lower resolution rendering)
+
 # 0.0.8
 
 - unsubscribe from all vars/events on client disconnect

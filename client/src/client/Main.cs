@@ -33,6 +33,11 @@ namespace OpenGaugeClient.Client
 
         public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<ClientApp>()
             .UsePlatformDetect()
+            .With(new Win32PlatformOptions
+            {
+                // fix window high DPI scaling issues
+                DpiAwareness = Win32DpiAwareness.Unaware
+            })
             .UseReactiveUI()
             .LogToTrace()
             .AfterSetup(_ =>
@@ -186,7 +191,19 @@ namespace OpenGaugeClient.Client
                         var simVarPayload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>() ?? throw new Exception("Payload is null");
 
                         var key = (simVarPayload.Name, simVarPayload.Unit);
-                        simVarValues[key] = ((JsonElement)simVarPayload.Value).GetDouble();
+
+                        double? value = null;
+
+                        if (simVarPayload.Value is JsonElement je)
+                        {
+                            if (je.ValueKind == JsonValueKind.Number)
+                                value = je.GetDouble();
+                            else if (je.ValueKind != JsonValueKind.Null &&
+                                     je.ValueKind != JsonValueKind.Undefined)
+                                Console.WriteLine($"Invalid value for {key}: {je}");
+                        }
+
+                        simVarValues[key] = value;
 
                         if (!hasSentAVar)
                         {
