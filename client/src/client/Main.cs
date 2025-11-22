@@ -107,7 +107,7 @@ namespace OpenGaugeClient.Client
 
             _panelManager = new PanelManager();
 
-            if (ConfigManager.Config.Debug)
+            if (ConfigManager.Config.RequireConnection != true)
                 _panelManager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
 
             var client = new ClientHandler(config.Server.IpAddress, config.Server.Port);
@@ -117,14 +117,14 @@ namespace OpenGaugeClient.Client
                 if (config.Debug)
                     Console.WriteLine($"[Main] Tell server to initialize (vehicle '{lastKnownVehicleName}')...");
 
-                var simVarsToSubscribeTo = SimVarHelper.GetSimVarDefsToSubscribeTo(config, lastKnownVehicleName);
+                var varsToSubscribeTo = VarHelper.GetVarDefsToSubscribeTo(config, lastKnownVehicleName);
 
                 if (config.Debug)
-                    Console.WriteLine($"[Main] Sim vars: {string.Join(", ", simVarsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
+                    Console.WriteLine($"[Main] Vars: {string.Join(", ", varsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
 
                 await client.SendInitMessage(
                     lastKnownVehicleName,
-                    simVarsToSubscribeTo.ToArray(),
+                    varsToSubscribeTo.ToArray(),
                     // TODO: finish events
                     new string[] { }
                 );

@@ -1,3 +1,4 @@
+using System.Reflection;
 using OpenGaugeAbstractions;
 
 namespace OpenGaugeServer
@@ -12,8 +13,9 @@ namespace OpenGaugeServer
 
             foreach (var type in dataSources)
             {
-                var instance = (IDataSource)Activator.CreateInstance(type, [ConfigManager.Config])!;
-                var key = instance.Name.ToLower();
+                var attr = type.GetCustomAttribute<DataSourceNameAttribute>();
+                var name = attr?.Name ?? type.Name;
+                var key = name.ToLower();
 
                 _pluginTypes[key] = type;
             }

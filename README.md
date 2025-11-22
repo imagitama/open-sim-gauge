@@ -93,6 +93,20 @@ uses "cpu" data source:
 }
 ```
 
+## Development
+
+This project was created entirely using VSCode (with the C# and C# Dev Kit
+extensions) and the dotnet CLI.
+
+1. Clone repo
+2. Open `./client/src/client` in VSCode (and install C# and C# Dev Kit
+   extensions)
+3. Run `dotnet restore ./client/src/client`
+4. Run with `dotnet run --project ./client/src/client`
+5. Build with the bash script `bash ./client/build.sh` or use the dotnet CLI
+
+Repeat for the server.
+
 ## FAQ
 
 ### Can I create my own client?
@@ -100,15 +114,21 @@ uses "cpu" data source:
 Yes - it just needs to connect over TCP to the server, broadcast the correct
 initialization message as JSON and the server will start sending it the SimVars.
 
+See server/src/server/Messages.cs for all possible messages.
+
 ```json
 {
   "type": "Init",
   "payload": {
-    "simvars": [
+    "vehicleName": "Cessna 172", // the last known vehicle (it will send a ReInit message if wrong)
+    "vars": [
       {
         "name": "AIRSPEED INDICATED",
         "unit": "knots"
       }
+    ],
+    "events": [
+      "SOME_COOL_EVENT"
     ]
   }
 }
@@ -127,31 +147,10 @@ initialization message as JSON and the server will start sending it the SimVars.
 
 ### Can I use this with my train or some other sim?
 
-Yes - you just need to creae a new data source in the server and change your
-`config.json` to use it:
+Yes it's very possible - just create a new dotnet project, depend on
+`OpenSimGaugeAbstractions.csproj`, create a class that implements `IDataSource`
+and place the DLL (and any other dependencies) into the client directory.
 
-```c#
-    public class MyAwesomeTrainSim : IDataSource
-    {
-        // a function called whenever a gauge layer wants to subscribe to a variable
-        public void SubscribeToVar(string varName, string unit, Action<object> callback);
+## Contribution
 
-        bool IsConnected { get; set; } // if connected or not
-
-        void Connect() {
-          // connect to the game's API
-        }
-        void Disconnect() {
-          // disconnect (called when all clients have disconnected)
-        }
-        void Listen(Config config) {
-          // start a loop to request data from the game (optional)
-        }
-    }
-}
-```
-
-## Ideas
-
-- send `config.json` to clients to remote update
-- Android/iOS app
+Please submit a PR with screenshots.

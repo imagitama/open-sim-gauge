@@ -2,20 +2,22 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using OpenGaugeAbstractions;
 
+[DataSourceName("Cpu")]
 public class CpuDataSource : DataSourceBase
 {
+    private Config _config;
     public override string? CurrentVehicleName { get; set; } = "CPU";
-
-    private Action<object>? _cpuCallback;
     private CancellationTokenSource? _cts;
     private readonly object _lock = new();
+    private bool _isSubscribed = false;
+    private readonly Dictionary<string, Action<object>> _eventCallbacks = [];
 
     public CpuDataSource(Config config)
     {
-        Name = "Cpu";
+        _config = config;
     }
 
-    public override void Connect()
+    public override async Task Connect()
     {
         if (IsConnected) return;
         IsConnected = true;
@@ -23,50 +25,50 @@ public class CpuDataSource : DataSourceBase
         _cts = new CancellationTokenSource();
     }
 
-    public override void Disconnect()
+    public override async Task Disconnect()
     {
         if (!IsConnected) return;
         IsConnected = false;
         _cts?.Cancel();
     }
 
-    public override void Listen(Config config)
+    public override async Task Listen()
     {
-        if (_cts == null)
+    }
+
+    public override async Task SubscribeToVar(string varName, string? unit, Action<object> callback)
+    {
+        if (_isSubscribed)
             return;
 
-        Task.Run(() => PollCpuUsageAsync(config.Rate, _cts.Token));
+        _ = Task.Run(() => PollCpuUsageAsync(callback, _config.Rate, _cts.Token));
+
+        _isSubscribed = true;
     }
 
-    public override void SubscribeToVar(string varName, string unit, Action<object> callback)
+    public override async Task UnsubscribeFromVar(string varName, string? unit, Action<object> callback)
     {
-        if (varName.Equals("CPU", StringComparison.OrdinalIgnoreCase))
-        {
-            _cpuCallback = callback;
-
-            Console.WriteLine($"[CPU] Subscribed to var '{varName}' ({unit})");
-        }
-        else
-        {
-            Console.WriteLine($"[CPU] Unknown var '{varName}' ({unit})");
-        }
+        _cts?.Cancel();
+        _isSubscribed = false;
     }
 
-    public override void UnsubscribeFromVar(string varName, string unit)
+    public override async Task SubscribeToEvent(string eventName, Action<object> callback)
     {
-        if (varName.Equals("CPU", StringComparison.OrdinalIgnoreCase))
-        {
-            _cpuCallback = null;
-
-            Console.WriteLine($"[CPU] Unsubscribed from var '{varName}' ({unit})");
-        }
-        else
-        {
-            Console.WriteLine($"[CPU] Unknown var '{varName}' ({unit})");
-        }
+        var key = eventName;
+        _eventCallbacks[key] = callback;
     }
 
-    private async Task PollCpuUsageAsync(double rate, CancellationToken token)
+    public override async Task UnsubscribeFromEvent(string eventName, Action<object> callback)
+    {
+        var key = eventName;
+        _eventCallbacks.Remove(key);
+    }
+
+    public override async Task SubscribeToVehicle(Action<string> callback)
+    {
+    }
+
+    private async Task PollCpuUsageAsync(Action<object> callback, double rate, CancellationToken token)
     {
         Console.WriteLine("[CPU] Polling CPU usage");
 
@@ -75,11 +77,13 @@ public class CpuDataSource : DataSourceBase
             float cpuUsage = GetSystemCpuUsage();
             lock (_lock)
             {
-                _cpuCallback?.Invoke(cpuUsage);
+                callback.Invoke(cpuUsage);
             }
 
             await Task.Delay((int)rate, token);
         }
+
+        Console.WriteLine("[CPU] Stopped polling CPU usage");
     }
 
     private static float GetSystemCpuUsage()

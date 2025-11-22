@@ -1,3 +1,19 @@
+# 0.0.8
+
+- unsubscribe from all vars/events on client disconnect
+- stop throwing exception on null vehicle name
+- changed `IDataSource` methods to async
+- added `server.config.ReconnectDelay = ms`
+- panels are now always shown
+  - added `client.config.RequireConnection = bool` to disable this
+- moved CPU to its own config
+- moved data source name to attribute `[DataSourceName("SimConnect")]`
+- fixed main menu black text on Linux
+- fixed text rendering without a template
+- fixed creating data sources twice
+- fixed gauges not defaulting to center of panel
+- fixed `set` and `unset` server CLI commands
+
 # 0.0.7
 
 - added "connect" button to editor for live editing

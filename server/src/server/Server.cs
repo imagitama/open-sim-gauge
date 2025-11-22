@@ -7,13 +7,38 @@ using System.Text.Json.Serialization;
 
 namespace OpenGaugeServer
 {
+    public class ClientWrapper(TcpClient client)
+    {
+        public TcpClient Client = client;
+        public override string ToString()
+        {
+            try
+            {
+                var socket = Client?.Client;
+                if (socket == null)
+                    return "[not_connected]";
+
+                var endpoint = socket.RemoteEndPoint as IPEndPoint;
+                if (endpoint == null)
+                    return "[no_endpoint]";
+
+                return endpoint.ToString();
+            }
+            catch
+            {
+                return "[unavailable]";
+            }
+        }
+    }
+
     public class Server
     {
         private readonly TcpListener _listener;
-        private readonly ConcurrentDictionary<TcpClient, NetworkStream> _clients = new();
+        private readonly ConcurrentDictionary<ClientWrapper, NetworkStream> _clients = new();
 
-        public delegate void MessageHandler(ClientMessage<object> message);
-        public event MessageHandler? OnMessage;
+        public Action<ClientWrapper, ClientMessage<object>>? OnMessage;
+        public Action<ClientWrapper>? OnClientConnect;
+        public Action<ClientWrapper>? OnClientDisconnect;
 
         public bool IsRunning = false;
 
@@ -37,26 +62,18 @@ namespace OpenGaugeServer
             while (!cancellationToken.IsCancellationRequested)
             {
                 var client = await _listener.AcceptTcpClientAsync();
+                var wrapper = new ClientWrapper(client);
 
-                var endpoint = client.Client.RemoteEndPoint as IPEndPoint;
-                if (endpoint != null)
-                {
-                    var ip = endpoint.Address.ToString();
-                    var port = endpoint.Port;
-                    Console.WriteLine($"Client connected: {ip}:{port}");
-                }
-                else
-                {
-                    Console.WriteLine($"Client connected");
-                }
+                Console.WriteLine($"Client {wrapper} connected");
 
-                _clients[client] = client.GetStream();
-                _ = HandleClientAsync(client);
+                _clients[wrapper] = client.GetStream();
+                _ = HandleClientAsync(wrapper);
             }
         }
 
-        private async Task HandleClientAsync(TcpClient client)
+        private async Task HandleClientAsync(ClientWrapper wrapper)
         {
+            var client = wrapper.Client;
             using var reader = new StreamReader(client.GetStream(), Encoding.UTF8);
             var stream = client.GetStream();
 
@@ -67,7 +84,9 @@ namespace OpenGaugeServer
                     // detect socket closed by remote (Ctrl+C)
                     if (client.Client.Poll(0, SelectMode.SelectRead) && client.Available == 0)
                     {
-                        Console.WriteLine("Client disconnected (poll)");
+                        if (ConfigManager.Config.Debug)
+                            Console.WriteLine($"[Server] Client {wrapper} disconnected (poll)");
+                        OnClientDisconnect?.Invoke(wrapper);
                         break;
                     }
 
@@ -78,20 +97,14 @@ namespace OpenGaugeServer
                         if (line == null)
                             break;
 
-                        try
+                        var options = new JsonSerializerOptions
                         {
-                            var options = new JsonSerializerOptions
-                            {
-                                Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-                            };
-                            var msg = JsonSerializer.Deserialize<ClientMessage<object>>(line, options);
-                            if (msg != null)
-                                OnMessage?.Invoke(msg);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"HandleClientAsync failed: {ex.Message}");
-                        }
+                            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                        };
+                        var msg = JsonSerializer.Deserialize<ClientMessage<object>>(line, options);
+                        if (msg != null)
+                            OnMessage?.Invoke(wrapper, msg);
+
                     }
                     else
                     {
@@ -101,34 +114,41 @@ namespace OpenGaugeServer
             }
             catch (IOException)
             {
-                Console.WriteLine("Client disconnected (IOException)");
+                if (ConfigManager.Config.Debug)
+                    Console.WriteLine($"[Server] Client {wrapper} disconnected (IOException)");
+
+                OnClientDisconnect?.Invoke(wrapper);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Client error: {ex.Message}");
+                Console.WriteLine($"[Server] Client {wrapper} error: {ex.Message}");
             }
 
-            Console.WriteLine("Client disconnected");
-            _clients.TryRemove(client, out _);
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[Server] Client {wrapper} disconnected");
+
+            OnClientDisconnect?.Invoke(wrapper);
+
             client.Close();
+            _clients.TryRemove(wrapper, out _);
         }
 
-        public void BroadcastSimVar(string name, string unit, object value)
+        public void BroadcastVar(ClientWrapper? client, string name, string unit, object? value)
         {
-            Broadcast(MessageType.Var, new SimVarPayload { Name = name, Unit = unit, Value = value });
+            Broadcast(client, MessageType.Var, new VarPayload { Name = name, Unit = unit, Value = value });
         }
 
-        public void BroadcastInit(string currentVehicleName)
+        public void BroadcastInit(ClientWrapper? client, string? currentVehicleName)
         {
-            Broadcast(MessageType.Init, new InitPayload { VehicleName = currentVehicleName, SimEvents = [], SimVars = [] });
+            Broadcast(client, MessageType.Init, new InitPayload { VehicleName = currentVehicleName, Events = [], Vars = [] });
         }
 
-        public void BroadcastReInit(string currentVehicleName)
+        public void BroadcastReInit(ClientWrapper? client, string? currentVehicleName)
         {
-            Broadcast(MessageType.ReInit, new InitPayload { VehicleName = currentVehicleName, SimEvents = [], SimVars = [] });
+            Broadcast(client, MessageType.ReInit, new InitPayload { VehicleName = currentVehicleName, Events = [], Vars = [] });
         }
 
-        public void Broadcast<TPayload>(MessageType type, TPayload payload)
+        public void Broadcast<TPayload>(ClientWrapper? client, MessageType type, TPayload payload)
         {
             var message = new ServerMessage<TPayload>
             {
@@ -136,91 +156,23 @@ namespace OpenGaugeServer
                 Payload = payload
             };
 
-            if (ConfigManager.Config.Debug)
-                Console.WriteLine($"[Server] Broadcast {message}");
-
             var json = JsonSerializer.Serialize(message) + "\n";
             var bytes = Encoding.UTF8.GetBytes(json);
 
-            foreach (var stream in _clients.Values)
+            // handle disconnections
+            if (client != null && !_clients.ContainsKey(client))
+                return;
+
+            List<NetworkStream> streamsToSendTo = client != null ? [_clients[client]] : [.. _clients.Values];
+
+            foreach (var stream in streamsToSendTo)
             {
+                if (ConfigManager.Config.Debug)
+                    Console.WriteLine($"[Server] Broadcast {message}");
+
                 try { stream.Write(bytes, 0, bytes.Length); }
                 catch { /* ignore client failures */ }
             }
         }
-    }
-
-    public class SimVarDef
-    {
-        public required string Name { get; set; }
-        public required string Unit { get; set; }
-        public bool? Debug { get; set; } // if client wants us to print extra debugging stuff
-    }
-
-    /// <summary>
-    /// A message to send from us to the clients.
-    /// </summary>
-    public class ServerMessage<TPayload>
-    {
-        public MessageType Type { get; set; }
-        public required TPayload Payload { get; set; }
-
-        public override string ToString()
-        {
-            return $"ServerMessage type={Type} payload={Payload!.ToString()}";
-        }
-    }
-
-    public class SimVarPayload
-    {
-        public required string Name { get; set; }
-        public required string Unit { get; set; }
-        public required object Value { get; set; }
-
-        public override string ToString()
-        {
-            return $"SimVarPayload Name={Name} Unit={Unit} Value={Value}";
-        }
-    }
-
-    public class InitPayload
-    {
-        public required string VehicleName { get; set; }
-        public required SimVarDef[] SimVars { get; set; }
-        public required string[] SimEvents { get; set; }
-
-        public override string ToString()
-        {
-            var simVarsList = string.Join(", ", SimVars.Select(v => $"{v.Name} ({v.Unit})"));
-            var eventsList = string.Join(", ", SimEvents);
-
-            return $"InitPayload:\n" +
-                $"  Vehicle: {VehicleName}" +
-                $"  SimVars: [{simVarsList}]\n" +
-                $"  SimEvents: [{eventsList}]";
-        }
-    }
-
-    /// <summary>
-    /// A message from a client.
-    /// </summary>
-    public class ClientMessage<TPayload>
-    {
-        public MessageType Type { get; set; }
-        public required TPayload Payload { get; set; }
-
-        public override string ToString()
-        {
-            return $"ClientMessage type={Type} payload={Payload!}";
-        }
-    }
-
-    public enum MessageType
-    {
-        Init,
-        ReInit,
-        Var,
-        Event,
-        Unknown
     }
 }

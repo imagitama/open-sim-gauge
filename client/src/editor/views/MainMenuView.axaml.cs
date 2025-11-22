@@ -226,10 +226,10 @@ namespace OpenGaugeClient.Editor
         private static string GetConnectionStatus(string? vehicleName = null)
         {
             if (ConnectionService.Instance.IsConnected && vehicleName != null)
-                return $"Aircraft: {vehicleName}";
+                return $"Vehicle: {vehicleName}";
 
             if (ConnectionService.Instance.IsConnected && ConnectionService.Instance.LastKnownVehicleName is { } name)
-                return $"Aircraft: {name}";
+                return $"Vehicle: {name}";
 
             if (ConnectionService.Instance.IsConnected)
                 return "Connected successfully";

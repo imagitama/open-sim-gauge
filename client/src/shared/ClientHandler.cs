@@ -82,9 +82,9 @@ namespace OpenGaugeClient.Client
             await _stream!.WriteAsync(bytes, 0, bytes.Length);
         }
 
-        public async Task SendInitMessage(string? vehicleName, SimVarDef[] simVars, string[] simEvents)
+        public async Task SendInitMessage(string? vehicleName, VarDef[] vars, string[] simEvents)
         {
-            await SendMessage(MessageType.Init, new InitPayload { VehicleName = vehicleName, SimVars = simVars, SimEvents = simEvents });
+            await SendMessage(MessageType.Init, new InitPayload { VehicleName = vehicleName, Vars = vars, Events = simEvents });
         }
 
         private async Task ListenAsync()
@@ -137,7 +137,7 @@ namespace OpenGaugeClient.Client
         }
     }
 
-    public class SimVarDef
+    public class VarDef
     {
         public required string Name { get; set; }
         public required string Unit { get; set; }
@@ -170,8 +170,8 @@ namespace OpenGaugeClient.Client
     public class InitPayload
     {
         public required string? VehicleName { get; set; }
-        public required SimVarDef[] SimVars { get; set; }
-        public required string[] SimEvents { get; set; }
+        public required VarDef[] Vars { get; set; }
+        public required string[] Events { get; set; }
     }
 
     public enum MessageType

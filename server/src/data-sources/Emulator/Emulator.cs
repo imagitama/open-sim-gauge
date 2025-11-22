@@ -1,6 +1,7 @@
 using System.Text.Json;
 using OpenGaugeAbstractions;
 
+[DataSourceName("Emulator")]
 public class EmulatorDataSource : DataSourceBase
 {
     private Config _config;
@@ -10,22 +11,11 @@ public class EmulatorDataSource : DataSourceBase
         "Cessna Skyhawk",
         "Piper PA44"
     };
-    private Action<string>? _vehicleCallback;
     private readonly Random _rand = new();
-    private readonly Dictionary<string, Func<string?, object>> _simVars = [];
-    private readonly Dictionary<string, object> _forcedVars = [];
     private CancellationTokenSource _cts = null!;
-    private string? _watching = null;
-    private int _watchCount = 0;
-
-    public class CallbackInfo
-    {
-        public required string name;
-        public required string unit;
-        public required Action<object> callback;
-    }
-
-    private readonly List<CallbackInfo> _simVarCallbacks = [];
+    private Dictionary<string, Func<object?, object>> _vars = [];
+    private Dictionary<(string VarName, string? Unit), Action<object>> _varCallbacks = [];
+    private Dictionary<string, Action<object>> _eventCallbacks = [];
 
     public class EmulatorOptions
     {
@@ -33,14 +23,12 @@ public class EmulatorDataSource : DataSourceBase
         public bool? UseRandomVehicles { get; set; }
         public List<string>? VehicleNames { get; set; }
     }
+    private Action<string> _vehicleCallback;
 
     public EmulatorDataSource(Config config)
     {
         _config = config;
-        Name = "Emulator";
         CurrentVehicleName = _aircraftNames[0];
-
-        Console.WriteLine($"Config {config.SourceOptions}");
 
         if (config.SourceOptions is not null)
         {
@@ -68,105 +56,66 @@ public class EmulatorDataSource : DataSourceBase
         Console.WriteLine($"[EMULATOR] Initial vehicle '{CurrentVehicleName}'");
     }
 
-    public override void WatchVar(string varName)
-    {
-        _watching = varName;
-    }
-
-    public bool GetIsSubscribed(string varName, string unit)
-    {
-        return _simVarCallbacks.Any(cb => cb.name == varName && cb.unit == unit);
-    }
-
-    public override void SubscribeToVar(string varName, string unit, Action<object> callback)
-    {
-        if (GetIsSubscribed(varName, unit))
-            return;
-
-        _simVarCallbacks.Add(new CallbackInfo
-        {
-            name = varName,
-            unit = unit,
-            callback = callback
-        });
-
-        Console.WriteLine($"[EMULATOR] Subscribed to var '{varName}' ({unit})");
-    }
-
-    public override void UnsubscribeFromVar(string name, string unit)
-    {
-        // TODO
-        // Console.WriteLine($"[EMULATOR] Unsubscribed from var '{name}' ({unit})");
-    }
-
-    public override void SubscribeToVehicle(Action<string> callback)
-    {
-        _vehicleCallback = callback;
-        Console.WriteLine($"[EMULATOR] Subscribed to vehicle change");
-    }
-
-    public override void Listen(Config config)
+    public override async Task Listen()
     {
         _cts = new CancellationTokenSource();
 
-        _simVars.Clear();
-
-        _simVars["INDICATED ALTITUDE"] = unit => _altitude; // feet
-        _simVars["AIRSPEED INDICATED"] = unit => _airspeedKnots; // knots
-        _simVars["PLANE BANK DEGREES"] = unit =>
+        _vars["INDICATED ALTITUDE"] = unit => _altitude; // feet
+        _vars["AIRSPEED INDICATED"] = unit => _airspeedKnots; // knots
+        _vars["PLANE BANK DEGREES"] = unit =>
             unit switch
             {
                 "radians" => _planeBankRadians,
                 _ => _planeBankRadians * 180.0 / Math.PI
             };
-        _simVars["GENERAL ENG RPM:1"] = unit => _rpmLeft;
-        _simVars["GENERAL ENG RPM:2"] = unit => _rpmRight;
-        _simVars["VERTICAL SPEED"] = unit =>
+        _vars["GENERAL ENG RPM:1"] = unit => _rpmLeft;
+        _vars["GENERAL ENG RPM:2"] = unit => _rpmRight;
+        _vars["VERTICAL SPEED"] = unit =>
             unit switch
             {
                 "feet" => _verticalSpeed,
                 _ => _verticalSpeed
             };
-        _simVars["PLANE HEADING DEGREES TRUE"] = unit =>
+        _vars["PLANE HEADING DEGREES TRUE"] = unit =>
             unit switch
             {
                 "radians" => _heading * Math.PI / 180.0,
                 _ => _heading
             };
-        _simVars["PLANE PITCH DEGREES"] = unit =>
+        _vars["PLANE PITCH DEGREES"] = unit =>
             unit switch
             {
                 "degrees" => _planePitchDegrees,
                 _ => _planePitchDegrees
             };
-        _simVars["TURN INDICATOR RATE"] = unit =>
+        _vars["TURN INDICATOR RATE"] = unit =>
             unit switch
             {
                 "radians" => _turnRateRadians,
                 _ => _turnRateRadians * 180.0 / Math.PI
             };
-        _simVars["TURN COORDINATOR BALL"] = unit =>
+        _vars["TURN COORDINATOR BALL"] = unit =>
             unit switch
             {
                 "degrees" => _turnBallDegrees,
                 _ => _turnBallPosition
             };
-        _simVars["KOHLSMAN SETTING HG:1"] = unit => 29.92;
-        _simVars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
-        _simVars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
+        _vars["KOHLSMAN SETTING HG:1"] = unit => 29.92;
+        _vars["ENG MANIFOLD PRESSURE:1"] = unit => _manifoldPressure1;
+        _vars["ENG MANIFOLD PRESSURE:2"] = unit => _manifoldPressure2;
 
         if (_options != null && _options.UseRandomVehicles == true)
         {
             Console.WriteLine($"[EMULATOR] Using random vehicles");
 
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 var remainingTitles = new List<string>(_aircraftNames);
 
                 while (!_cts.Token.IsCancellationRequested)
                 {
                     if (remainingTitles.Count == 0)
-                        remainingTitles = new List<string>(_aircraftNames);
+                        remainingTitles = [.. _aircraftNames];
 
                     int index = _rand.Next(remainingTitles.Count);
                     var newName = remainingTitles[index];
@@ -176,6 +125,8 @@ public class EmulatorDataSource : DataSourceBase
                         CurrentVehicleName = newName;
 
                         Console.WriteLine($"[EMULATOR] New vehicle: {CurrentVehicleName}");
+
+                        EmitEvent("EMULATED_VEHICLE_CHANGED", CurrentVehicleName);
 
                         _vehicleCallback?.Invoke(CurrentVehicleName);
                     }
@@ -194,7 +145,7 @@ public class EmulatorDataSource : DataSourceBase
             }, _cts.Token);
         }
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             while (!_cts.Token.IsCancellationRequested)
             {
@@ -213,77 +164,76 @@ public class EmulatorDataSource : DataSourceBase
             }
         }, _cts.Token);
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
-            Console.WriteLine($"[EMULATOR] Sending fake data at rate {(int)config.Rate}ms");
+            Console.WriteLine($"[EMULATOR] Sending fake data at rate {(int)_config.Rate}ms");
 
             while (!_cts.Token.IsCancellationRequested)
             {
-                foreach (var info in _simVarCallbacks)
+                foreach (var info in _varCallbacks)
                 {
-                    var value = GetVarValue(info.name, info.unit);
-                    if (value != null)
-                    {
-                        if (_watching != null && _watching == info.name)
-                        {
-                            if (_watchCount < 10)
-                            {
-                                Console.WriteLine($"SimVar {_watching}: {value}");
-                                _watchCount++;
-                            }
-                            else
-                            {
-                                _watching = null;
-                                _watchCount = 0;
-                            }
-                        }
-
-                        info.callback(value);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Unknown SimVar: {info.name} ({string.Join(",", _simVars.Keys)})");
-                    }
+                    var (varName, unit) = info.Key;
+                    var generator = _vars[varName];
+                    var newValue = generator(unit);
+                    var callback = info.Value;
+                    callback.Invoke(newValue);
                 }
 
-                await Task.Delay((int)config.Rate);
+                await Task.Delay((int)_config.Rate);
             }
         }, _cts.Token);
     }
 
-    public override void Connect()
+    private void EmitEvent(string eventName, object value)
+    {
+        var key = eventName;
+
+        if (!_eventCallbacks.ContainsKey(key))
+            return;
+
+        _eventCallbacks[key].Invoke(value);
+    }
+
+    public override async Task SubscribeToVar(string varName, string? unit, Action<object> callback)
+    {
+        var key = (varName, unit);
+        _varCallbacks[key] = callback;
+    }
+
+    public override async Task UnsubscribeFromVar(string varName, string? unit, Action<object> callback)
+    {
+        var key = (varName, unit);
+        _varCallbacks.Remove(key);
+    }
+
+    public override async Task SubscribeToEvent(string eventName, Action<object> callback)
+    {
+        var key = eventName;
+        _eventCallbacks[key] = callback;
+    }
+
+    public override async Task UnsubscribeFromEvent(string eventName, Action<object> callback)
+    {
+        var key = eventName;
+        _eventCallbacks.Remove(key);
+    }
+
+    public override async Task SubscribeToVehicle(Action<string> callback)
+    {
+        _vehicleCallback = callback;
+    }
+
+    public override async Task Connect()
     {
         IsConnected = true;
+        Console.WriteLine($"[EMULATOR] Connected");
     }
 
-    private object? GetVarValue(string name, string? unit)
+    public override async Task Disconnect()
     {
-        object? result;
-
-        if (_forcedVars.TryGetValue(name, out var forced))
-            result = forced;
-        else if (_simVars.TryGetValue(name, out var generator))
-            result = generator(unit);
-        else
-            return null;
-
-        if (result is string s && double.TryParse(s, out var n))
-            result = n;
-
-        return result;
+        _cts?.Cancel();
+        Console.WriteLine($"[EMULATOR] Disconnected");
     }
-
-    public void ForceVarValue(string name, object value)
-    {
-        _forcedVars[name] = value;
-    }
-
-    public void ClearForcedVar(string name)
-    {
-        _forcedVars.Remove(name);
-    }
-
-    public override void Disconnect() => _cts?.Cancel();
 
     private double _altitude = 1000;
     private bool _ascending = true;

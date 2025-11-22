@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(realpath "$SCRIPT_DIR/..")"
 
 version=$(<"$SCRIPT_DIR/../VERSION.txt")
-default_platforms=("win-x64" "osx-arm64" "linux-x64")
+default_platforms=("win-x64" "win-arm64" "osx-arm64" "linux-x64" "linux-arm64")
 platforms=("$@")
 
 # If no argument given, use all platforms
@@ -51,6 +51,7 @@ build_project() {
         echo "Copying resources..."
         
         cp "$SCRIPT_DIR/src/default-config.json" "$SCRIPT_DIR/dist/$platform/config.json"
+        cp "$SCRIPT_DIR/src/cpu-config.json" "$SCRIPT_DIR/dist/$platform"
         cp -R "$SCRIPT_DIR/src/fonts" "$SCRIPT_DIR/dist/$platform"
         cp -R "$SCRIPT_DIR/../gauges" "$SCRIPT_DIR/dist/$platform"
 

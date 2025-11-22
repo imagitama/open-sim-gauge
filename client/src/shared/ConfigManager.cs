@@ -285,9 +285,9 @@ namespace OpenGaugeClient
         /// </summary>
         public bool Debug { get; set; } = false;
         /// <summary>
-        /// If in edit mode.
+        /// If to only render panels if connected.
         /// </summary>
-        public bool Editing { get; set; } = false;
+        public bool RequireConnection { get; set; } = false;
 
         // internal
         public Gauge GetGauge(int? rootLevelIndex, string? gaugePath)
@@ -493,7 +493,11 @@ namespace OpenGaugeClient
         /// <type>[double|string, double|string]</type>
         /// <default>[0, 0]</default>
         /// </summary>
-        public FlexibleVector2 Position { get; set; } = new();
+        public FlexibleVector2 Position { get; set; } = new FlexibleVector2()
+        {
+            X = "50%",
+            Y = "50%"
+        };
         /// <summary>
         /// How much to scale the gauge (respecting the width you set).
         /// </summary>
@@ -898,7 +902,7 @@ namespace OpenGaugeClient
 
     [GenerateMarkdownTable]
     /// <summary>
-    /// An object that describes how to transform a layer using SimVars.
+    /// An object that describes how to transform a layer using vars.
     /// </summary>
     public class TransformDef
     {

@@ -15,7 +15,7 @@ The config for your client.
 | `panels` | `List<Panel>` |  | The panels to render. On desktop a panel is a window. |
 | `gauges` | `List<Gauge>` | `[]` | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
 | `debug` | `bool` | `false` | Log extra info to the console. |
-| `editing` | `bool` | `false` | If in edit mode. |
+| `requireConnection` | `bool` | `false` | If to only render panels if connected. |
 
 ### ServerConfig
 
@@ -130,7 +130,7 @@ An object that describes what kind of text to render in the layer.
 
 ### TransformDef
 
-An object that describes how to transform a layer using SimVars.
+An object that describes how to transform a layer using vars.
 
 | Property | Type | Default | Description |
 |-----------|------|----------|--------------|

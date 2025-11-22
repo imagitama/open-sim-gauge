@@ -6,16 +6,15 @@
     <fluent:FluentTheme />
     <Style Selector="Window">
         <Setter Property="Background" Value="rgb(25,25,25)" />
+        <Setter Property="Foreground" Value="rgb(255,255,255)" />
     </Style>
     <Style Selector="StackPanel">
         <Setter Property="Spacing" Value="1" />
         <Setter Property="Margin" Value="3" />
     </Style>
     <Style Selector="TextBlock">
-        <Setter Property="Foreground" Value="White" />
-    </Style>
-    <Style Selector="TextBlock">
         <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="rgb(255,255,255)" />
     </Style>
     <Style Selector="TextBox">
         <Setter Property="FontSize" Value="12" />

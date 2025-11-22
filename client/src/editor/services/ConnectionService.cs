@@ -49,14 +49,14 @@ namespace OpenGaugeClient.Editor.Services
 
                 // ensure we pass null to subscribe to all
                 // TODO: make this optional for re-use with client
-                var simVarsToSubscribeTo = SimVarHelper.GetSimVarDefsToSubscribeTo(ConfigManager.Config, null);
+                var varsToSubscribeTo = VarHelper.GetVarDefsToSubscribeTo(ConfigManager.Config, null);
 
                 if (ConfigManager.Config.Debug)
-                    Console.WriteLine($"[ConnectionService] Sim vars: {string.Join(", ", simVarsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
+                    Console.WriteLine($"[ConnectionService] Vars: {string.Join(", ", varsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
 
                 await _client.SendInitMessage(
                     _lastKnownVehicleName,
-                    simVarsToSubscribeTo.ToArray(),
+                    varsToSubscribeTo.ToArray(),
                     // TODO: finish events
                     new string[] { }
                 );

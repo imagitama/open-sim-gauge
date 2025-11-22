@@ -2,7 +2,6 @@ namespace OpenGaugeClient.Client
 {
     public class PanelManager : IDisposable
     {
-        private bool _isInitialized = false;
         private readonly Dictionary<string, PanelRenderer> _panelRenderers = [];
         private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
@@ -24,9 +23,6 @@ namespace OpenGaugeClient.Client
         public void Initialize(Config config, Func<string, string, object?> _getSimVarValue, string? vehicleName)
         {
             Console.WriteLine($"Initializing panels...{(vehicleName != null ? $" (vehicle '{vehicleName}')" : "")}");
-
-            if (_isInitialized)
-                Uninitialize();
 
             foreach (var panel in config.Panels)
             {
@@ -71,17 +67,6 @@ namespace OpenGaugeClient.Client
 
             if (_panelRenderers.Count == 0)
                 throw new Exception("No panels were initialized");
-
-            _isInitialized = true;
-        }
-
-        private void Uninitialize()
-        {
-            if (ConfigManager.Config.Debug)
-                Console.WriteLine($"[PanelManager] Already initialized, uninitializing...");
-
-            Dispose();
-            _isInitialized = false;
         }
 
         private void UnrenderPanel(Panel panel)

@@ -51,7 +51,7 @@ namespace OpenGaugeServer
                                     && !t.IsInterface);
 
                     if (types.Count() == 0)
-                        Console.WriteLine($"[DataSourceLoader] DLL is invalid (no types)");
+                        Console.WriteLine($"[DataSourceLoader] DLL is invalid (no types): {dllPath}");
 
                     foreach (var type in types)
                     {

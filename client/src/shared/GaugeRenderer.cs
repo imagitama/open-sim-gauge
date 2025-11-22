@@ -297,9 +297,12 @@ namespace OpenGaugeClient
                                         var varType = textRef.Var.Unit;
                                         var varValue = _getSimVarValue(varName, varType);
 
-                                        if (varValue != null && textRef.Template != null)
+                                        if (varValue != null)
                                         {
-                                            text = string.Format(textRef.Template, varValue);
+                                            if (textRef.Template != null)
+                                                text = string.Format(textRef.Template, varValue);
+                                            else
+                                                text = varValue.ToString();
                                         }
                                     }
                                     else if (textRef.Template != null)

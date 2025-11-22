@@ -1,10 +1,11 @@
 {
-  "debug": false,
+  // "debug": true,
   // "fps": 144
   // "server": {
   //   "ipAddress": "127.0.0.1",
   //   "port": 1234
   // },
+  // "requireConnection": true
   "panels": [
     {
       "debug": false,
@@ -119,54 +120,7 @@
           "scale": 0.4
         }
       ]
-    },
-    {
-      "skip": true,
-      "name": "System Info",
-      "vehicle": "GPU",
-      "width": 400,
-      "height": 400,
-      "gauges": [
-        {
-          "name": "cpu",
-          "position": [
-            "50%",
-            "50%"
-          ]
-        }
-      ]
     }
   ],
-  "gauges": [
-    {
-      "name": "cpu",
-      "width": 400,
-      "height": 400,
-      "layers": [
-        {
-          "position": [
-            "50%",
-            "33.3%"
-          ],
-          "text": {
-            "default": "CPU"
-          }
-        },
-        {
-          "position": [
-            "50%",
-            "66.6%"
-          ],
-          "text": {
-            "var": [
-              "CPU",
-              "percent"
-            ],
-            "template": "{0:F1}%",
-            "default": "---"
-          }
-        }
-      ]
-    }
-  ]
+  "gauges": []
 }

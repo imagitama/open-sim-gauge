@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using OpenGaugeAbstractions;
@@ -6,6 +7,8 @@ namespace OpenGaugeServer
 {
     public class Program
     {
+        private static DataSourceManager _dataSourceManager;
+
         public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting up...");
@@ -27,60 +30,77 @@ namespace OpenGaugeServer
 #endif
 
             var dataSource = DataSourceFactory.Create(config.Source);
+            _dataSourceManager = new DataSourceManager(dataSource);
 
-            server.OnMessage += (msg) =>
+            var initPayloads = new Dictionary<ClientWrapper, InitPayload>();
+
+            server.OnClientConnect += (client) =>
+            {
+                Console.WriteLine($"Client {client} connected");
+            };
+
+            server.OnClientDisconnect += (client) =>
+            {
+                Console.WriteLine($"Client {client} disconnected");
+
+                initPayloads.Remove(client);
+
+                _dataSourceManager.UnsubscribeFromUnusedVars(initPayloads.Values.SelectMany(x => x.Vars).ToArray());
+                _dataSourceManager.UnsubscribeFromUnusedEvents(initPayloads.Values.SelectMany(x => x.Events).ToArray());
+            };
+
+            server.OnMessage += (client, msg) =>
             {
                 if (msg.Type == MessageType.Init)
                 {
                     if (ConfigManager.Config.Debug)
-                        Console.WriteLine($"Client wants to initialize: {msg}");
+                        Console.WriteLine($"Client {client} wants to initialize: {msg}");
 
                     var payload = ((JsonElement)msg.Payload).Deserialize<InitPayload>();
 
                     if (payload == null)
                         throw new Exception("Payload is null");
 
-                    if (dataSource.CurrentVehicleName == null)
-                        throw new Exception("Data source vehicle name is null");
+                    initPayloads[client] = payload;
 
                     if (payload.VehicleName != dataSource.CurrentVehicleName)
                     {
-                        Console.WriteLine($"Client has vehicle '{payload.VehicleName}' but it is currently '{dataSource.CurrentVehicleName}' - telling them to re-init");
+                        Console.WriteLine($"Client {client} has vehicle '{payload.VehicleName}' but it is currently '{dataSource.CurrentVehicleName}' - telling them to re-init");
 
-                        // TODO: Broadcast to this client specifically
-
-                        // tell all clients they need to start again
-                        server.BroadcastReInit(dataSource.CurrentVehicleName);
+                        // tell client they need to start again
+                        server.BroadcastReInit(client, dataSource.CurrentVehicleName);
                         return;
                     }
                     else
                     {
-                        // tell all clients everything matches up and they can render panels
-                        server.BroadcastInit(dataSource.CurrentVehicleName);
+                        // tell client everything matches up and they can render panels
+                        server.BroadcastInit(client, dataSource.CurrentVehicleName);
                     }
 
-                    // TODO: Handle unsubscribing
+                    Console.WriteLine($"Subscribing to {payload.Vars.Length} vars");
 
-                    Console.WriteLine($"Subscribing to {payload!.SimVars.Length} SimVars");
-
-                    foreach (var simVar in payload!.SimVars)
+                    foreach (var varInfo in payload.Vars)
                     {
-                        dataSource.SubscribeToVar(simVar.Name, simVar.Unit, data =>
+                        _dataSourceManager.SubscribeToVar(varInfo.Name, varInfo.Unit, data =>
                         {
-                            if (simVar.Debug == true)
-                                Console.WriteLine($"SimVar '{simVar.Name}' ({simVar.Unit}) => {data}");
+                            if (varInfo.Debug == true)
+                                Console.WriteLine($"Var '{varInfo.Name}' ({varInfo.Unit}) => {data}");
 
-                            server.BroadcastSimVar(simVar.Name, simVar.Unit, data);
+                            server.BroadcastVar(client, varInfo.Name, varInfo.Unit, data);
                         });
                     }
+
+                    _dataSourceManager.UnsubscribeFromUnusedVars(initPayloads.Values.SelectMany(x => x.Vars).ToArray());
+
+                    initPayloads[client] = payload;
                 }
             };
 
-            dataSource.SubscribeToVehicle(vehicleName =>
+            _dataSourceManager.SubscribeToVehicle(vehicleName =>
             {
                 Console.WriteLine($"New vehicle '{vehicleName}', informing clients...");
 
-                server.BroadcastReInit(dataSource.CurrentVehicleName!);
+                server.BroadcastReInit(null, dataSource.CurrentVehicleName!);
             });
 
             while (!dataSource.IsConnected)
@@ -88,8 +108,7 @@ namespace OpenGaugeServer
                 try
                 {
                     Console.WriteLine($"Connecting to data source '{config.Source}'...");
-                    dataSource.Connect();
-                    Console.WriteLine($"Connected to data source '{config.Source}' successfully");
+                    await dataSource.Connect();
                 }
                 catch (Exception ex)
                 {
@@ -98,10 +117,12 @@ namespace OpenGaugeServer
 
                 if (!dataSource.IsConnected)
                 {
-                    Console.WriteLine($"Retrying connecting to data source '{config.Source}' in 2 seconds...");
-                    await Task.Delay(2000);
+                    Console.WriteLine($"Retrying connecting to data source '{config.Source}'...");
+                    await Task.Delay((int)ConfigManager.Config.ReconnectDelay);
                 }
             }
+
+            Console.WriteLine($"Connected successfully");
 
             Console.WriteLine("Press Ctrl+C to to quit");
 
@@ -109,11 +130,11 @@ namespace OpenGaugeServer
 
             var httpTask = server.StartAsync(cts.Token);
 
-            var simTask = Task.Run(() =>
+            var simTask = Task.Run(async () =>
             {
                 try
                 {
-                    dataSource.Listen(config);
+                    await dataSource.Listen();
                 }
                 catch (Exception ex)
                 {
@@ -141,52 +162,59 @@ namespace OpenGaugeServer
         {
             while (!cts.IsCancellationRequested)
             {
-                var line = Console.ReadLine();
-                if (line == null)
-                    continue;
-
-                var args = SplitArgs(line);
-                var command = args[0].ToLowerInvariant();
-
-                switch (command)
+                try
                 {
-                    case "exit":
-                    case "quit":
-                        cts.Cancel();
-                        break;
+                    var line = Console.ReadLine();
+                    if (line == null)
+                        continue;
 
-                    // case "set":
-                    //     if (args.Length < 3)
-                    //     {
-                    //         Console.WriteLine("Usage: set <SimVarName> <Value>");
-                    //         break;
-                    //     }
+                    var allArgs = SplitArgs(line);
+                    var command = allArgs[0].ToLowerInvariant();
+                    var args = allArgs.Skip(1).ToArray();
 
-                    //     if (dataSource != null && dataSource is EmulatorDataSource)
-                    //     {
-                    //         var simVar = args[1];
-                    //         var value = args[2];
-                    //         Console.WriteLine($"Setting SimVar {simVar} to {value}");
-                    //         double doubleValue = double.Parse(value, CultureInfo.InvariantCulture);
-                    //         dataSource.ForceVarValue(simVar, doubleValue);
-                    //     }
-                    //     else
-                    //     {
-                    //         Console.WriteLine("Only works in emulator");
-                    //     }
-                    //     break;
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"Command '{command}' args: {string.Join(",", args)}");
 
-                    case "watch":
-                        var varName = args[1];
+                    switch (command)
+                    {
+                        case "exit":
+                        case "quit":
+                            cts.Cancel();
+                            break;
 
-                        if (dataSource != null)
-                            dataSource.WatchVar(varName);
+                        case "set":
+                            {
+                                var varName = args[0] ?? throw new Exception("Need a var name");
+                                var unit = args[1] ?? throw new Exception("Need a unit (can be 'null')");
+                                var value = args[2] ?? throw new Exception("Need a value");
+                                _dataSourceManager.ForceVarValue(varName, unit, value);
+                            }
+                            break;
 
-                        break;
+                        case "unset":
+                            {
+                                var varName = args[0] ?? throw new Exception("Need a var name");
+                                var unit = args[1] ?? throw new Exception("Need a unit (can be 'null')");
+                                _dataSourceManager.ClearForcedVar(varName, unit);
+                            }
+                            break;
 
-                    default:
-                        Console.WriteLine($"Unknown command: {line}");
-                        break;
+                        case "watch":
+                            {
+                                var varName = args[0] ?? throw new Exception("Need a var name");
+                                var unit = args.Length > 1 ? args[1] : null;
+                                _dataSourceManager.WatchVar(varName, unit);
+                            }
+                            break;
+
+                        default:
+                            Console.WriteLine($"Unknown command: {line}");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to parse command: {ex}");
                 }
             }
         }

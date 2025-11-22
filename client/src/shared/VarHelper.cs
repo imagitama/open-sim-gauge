@@ -1,10 +1,10 @@
 namespace OpenGaugeClient.Client
 {
-    public static class SimVarHelper
+    public static class VarHelper
     {
-        public static List<SimVarDef> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName, bool includeSkipped = false)
+        public static List<VarDef> GetVarDefsToSubscribeTo(Config config, string? vehicleName, bool includeSkipped = false)
         {
-            var simVarDefs = new List<SimVarDef>();
+            var simVarDefs = new List<VarDef>();
 
             if (config.Panels == null || config.Panels.Count == 0)
                 throw new Exception("No panels");
@@ -32,7 +32,7 @@ namespace OpenGaugeClient.Client
                     {
                         void AddSimVar(VarConfig varConfig)
                         {
-                            simVarDefs.Add(new SimVarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
+                            simVarDefs.Add(new VarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
                         }
 
                         if (layer.Text?.Var is not null)

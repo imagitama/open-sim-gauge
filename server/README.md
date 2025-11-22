@@ -14,7 +14,8 @@ Configuration of the server application that runs on the host machine.
 | `server` | `ServerConfig` | `ServerConfig` | Override the default IP address and port of the server. |
 | `rate` | `double` | `16.7` | Override the default poll rate the data source should use (which is also network send rate).<br>16.7ms = 60Hz. |
 | `debug` | `bool` | `false` | Log extra output to help diagnose issues. |
-| `sourceOptions` | `JsonElement?` |  | Arbitrary options provided to the data source. Currently used for configuring the emulator. |
+| `sourceOptions` | `object` |  | Options provided to the data source. |
+| `reconnectDelay` | `ms` | `2000` | How long to wait before attempting another connection with the data source. |
 
 ### ServerConfig
 

@@ -27,9 +27,15 @@ namespace OpenGaugeAbstractions
         /// </summary>
         public bool Debug { get; set; } = false;
         /// <summary>
-        /// Arbitrary options provided to the data source. Currently used for configuring the emulator.
+        /// Options provided to the data source.
+        /// <type>object</type>
         /// </summary>
         public JsonElement? SourceOptions { get; set; }
+        /// <summary>
+        /// How long to wait before attempting another connection with the data source.
+        /// <type>ms</type>
+        /// </summary>
+        public double ReconnectDelay { get; set; } = 2000;
     }
 
     [GenerateMarkdownTable]

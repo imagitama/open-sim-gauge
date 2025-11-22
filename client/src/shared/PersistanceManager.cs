@@ -44,7 +44,7 @@ namespace OpenGaugeClient
 
         public static async Task Persist(string key, object? value)
         {
-            string absoluteFilePath = PathHelper.GetFilePath(FileName, true);
+            string absoluteFilePath = PathHelper.GetFilePath(FileName, forceToGitRoot: false);
 
             if (State == null)
                 State = await LoadState();
