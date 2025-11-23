@@ -1,3 +1,7 @@
+# 0.0.10
+
+- fixed font file selector wrong file type
+
 # 0.0.9
 
 - fixed client crash

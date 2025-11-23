@@ -65,26 +65,30 @@ public class CustomFontCollection : FontCollectionBase
         return false;
     }
 
-    public Typeface GetTypefaceFromPath(string absolutePath)
+    public Typeface GetTypefaceFromPath(string absolutePath, string? familyName = null)
     {
-        var familyName = _absolutePathToFamilyNameMap[absolutePath];
-
-        if (!_glyphTypefacesByPath.ContainsKey(absolutePath))
+        if (!_absolutePathToFamilyNameMap.ContainsKey(absolutePath) || !_glyphTypefacesByPath.ContainsKey(absolutePath))
         {
             familyName = RegisterFontFile(absolutePath);
         }
 
-        var fontFamily = new FontFamily(familyName);
+        if (familyName == null)
+            familyName = _absolutePathToFamilyNameMap[absolutePath];
+
+        var uri = $"{Key}#{familyName}";
+
+        var fontFamily = new FontFamily(uri);
 
         var typeface = new Typeface(fontFamily);
 
         return typeface;
     }
 
-    public string RegisterFontFile(string absolutePath)
+    public string RegisterFontFile(string absolutePath, string? familyName = null)
     {
-        var familyName = Path.GetFileNameWithoutExtension(absolutePath);
-        var uri = $"fonts:Custom#{familyName}";
+        familyName ??= Path.GetFileNameWithoutExtension(absolutePath);
+
+        var uri = $"{Key}#{familyName}";
 
         var family = new FontFamily(uri);
         _families.Add(family);
@@ -96,14 +100,16 @@ public class CustomFontCollection : FontCollectionBase
 
         var glyphTypeface = RuntimeGlyphFactory.Create(skTypeface);
 
-        if (ConfigManager.Config.Debug)
-            Console.WriteLine($"[CustomFontCollection] Register font file '{absolutePath}' as '{uri}' (actual '{actualFamilyName}')");
-
         _glyphTypefacesByPath[absolutePath] = glyphTypeface;
         _glyphTypefacesByFamilyName[familyName] = glyphTypeface;
         _absolutePathToFamilyNameMap[absolutePath] = familyName;
 
-        return familyName;
+        if (ConfigManager.Config.Debug)
+            Console.WriteLine($"[CustomFontCollection] Registered font file '{absolutePath}' as '{uri}' (actual '{actualFamilyName}')");
+
+        FontManager.Current.AddFontCollection(this);
+
+        return uri;
     }
 }
 
@@ -119,19 +125,22 @@ namespace OpenGaugeClient
             var gordonFontPath = PathHelper.GetFilePath("fonts/Gordon.ttf", forceToGitRoot: false);
             myCollection.RegisterFontFile(gordonFontPath);
 
+            // var myFont = PathHelper.GetFilePath("/Users/jared/Downloads/baby-plums-font/BabyPlums-rv2gL.ttf", forceToGitRoot: false);
+            // myCollection.RegisterFontFile(myFont, "Baby Plums");
+
             FontManager.Current.AddFontCollection(myCollection);
         }
 
-        public Typeface GetTypefaceFromPath(string absolutePath)
+        public Typeface GetTypefaceFromPath(string absolutePath, string? familyName = null)
         {
-            return myCollection.GetTypefaceFromPath(absolutePath);
+            return myCollection.GetTypefaceFromPath(absolutePath, familyName);
         }
 
         public Typeface GetTypefaceFromFamilyName(string familyName)
         {
-            var technicalFamilyName = $"{myCollection.Key}#{familyName}";
+            var uri = $"{myCollection.Key}#{familyName}";
 
-            var fontFamily = new FontFamily(technicalFamilyName);
+            var fontFamily = new FontFamily(uri);
 
             var typeface = new Typeface(fontFamily);
 

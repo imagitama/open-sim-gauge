@@ -271,7 +271,7 @@ namespace OpenGaugeClient.Editor.Components
                 case FieldType.SvgFile:
                     return ["svg"];
                 case FieldType.FontFile:
-                    return ["tff"];
+                    return ["ttf"];
                 default:
                     throw new Exception($"Unknown field type '{FieldType}'");
             }

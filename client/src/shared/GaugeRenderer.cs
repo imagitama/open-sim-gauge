@@ -273,16 +273,19 @@ namespace OpenGaugeClient
                                 if (layer.Text != null)
                                 {
                                     var textRef = layer.Text;
+                                    var fontPath = textRef.Font;
                                     var familyName = textRef.FontFamily;
 
                                     var typeface = new Typeface("Arial");
 
-                                    if (textRef.Font != null)
-                                    {
-                                        var fontPath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, textRef.Font);
-                                        var fontAbsolutePath = PathHelper.GetFilePath(fontPath);
+                                    Console.WriteLine($"TEXT font={textRef.Font} fontFamily={familyName}");
 
-                                        typeface = _fontProvider.GetTypefaceFromPath(fontAbsolutePath);
+                                    if (fontPath != null)
+                                    {
+                                        var fullFontPath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, fontPath);
+                                        var fontAbsolutePath = PathHelper.GetFilePath(fullFontPath);
+
+                                        typeface = _fontProvider.GetTypefaceFromPath(fontAbsolutePath, familyName);
                                     }
                                     else if (familyName != null)
                                     {
