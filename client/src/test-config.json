@@ -31,6 +31,30 @@
           ]
         }
       ]
+    },
+    {
+      "name": "My Foo Panel",
+      "vehicle": "Foo",
+      "width": 400,
+      "height": 400,
+      "position": [
+        "25%",
+        "50%"
+      ],
+      "background": "red",
+      "gauges": []
+    },
+    {
+      "name": "My Bar Panel",
+      "vehicle": "Bar",
+      "width": 400,
+      "height": 400,
+      "position": [
+        "75%",
+        "50%"
+      ],
+      "background": "blue",
+      "gauges": []
     }
   ],
   "gauges": [
@@ -60,7 +84,7 @@
         },
         {
           "debug": false,
-          "image": "client/src/tests/dot.svg",
+          "image": "tests/dot.svg",
           "width": 25,
           "height": 25,
           "origin": [
@@ -78,7 +102,7 @@
                 "position"
               ],
               // "debug": false,
-              "image": "client/src/tests/single-path-line.svg",
+              "image": "tests/single-path-line.svg",
               // "override": 0,
               "width": 250,
               "height": 250,
@@ -94,7 +118,7 @@
           }
         },
         {
-          "image": "client/src/tests/single-path-line.svg",
+          "image": "tests/single-path-line.svg",
           "width": 250,
           "height": 250,
           "origin": [
@@ -126,7 +150,7 @@
         },
         {
           "debug": false,
-          "image": "client/src/tests/dot.svg",
+          "image": "tests/dot.svg",
           "width": 25,
           "height": 25,
           "origin": [
@@ -144,7 +168,7 @@
                 "position"
               ],
               // "debug": false,
-              "image": "client/src/tests/single-path-semicircle.svg",
+              "image": "tests/single-path-semicircle.svg",
               // "override": 0,
               "width": 250,
               "height": 250,
@@ -156,7 +180,7 @@
           }
         },
         {
-          "image": "client/src/tests/single-path-semicircle.svg",
+          "image": "tests/single-path-semicircle.svg",
           "width": 250,
           "height": 250,
           "origin": [
@@ -181,7 +205,7 @@
         0
       ],
       "clip": {
-        "image": "client/src/tests/single-path-star.svg",
+        "image": "tests/single-path-star.svg",
         "width": 500,
         "height": 500,
         "position": [
@@ -242,7 +266,7 @@
             "25%",
             "25%"
           ],
-          "image": "client/src/tests/single-path-star.svg",
+          "image": "tests/single-path-star.svg",
           "transform": {
             "rotate": {
               "debug": true,
@@ -277,7 +301,7 @@
             "75%",
             "25%"
           ],
-          "image": "client/src/tests/single-path-star.svg",
+          "image": "tests/single-path-star.svg",
           "transform": {
             "translateX": {
               "debug": true,
@@ -312,7 +336,7 @@
             "75%",
             "75%"
           ],
-          "image": "client/src/tests/single-path-star.svg",
+          "image": "tests/single-path-star.svg",
           "transform": {
             "translateY": {
               "debug": true,

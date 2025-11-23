@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>OpenSimGauge</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../client/src/client/client.csproj" />
+    <ProjectReference Include="../server/src/server/server.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <None Include="../client/src/default-client.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RenameClientProdConfig"
+        AfterTargets="Publish"
+        Condition="'$(Configuration)' == 'Release'">
+    <Message Text="Renaming file in $(PublishDir)" Importance="high" />
+    <Move SourceFiles="$(PublishDir)default-client.json"
+        DestinationFiles="$(PublishDir)client.json" />
+  </Target>
+  <ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <None Include="../client/src/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <None Include="../server/src/default-server.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RenameServerProdConfig"
+        AfterTargets="Publish"
+        Condition="'$(Configuration)' == 'Release'">
+    <Message Text="Renaming file in $(PublishDir)" Importance="high" />
+    <Move SourceFiles="$(PublishDir)default-server.json"
+        DestinationFiles="$(PublishDir)server.json" />
+  </Target>
+  <ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <None Include="../server/src/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Fonts Include="../client/src/fonts/*" />
+  </ItemGroup>
+  <Target Name="CopyFonts" AfterTargets="Publish">
+    <Copy 
+      SourceFiles="@(Fonts)" 
+      DestinationFolder="$(PublishDir)fonts\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <Svgs Include="../client/src/tests/**/*.svg" />
+  </ItemGroup>
+  <Target Name="CopySvgs" AfterTargets="Publish" Condition="'$(Configuration)' != 'Release'">
+    <Copy 
+      SourceFiles="@(Svgs)" 
+      DestinationFolder="$(PublishDir)tests\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <Gauges Include="..\gauges\**\*.*" />
+  </ItemGroup>
+  <Target Name="CopyGauges" AfterTargets="Publish">
+    <Copy 
+      SourceFiles="@(Gauges)" 
+      DestinationFolder="$(PublishDir)gauges\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+</Project>

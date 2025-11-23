@@ -56,6 +56,7 @@ for projdir in "$DATA_SRC_ROOT"/*/ ; do
     dotnet publish "$csproj" \
         -c Release -r "$platform" \
         --self-contained false \
+        -v:detailed \
         /p:PublishSingleFile=false \
         /p:PublishDir="$OUT_DIR"
 
@@ -66,7 +67,6 @@ for projdir in "$DATA_SRC_ROOT"/*/ ; do
 done
 
 echo "Copying..."
-cp "$SCRIPT_DIR"/src/default-config.json "$SCRIPT_DIR/dist/$platform/config.json"
 cp "$SCRIPT_DIR"/README.md "$SCRIPT_DIR/dist/$platform"
 
 echo "Zipping..."

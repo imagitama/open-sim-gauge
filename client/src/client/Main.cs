@@ -25,29 +25,11 @@ namespace OpenGaugeClient.Client
             Console.SetOut(new TeeTextWriter(Console.Out, FileLogger));
             Console.SetError(new TeeTextWriter(Console.Error, FileLogger));
 
-            Console.WriteLine("Starting up...");
+            Console.WriteLine("Starting client...");
             Console.Out.Flush();
 
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            ClientAppBuilder.BuildAvaloniaApp(args).StartWithClassicDesktopLifetime(args);
         }
-
-        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<ClientApp>()
-            .UsePlatformDetect()
-            .With(new Win32PlatformOptions
-            {
-                // fix window high DPI scaling issues
-                DpiAwareness = Win32DpiAwareness.Unaware
-            })
-            .UseReactiveUI()
-            .LogToTrace()
-            .AfterSetup(_ =>
-                {
-                    // make textboxes work
-                    Application.Current!.Styles.Add(new FluentTheme()
-                    {
-                        DensityStyle = DensityStyle.Compact
-                    });
-                });
     }
 
     public partial class ClientApp : Application
@@ -55,6 +37,13 @@ namespace OpenGaugeClient.Client
         private PanelManager? _panelManager;
         private VarManager? _varManager;
         private string? lastKnownVehicleName;
+
+        private readonly string[] _args;
+
+        public ClientApp(string[] args)
+        {
+            _args = args;
+        }
 
         public override async void OnFrameworkInitializationCompleted()
         {
@@ -83,13 +72,13 @@ namespace OpenGaugeClient.Client
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             }
 
-            Console.WriteLine("Loading config...");
+            var configPath = Cli.GetConfigPathFromArgs(_args);
 
-            var configPath = Cli.GetConfigPathFromArgs(Program.StartupArgs);
+            Console.WriteLine($"Loading config {configPath}");
 
             var config = await ConfigManager.LoadConfig(configPath);
 
-            var cliArgs = Cli.ParseArgs(Program.StartupArgs);
+            var cliArgs = Cli.ParseArgs(_args);
 
             Cli.ApplyArgsToConfig(config, cliArgs);
 

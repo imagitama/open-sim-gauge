@@ -11,6 +11,19 @@
   <ItemGroup>
     <ProjectReference Include="..\abstractions\OpenSimGaugeAbstractions.csproj"  />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <None Include="..\default-server.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RenameProdConfig"
+        AfterTargets="Publish"
+        Condition="'$(Configuration)' == 'Release'">
+    <Message Text="Renaming file in $(PublishDir)" Importance="high" />
+    <Move SourceFiles="$(PublishDir)default-server.json"
+        DestinationFiles="$(PublishDir)server.json" />
+  </Target>
+  <ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <None Include="..\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <DataSourceDlls Include="data-sources\**\*.dll" />
   </ItemGroup>

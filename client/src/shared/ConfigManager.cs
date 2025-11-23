@@ -55,7 +55,7 @@ namespace OpenGaugeClient
 
         public static async Task<Config> LoadConfig(string? overridePath = null)
         {
-            var configPath = overridePath ?? PathHelper.GetFilePath("config.json", forceToGitRoot: false);
+            var configPath = overridePath ?? PathHelper.GetFilePath("client.json", forceToGitRoot: false);
 
             var newConfig = await LoadTypedJson<Config>(configPath);
 
@@ -111,7 +111,7 @@ namespace OpenGaugeClient
 
         public static async Task SaveConfig()
         {
-            await SaveJson(Config, "config.json", false);
+            await SaveJson(Config, "client.json", false);
         }
 
         public static async Task SaveJson(object content, string relativePath, bool forceToGitRoot = true)

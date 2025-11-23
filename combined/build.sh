@@ -25,6 +25,46 @@ generate_readme()
     python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/ConfigManager.md
 }
 
+build_data_sources()
+{
+    local platform=$1
+
+    echo "Building data sources..."
+
+    DATA_SRC_ROOT="$SCRIPT_DIR/../server/src/data-sources"
+    DATA_OUT_ROOT="$SCRIPT_DIR/dist/$platform/data-sources"
+
+    mkdir -p "$DATA_OUT_ROOT"
+
+    for projdir in "$DATA_SRC_ROOT"/*/ ; do
+        [ -d "$projdir" ] || continue
+
+        name="$(basename "$projdir")"
+        csproj=$(find "$projdir" -maxdepth 1 -name '*.csproj' | head -n 1)
+
+        if [ -z "$csproj" ]; then
+            continue
+        fi
+
+        echo "  Building data source: $name"
+
+        OUT_DIR="$projdir/bin/publish"
+        rm -rf "$OUT_DIR"
+
+        dotnet publish "$csproj" \
+            -c Release -r "$platform" \
+            --self-contained false \
+            -v:detailed \
+            /p:PublishSingleFile=false \
+            /p:PublishDir="$OUT_DIR"
+
+        DEST="$DATA_OUT_ROOT"
+        mkdir -p "$DEST"
+
+        cp "$OUT_DIR"/*.dll "$DEST"/
+    done
+}
+
 build_project() {
     local project_path=$1
     local project_name=$2
@@ -41,21 +81,18 @@ build_project() {
             -v:detailed \
             /p:PublishSingleFile=true \
             /p:PublishTrimmed=false \
-            /p:PublishDir=../../dist/"$platform"
-        
-        echo "Renaming..."
+            /p:PublishDir=./dist/"$platform"
 
-        ext=""
-        if [[ "$platform" == win* ]]; then
-            ext=".exe"
-        fi
+        build_data_sources $platform
 
         echo "Copying resources..."
 
-        cp "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/dist/$platform"
+        cp "$SCRIPT_DIR/../README.md" "$SCRIPT_DIR/dist/$platform"
+        cp "$SCRIPT_DIR/../client/README.md" "$SCRIPT_DIR/dist/$platform/README-client.md"
+        cp "$SCRIPT_DIR/../server/README.md" "$SCRIPT_DIR/dist/$platform/README-server.md"
 
         echo "Zipping..."
-        zip_name="client-${version}-${platform}.zip"
+        zip_name="OpenSimGauge-${version}-${platform}.zip"
         (
             cd "$SCRIPT_DIR/dist/$platform" || exit
             zip -r "../$zip_name" . -x "*.DS_Store" "__MACOSX/*"
@@ -63,10 +100,8 @@ build_project() {
     done
 }
 
-generate_readme
+build_project "$SCRIPT_DIR/combined.csproj" "Combined" "Program" combined
 
-build_project "$SCRIPT_DIR/src/client/client.csproj" "OpenSimGaugeClient" "OpenGaugeClient.Client.Program" client
-
-build_project "$SCRIPT_DIR/src/editor/editor.csproj" "OpenSimGaugeEditor" "OpenGaugeEditor.Editor.Program" editor
+# generate_readme
 
 echo "Done!"

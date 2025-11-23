@@ -7,16 +7,7 @@ namespace OpenGaugeServer
             if (Path.IsPathRooted(relativePath))
                 return relativePath;
 
-            string baseDir;
-
-#if DEBUG
-            if (forceToGitRoot)
-                baseDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../"));
-            else
-                baseDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../"));
-#else
-            baseDir = AppContext.BaseDirectory;
-#endif
+            string baseDir = AppContext.BaseDirectory;
 
             var absolutePath = Path.GetFullPath(Path.Combine(baseDir, relativePath));
 

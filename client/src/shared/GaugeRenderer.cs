@@ -61,7 +61,7 @@ namespace OpenGaugeClient
 
             var (gaugeOriginX, gaugeOriginY) = _gauge.Origin.Resolve(_gauge.Width, _gauge.Height, useCachedPositions);
 
-            var gaugeConfigPath = !string.IsNullOrEmpty(_gaugeRef.Path) ? _gaugeRef.Path : PathHelper.GetFilePath("config.json");
+            var gaugeConfigPath = !string.IsNullOrEmpty(_gaugeRef.Path) ? _gaugeRef.Path : PathHelper.GetFilePath("client.json");
 
             var (gaugeX, gaugeY) = _gaugeRef.Position.Resolve(_canvasWidth, _canvasHeight, useCachedPositions);
 

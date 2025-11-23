@@ -15,7 +15,7 @@ The config for your client.
 | `panels` | `List<Panel>` |  | The panels to render. On desktop a panel is a window. |
 | `gauges` | `List<Gauge>` | `[]` | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
 | `debug` | `bool` | `false` | Log extra info to the console. |
-| `requireConnection` | `bool` | `false` | If to only render panels if connected. |
+| `requireConnection` | `bool` | `true` | If to only render panels if connected.<br>Note: There should always be a console open on launch. |
 
 ### ServerConfig
 
@@ -110,7 +110,7 @@ An object that describes a layer of a gauge.
 | `translateY` | `double` | `0` | How much to initially translate the layer on the Y axis. |
 | `fill` | `ColorDef?` |  | A color to fill with (behind any image you specify). |
 | `debug` | `bool` | `false` | Render useful debugging visuals such as bounding box.<br>Note: If you subscribe to a SimVar in this layer and debugging is enabled it is sent to the server for extra logging. |
-| `skip` | `bool?` | `false` | If to skip rendering this layer. |
+| `skip` | `bool` | `false` | If to skip rendering this layer. |
 
 ### TextDef
 

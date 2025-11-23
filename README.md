@@ -28,7 +28,7 @@ Inspired by
 4. Start a fight and the gauges should start animating
 
 To create a custom panel and/or gauge you must define everything inside of
-`config.json`.
+`client.json`.
 
 ## Config
 

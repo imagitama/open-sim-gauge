@@ -1,23 +1,52 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>OpenSimGaugeEditor</AssemblyName>
+    <AssemblyName>editor</AssemblyName>
     <OutputType>WinExe</OutputType>
     <!-- WinExe = console NEVER opens on windows (never opens on mac/linux) -->
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Product>OpenSimGauge Editor</Product>
-    <!-- <RuntimeIdentifier>osx-arm64</RuntimeIdentifier> -->
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
-    <SelfContained>true</SelfContained>
     <UseAppHost>true</UseAppHost>
     <MacAppBundle>true</MacAppBundle>
     <UseAvalonia>true</UseAvalonia>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\shared\OpenSimGaugeShared.csproj"  />
+    <ProjectReference Include="..\shared\shared.csproj"  />
   </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <None Include="..\default-client.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RenameProdConfig"
+        AfterTargets="Publish"
+        Condition="'$(Configuration)' == 'Release'">
+    <Message Text="Renaming file in $(PublishDir)" Importance="high" />
+    <Move SourceFiles="$(PublishDir)default-client.json"
+        DestinationFiles="$(PublishDir)client.json" />
+  </Target>
+  <ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <None Include="..\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Fonts Include="..\fonts\**\*.*" />
+  </ItemGroup>
+  <Target Name="CopyFonts" AfterTargets="Build">
+    <Copy 
+      SourceFiles="@(Fonts)" 
+      DestinationFolder="$(OutDir)fonts\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <Svgs Include="..\tests\**\*.svg" />
+  </ItemGroup>
+  <Target Name="CopySvgs" AfterTargets="Build">
+    <Copy 
+      SourceFiles="@(Svgs)" 
+      DestinationFolder="$(OutDir)tests\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.8" />

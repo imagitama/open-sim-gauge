@@ -125,9 +125,6 @@ namespace OpenGaugeClient
             var gordonFontPath = PathHelper.GetFilePath("fonts/Gordon.ttf", forceToGitRoot: false);
             myCollection.RegisterFontFile(gordonFontPath);
 
-            // var myFont = PathHelper.GetFilePath("/Users/jared/Downloads/baby-plums-font/BabyPlums-rv2gL.ttf", forceToGitRoot: false);
-            // myCollection.RegisterFontFile(myFont, "Baby Plums");
-
             FontManager.Current.AddFontCollection(myCollection);
         }
 

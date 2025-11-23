@@ -24,7 +24,7 @@ namespace OpenGaugeClient.Editor
             Console.SetOut(new TeeTextWriter(Console.Out, fileWriter));
             Console.SetError(new TeeTextWriter(Console.Error, fileWriter));
 
-            Console.WriteLine("Starting up...");
+            Console.WriteLine("Starting editor...");
             Console.Out.Flush();
 
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -66,7 +66,7 @@ namespace OpenGaugeClient.Editor
 
                 try
                 {
-                    var uri = new Uri("avares://OpenSimGaugeEditor/GlobalStyles.axaml");
+                    var uri = new Uri("avares://editor/GlobalStyles.axaml");
                     Current?.Styles.Add(new StyleInclude(uri) { Source = uri });
 
 #if DEBUG

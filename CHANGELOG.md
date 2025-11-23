@@ -1,5 +1,8 @@
 # 0.0.10
 
+- renamed client and server `config.json` to `client.json` and `server.json`
+  respectively
+- create "combined" client and server binary for easier launching
 - interpolate vars for smoother rendering
 - render warning if variable is empty
 - fixed font file selector wrong file type
@@ -7,6 +10,7 @@
   match
 - changed client `config.RequireConnection` to default `true` (relying on
   console appearing instead)
+- write server logs to file
 
 # 0.0.9
 

@@ -17,14 +17,14 @@ namespace OpenGaugeServer
             WriteIndented = true
         };
 
-        public static async Task<Config> LoadConfig()
+        public static async Task<Config> LoadConfig(string? overridePath = null)
         {
-            string configAbsolutePath = PathHelper.GetFilePath("config.json", forceToGitRoot: false);
+            var configPath = overridePath ?? PathHelper.GetFilePath("server.json", forceToGitRoot: false);
 
-            if (!File.Exists(configAbsolutePath))
-                throw new Exception($"Config file not found: {configAbsolutePath}");
+            if (!File.Exists(configPath))
+                throw new Exception($"Config file not found: {configPath}");
 
-            string json = await File.ReadAllTextAsync(configAbsolutePath) ?? throw new Exception($"Config file is invalid: {configAbsolutePath}");
+            string json = await File.ReadAllTextAsync(configPath) ?? throw new Exception($"Config file is invalid: {configPath}");
 
             try
             {

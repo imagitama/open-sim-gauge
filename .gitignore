@@ -5,6 +5,7 @@ dist/
 .DS_Store
 *.sln
 TODO
-config*.json
+client*.json
+server*.json
 persist*.json
 settings*.json
