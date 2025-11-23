@@ -7,6 +7,8 @@ namespace OpenGaugeServer
         private IDataSource _dataSource;
         private readonly Dictionary<(string VarName, string? Unit), object> _vars = [];
         private readonly Dictionary<(string VarName, string? Unit), object> _forcedVars = [];
+        private string? _currentVehicleName;
+        private string? _forceVehicleName;
         private Action<string>? _vehicleCallback;
         private readonly Dictionary<(string VarName, string? Unit), Action<object?>> _varCallbacks = [];
         private readonly Dictionary<string, Action<object?>> _eventCallbacks = [];
@@ -127,6 +129,7 @@ namespace OpenGaugeServer
         {
             void managerCallback(string vehicleName)
             {
+                _currentVehicleName = vehicleName;
                 callback(vehicleName);
             }
 
@@ -136,6 +139,14 @@ namespace OpenGaugeServer
 
             if (ConfigManager.Config.Debug)
                 Console.WriteLine($"[DataSourceManager] Subscribed to vehicle");
+        }
+
+        public string? GetCurrentVehicleName()
+        {
+            if (_forceVehicleName != null)
+                return _forceVehicleName;
+
+            return _currentVehicleName;
         }
 
         public void UnsubscribeFromUnusedVars(VarDef[] vars)
@@ -200,6 +211,19 @@ namespace OpenGaugeServer
             var key = GetKey(varName, unit);
             _forcedVars.Remove(key);
             Console.WriteLine($"[DataSourceManager] Clear forced var '{varName}' ({unit})");
+        }
+
+        public void ForceVehicleName(string vehicleName)
+        {
+            _forceVehicleName = vehicleName;
+            _vehicleCallback?.Invoke(vehicleName);
+            Console.WriteLine($"[DataSourceManager] Forcing vehicle name '{vehicleName}'");
+        }
+
+        public void ClearForcedVehicleName()
+        {
+            _forceVehicleName = null;
+            Console.WriteLine($"[DataSourceManager] Clear forced vehicle name");
         }
 
         private static (string VarName, string? Unit) GetKey(string varName, string? unit)

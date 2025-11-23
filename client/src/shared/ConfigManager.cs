@@ -286,8 +286,9 @@ namespace OpenGaugeClient
         public bool Debug { get; set; } = false;
         /// <summary>
         /// If to only render panels if connected.
+        /// Note: There should always be a console open on launch.
         /// </summary>
-        public bool RequireConnection { get; set; } = false;
+        public bool RequireConnection { get; set; } = true;
 
         // internal
         public Gauge GetGauge(int? rootLevelIndex, string? gaugePath)

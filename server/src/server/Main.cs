@@ -63,18 +63,18 @@ namespace OpenGaugeServer
 
                     initPayloads[client] = payload;
 
-                    if (payload.VehicleName != dataSource.CurrentVehicleName)
+                    if (payload.VehicleName != _dataSourceManager.GetCurrentVehicleName())
                     {
-                        Console.WriteLine($"Client {client} has vehicle '{payload.VehicleName}' but it is currently '{dataSource.CurrentVehicleName}' - telling them to re-init");
+                        Console.WriteLine($"Client {client} has vehicle '{payload.VehicleName}' but it is currently '{_dataSourceManager.GetCurrentVehicleName()}' - telling them to re-init");
 
                         // tell client they need to start again
-                        server.BroadcastReInit(client, dataSource.CurrentVehicleName);
+                        server.BroadcastReInit(client, _dataSourceManager.GetCurrentVehicleName());
                         return;
                     }
                     else
                     {
                         // tell client everything matches up and they can render panels
-                        server.BroadcastInit(client, dataSource.CurrentVehicleName);
+                        server.BroadcastInit(client, _dataSourceManager.GetCurrentVehicleName());
                     }
 
                     Console.WriteLine($"Subscribing to {payload.Vars.Length} vars");
@@ -100,7 +100,7 @@ namespace OpenGaugeServer
             {
                 Console.WriteLine($"New vehicle '{vehicleName}', informing clients...");
 
-                server.BroadcastReInit(null, dataSource.CurrentVehicleName!);
+                server.BroadcastReInit(null, _dataSourceManager.GetCurrentVehicleName());
             });
 
             while (!dataSource.IsConnected)
@@ -204,6 +204,17 @@ namespace OpenGaugeServer
                                 var varName = args[0] ?? throw new Exception("Need a var name");
                                 var unit = args.Length > 1 ? args[1] : null;
                                 _dataSourceManager.WatchVar(varName, unit);
+                            }
+                            break;
+
+                        case "vehicle":
+                            {
+                                var vehicleName = args[0] ?? null;
+
+                                if (vehicleName == null)
+                                    _dataSourceManager.ClearForcedVehicleName();
+                                else
+                                    _dataSourceManager.ForceVehicleName(vehicleName);
                             }
                             break;
 

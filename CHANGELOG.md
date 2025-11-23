@@ -1,6 +1,10 @@
 # 0.0.10
 
 - fixed font file selector wrong file type
+- changed panels to never render if vehicle set and current vehicle does not
+  match
+- changed client `config.RequireConnection` to default `true` (relying on
+  console appearing instead)
 
 # 0.0.9
 

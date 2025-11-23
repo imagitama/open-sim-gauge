@@ -66,7 +66,7 @@ namespace OpenGaugeClient.Client
             }
 
             if (_panelRenderers.Count == 0)
-                throw new Exception("No panels were initialized");
+                Console.WriteLine("No panels were initialized");
         }
 
         private void UnrenderPanel(Panel panel)
