@@ -790,7 +790,7 @@ namespace OpenGaugeClient
         /// <summary>
         /// If to skip rendering this layer.
         /// </summary>
-        public bool? Skip { get; set; } = false;
+        public bool Skip { get; set; } = false;
 
         public Layer Clone()
         {

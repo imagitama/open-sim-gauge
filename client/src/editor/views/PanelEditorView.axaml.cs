@@ -136,9 +136,7 @@ namespace OpenGaugeClient.Editor
 
                 _panelRenderer = new PanelRenderer(
                     panel,
-                    _gaugeCache,
                     _imageCache,
-                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     GetSimVarValue,

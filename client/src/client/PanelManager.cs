@@ -3,7 +3,6 @@ namespace OpenGaugeClient.Client
     public class PanelManager : IDisposable
     {
         private readonly Dictionary<string, PanelRenderer> _panelRenderers = [];
-        private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
         private readonly SKFontCache _fontCache;
         private readonly SKFontProvider _skFontProvider;
@@ -12,7 +11,6 @@ namespace OpenGaugeClient.Client
 
         public PanelManager()
         {
-            _gaugeCache = new GaugeCache();
             _fontCache = new SKFontCache();
             _skFontProvider = new SKFontProvider(_fontCache);
             _fontProvider = new FontProvider();
@@ -51,9 +49,7 @@ namespace OpenGaugeClient.Client
 
                 var renderer = new PanelRenderer(
                     panel,
-                    _gaugeCache,
                     _imageCache,
-                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     _getSimVarValue

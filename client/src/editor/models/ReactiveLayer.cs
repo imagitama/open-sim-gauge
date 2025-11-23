@@ -158,8 +158,8 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _debug, value);
         }
 
-        private bool? _skip;
-        public bool? Skip
+        private bool _skip;
+        public bool Skip
         {
             get => _skip;
             set => this.RaiseAndSetIfChanged(ref _skip, value);

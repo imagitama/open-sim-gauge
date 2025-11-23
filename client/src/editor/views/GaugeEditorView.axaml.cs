@@ -41,7 +41,6 @@ namespace OpenGaugeClient.Editor
         private ReactiveGauge _reactiveGauge;
         private RenderingHelper? _renderer;
         private GaugeRenderer? _gaugeRenderer;
-        private readonly GaugeCache _gaugeCache;
         private readonly ImageCache _imageCache;
         private readonly SKFontCache _skFontCache;
         private readonly SKFontProvider _skFontProvider;
@@ -69,7 +68,6 @@ namespace OpenGaugeClient.Editor
             ViewModel = new GaugeEditorViewViewModel(_reactiveGauge);
             DataContext = ViewModel;
 
-            _gaugeCache = new GaugeCache();
             _skFontCache = new SKFontCache();
             _skFontProvider = new SKFontProvider(_skFontCache);
             _fontProvider = new FontProvider();
@@ -210,7 +208,6 @@ namespace OpenGaugeClient.Editor
                 (int)window.Height,
                 renderScaling: window.RenderScaling,
                 _imageCache,
-                _skFontProvider,
                 _fontProvider,
                 _svgCache,
                 GetSimVarValue,
@@ -230,7 +227,8 @@ namespace OpenGaugeClient.Editor
             _gaugeRenderer?.DrawGaugeLayers(
                 ctx,
                 useCachedPositions: false,
-                disableClipping: !SettingsService.Instance.ClipVisually
+                disableClipping: !SettingsService.Instance.ClipVisually,
+                renderNoVarWarnings: false
             );
         }
     }

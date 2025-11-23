@@ -11,8 +11,6 @@ namespace OpenGaugeClient
     {
         private Panel _panel;
         private readonly ImageCache _imageCache;
-        private readonly GaugeCache _gaugeCache;
-        private readonly SKFontProvider _skFontProvider;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
         private Func<string, string, object?> _getSimVarValue { get; set; }
@@ -39,9 +37,7 @@ namespace OpenGaugeClient
 
         public PanelRenderer(
             Panel panel,
-            GaugeCache gaugeCache,
             ImageCache imageCache,
-            SKFontProvider skFontProvider,
             FontProvider fontProvider,
             SvgCache svgCache,
             Func<string, string, object?> getSimVarValue,
@@ -51,9 +47,7 @@ namespace OpenGaugeClient
         )
         {
             _panel = panel;
-            _gaugeCache = gaugeCache;
             _imageCache = imageCache;
-            _skFontProvider = skFontProvider;
             _fontProvider = fontProvider;
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
@@ -187,7 +181,6 @@ namespace OpenGaugeClient
                     (int)_window.Height,
                     renderScaling: _window.RenderScaling,
                     _imageCache,
-                    _skFontProvider,
                     _fontProvider,
                     _svgCache,
                     _getSimVarValue,

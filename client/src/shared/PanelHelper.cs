@@ -209,7 +209,7 @@ namespace OpenGaugeClient
 
         public static bool GetIsPanelVisible(Panel panel, string? vehicleName)
         {
-            return panel.Vehicle != null && vehicleName != null && Utils.GetIsVehicle(panel.Vehicle, vehicleName);
+            return (panel.Vehicle != null && vehicleName != null && Utils.GetIsVehicle(panel.Vehicle, vehicleName)) || panel.Vehicle == null;
         }
     }
 }

@@ -15,12 +15,12 @@ namespace OpenGaugeClient
         private double _renderScaling;
         private Func<string, string, object?> _getSimVarValue { get; set; }
         private ImageCache _imageCache;
-        private SKFontProvider _skFontProvider;
         private FontProvider _fontProvider;
         private SvgCache _svgCache;
         private bool _debug;
+        private int _debugOutputCount = 0;
 
-        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, SKFontProvider skFontProvider, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
+        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
         {
             _gauge = gauge;
             _gaugeRef = gaugeRef;
@@ -28,7 +28,6 @@ namespace OpenGaugeClient
             _canvasHeight = canvasHeight;
             _renderScaling = renderScaling;
             _imageCache = imageCache;
-            _skFontProvider = skFontProvider;
             _fontProvider = fontProvider;
             _svgCache = svgCache;
             _getSimVarValue = getSimVarValue;
@@ -56,7 +55,7 @@ namespace OpenGaugeClient
             public string DebugText { get; set; } = "";
         }
 
-        public void DrawGaugeLayers(DrawingContext ctx, bool useCachedPositions = true, bool? disableClipping = null)
+        public void DrawGaugeLayers(DrawingContext ctx, bool useCachedPositions = true, bool? disableClipping = null, bool? renderNoVarWarnings = true)
         {
             var layersToDraw = _gauge.Layers.ToArray().Reverse().ToArray();
 
@@ -78,6 +77,8 @@ namespace OpenGaugeClient
                 Matrix.CreateTranslation(gaugeX, gaugeY);
 
             var layerRenderDatas = new List<LayerRenderData>();
+
+            _debugOutputCount = 0;
 
             using (ctx.PushTransform(gaugeTransform))
             {
@@ -154,40 +155,49 @@ namespace OpenGaugeClient
                             if (layer.Transform?.Rotate?.Var != null && layer.Transform.Rotate.Skip != true)
                             {
                                 var rotateConfig = layer.Transform.Rotate;
-                                var simVarName = rotateConfig.Var.Name;
-                                var simVarUnit = rotateConfig.Var.Unit;
-                                var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
+                                var varName = rotateConfig.Var.Name;
+                                var unit = rotateConfig.Var.Unit;
+                                var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(varName, unit);
+
+                                if (varValue == null && renderNoVarWarnings == true)
+                                    DrawNoVarWarning(ctx, varName, unit);
 
                                 rotationAngle = ComputeValue(rotateConfig, varValue, layer);
 
                                 if (rotateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] Rotate '{simVarName}' ({simVarUnit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
+                                    Console.WriteLine($"[PanelRenderer] Rotate '{varName}' ({unit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
                             }
 
                             if (layer.Transform?.TranslateX?.Var != null && layer.Transform.TranslateX.Skip != true)
                             {
                                 var translateConfig = layer.Transform.TranslateX;
-                                var simVarName = translateConfig.Var.Name;
-                                var simVarUnit = translateConfig.Var.Unit;
-                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
+                                var varName = translateConfig.Var.Name;
+                                var unit = translateConfig.Var.Unit;
+                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(varName, unit);
+
+                                if (varValue == null && renderNoVarWarnings == true)
+                                    DrawNoVarWarning(ctx, varName, unit);
 
                                 offsetX = ComputeValue(translateConfig, varValue);
 
                                 if (translateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] TranslateX '{simVarName}' ({simVarUnit}) {varValue} => {offsetX}°");
+                                    Console.WriteLine($"[PanelRenderer] TranslateX '{varName}' ({unit}) {varValue} => {offsetX}°");
                             }
 
                             if (layer.Transform?.TranslateY?.Var != null && layer.Transform.TranslateY.Skip != true)
                             {
                                 var translateConfig = layer.Transform.TranslateY;
-                                var simVarName = translateConfig.Var.Name;
-                                var simVarUnit = translateConfig.Var.Unit;
-                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(simVarName, simVarUnit);
+                                var varName = translateConfig.Var.Name;
+                                var unit = translateConfig.Var.Unit;
+                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(varName, unit);
+
+                                if (varValue == null && renderNoVarWarnings == true)
+                                    DrawNoVarWarning(ctx, varName, unit);
 
                                 offsetY = ComputeValue(translateConfig, varValue);
 
                                 if (translateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] TranslateY '{simVarName}' ({simVarUnit}) {varValue} => {offsetY}°");
+                                    Console.WriteLine($"[PanelRenderer] TranslateY '{varName}' ({unit}) {varValue} => {offsetY}°");
                             }
 
                             SKPoint? pathPositionResult = null;
@@ -195,9 +205,12 @@ namespace OpenGaugeClient
                             if (layer.Transform?.Path?.Var != null && layer.Transform.Path.Skip != true)
                             {
                                 var pathConfig = layer.Transform.Path;
-                                var simVarName = pathConfig.Var.Name;
-                                var simVarUnit = pathConfig.Var.Unit;
-                                var varValue = pathConfig.Override != null ? pathConfig.Override : _getSimVarValue(simVarName, simVarUnit);
+                                var varName = pathConfig.Var.Name;
+                                var unit = pathConfig.Var.Unit;
+                                var varValue = pathConfig.Override != null ? pathConfig.Override : _getSimVarValue(varName, unit);
+
+                                if (varValue == null && renderNoVarWarnings == true)
+                                    DrawNoVarWarning(ctx, varName, unit);
 
                                 // note for ball position even if requested unit "position" it returned as -1 to 1
                                 double value = varValue != null ? (double)varValue : 0;
@@ -211,7 +224,7 @@ namespace OpenGaugeClient
                                 pathPositionResult = SvgUtils.GetPathPosition(_svgCache, absolutePathImagePath, pathConfig, layerWidth, layerHeight, value, useCachedPositions);
 
                                 if (pathConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] Path '{simVarName}' ({simVarUnit}) {varValue} => {pathPositionResult}");
+                                    Console.WriteLine($"[PanelRenderer] Path '{varName}' ({unit}) {varValue} => {pathPositionResult}");
                             }
 
                             var initialRotation = layer.Rotate;
@@ -278,8 +291,6 @@ namespace OpenGaugeClient
 
                                     var typeface = new Typeface("Arial");
 
-                                    Console.WriteLine($"TEXT font={textRef.Font} fontFamily={familyName}");
-
                                     if (fontPath != null)
                                     {
                                         var fullFontPath = Path.Combine(Path.GetDirectoryName(gaugeConfigPath)!, fontPath);
@@ -297,8 +308,11 @@ namespace OpenGaugeClient
                                     if (textRef.Var != null)
                                     {
                                         var varName = textRef.Var.Name;
-                                        var varType = textRef.Var.Unit;
-                                        var varValue = _getSimVarValue(varName, varType);
+                                        var unit = textRef.Var.Unit;
+                                        var varValue = _getSimVarValue(varName, unit);
+
+                                        if (varValue == null && renderNoVarWarnings == true)
+                                            DrawNoVarWarning(ctx, varName, unit);
 
                                         if (varValue != null)
                                         {
@@ -329,8 +343,6 @@ namespace OpenGaugeClient
                                     var textY = TextUtils.GetVerticalOffset(layerHeight, formattedText.Height, textRef.Vertical);
 
                                     ctx.DrawText(formattedText, new Point(textX, textY));
-
-                                    // ctx.DrawText(formattedText, new Point(textX, textY));
                                 }
                             }
 
@@ -515,8 +527,10 @@ namespace OpenGaugeClient
             return finalValue;
         }
 
-        private static void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point pos, double scaleText = 1)
+        private void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point? pos = null, double scaleText = 1)
         {
+            var p = pos ?? new Point(0, 0);
+
             var formattedText = new FormattedText(
                 text,
                 CultureInfo.CurrentCulture,
@@ -526,7 +540,14 @@ namespace OpenGaugeClient
                 brush
             );
 
-            ctx.DrawText(formattedText, new Point(pos.X + 2, pos.Y + 2));
+            ctx.DrawText(formattedText, new Point(p.X + 2, p.Y + 2 + (_debugOutputCount * formattedText.Height)));
+
+            _debugOutputCount++;
+        }
+
+        private void DrawNoVarWarning(DrawingContext ctx, string varName, string? unit)
+        {
+            DrawDebugText(ctx, $"Var '{varName}' ({unit}) is empty", Brushes.Orange);
         }
     }
 }
