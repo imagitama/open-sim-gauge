@@ -11,19 +11,12 @@ namespace OpenGaugeClient.Editor.Services
         private ClientHandler? _client;
         private string? _lastKnownVehicleName;
         public string? LastKnownVehicleName => _lastKnownVehicleName;
-        private Dictionary<(string, string), object?> simVarValues = new Dictionary<(string, string), object?>();
         public bool IsConnecting => _client != null && _client.IsConnecting;
         public bool IsConnected => _client != null && _client.IsConnected;
         public Exception? LastFailReason => _client != null ? _client.LastFailReason : null;
         public Action? OnConnect;
         public Action<Exception?>? OnDisconnect;
         public Action<string?>? OnVehicle;
-
-        public object? GetSimVarValue(string name, string unit)
-        {
-            simVarValues.TryGetValue((name, unit), out var v);
-            return v;
-        }
 
         public async Task Connect()
         {
@@ -105,8 +98,7 @@ namespace OpenGaugeClient.Editor.Services
                     case MessageType.Var:
                         var simVarPayload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>() ?? throw new Exception("Payload is null");
 
-                        var key = (simVarPayload.Name, simVarPayload.Unit);
-                        simVarValues[key] = ((JsonElement)simVarPayload.Value).GetDouble();
+                        VarManager.Instance.StoreVar(simVarPayload.Name, simVarPayload.Unit, simVarPayload.Value);
 
                         if (!hasSentAVar)
                         {

@@ -40,6 +40,7 @@ namespace OpenGaugeClient.Editor
         private int? _gaugeIndex;
         private ReactiveGauge _reactiveGauge;
         private RenderingHelper? _renderer;
+        private VarManager? _varManager;
         private GaugeRenderer? _gaugeRenderer;
         private readonly ImageCache _imageCache;
         private readonly SKFontCache _skFontCache;
@@ -68,6 +69,7 @@ namespace OpenGaugeClient.Editor
             ViewModel = new GaugeEditorViewViewModel(_reactiveGauge);
             DataContext = ViewModel;
 
+            _varManager = new VarManager();
             _skFontCache = new SKFontCache();
             _skFontProvider = new SKFontProvider(_skFontCache);
             _fontProvider = new FontProvider();
@@ -172,14 +174,6 @@ namespace OpenGaugeClient.Editor
             FileHelper.RevealFile(_gauge.Source);
         }
 
-        private object? GetSimVarValue(string name, string unit)
-        {
-            if (ConnectionService.Instance == null)
-                return null;
-
-            return ConnectionService.Instance.GetSimVarValue(name, unit);
-        }
-
         private void RebuildGaugeRenderer()
         {
             if (VisualRoot is not Window window)
@@ -210,7 +204,7 @@ namespace OpenGaugeClient.Editor
                 _imageCache,
                 _fontProvider,
                 _svgCache,
-                GetSimVarValue,
+                VarManager.Instance.GetInterpolatedSimVarValue,
                 debug: true
             );
         }

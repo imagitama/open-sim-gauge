@@ -1,5 +1,6 @@
 # 0.0.10
 
+- interpolate vars for smoother rendering
 - render warning if variable is empty
 - fixed font file selector wrong file type
 - changed panels to never render if vehicle set and current vehicle does not

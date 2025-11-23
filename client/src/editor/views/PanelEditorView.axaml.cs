@@ -139,7 +139,7 @@ namespace OpenGaugeClient.Editor
                     _imageCache,
                     _fontProvider,
                     _svgCache,
-                    GetSimVarValue,
+                    VarManager.Instance.GetInterpolatedSimVarValue,
                     isConnected: null,
                     disableRenderOnTop: true,
                     gridSize: SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null
@@ -316,14 +316,6 @@ namespace OpenGaugeClient.Editor
             Console.WriteLine($"[PanelEditorView] Save panel={panel}");
 
             _ = ConfigManager.SavePanel(_panelIndex, panel.ToPanel());
-        }
-
-        private object? GetSimVarValue(string name, string unit)
-        {
-            if (ConnectionService.Instance == null)
-                return null;
-
-            return ConnectionService.Instance.GetSimVarValue(name, unit);
         }
     }
 

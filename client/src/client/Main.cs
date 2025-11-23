@@ -53,15 +53,8 @@ namespace OpenGaugeClient.Client
     public partial class ClientApp : Application
     {
         private PanelManager? _panelManager;
+        private VarManager? _varManager;
         private string? lastKnownVehicleName;
-
-        private Dictionary<(string, string), object?> simVarValues = new Dictionary<(string, string), object?>();
-
-        private object? GetSimVarValue(string name, string unit)
-        {
-            simVarValues.TryGetValue((name, unit), out var v);
-            return v;
-        }
 
         public override async void OnFrameworkInitializationCompleted()
         {
@@ -110,10 +103,11 @@ namespace OpenGaugeClient.Client
                 Console.WriteLine($"Last known vehicle was '{lastKnownVehicleName}'");
             }
 
+            _varManager = new VarManager();
             _panelManager = new PanelManager();
 
             if (ConfigManager.Config.RequireConnection != true)
-                _panelManager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
+                _panelManager.Initialize(config, _varManager.GetInterpolatedSimVarValue, lastKnownVehicleName);
 
             var client = new ClientHandler(config.Server.IpAddress, config.Server.Port);
 
@@ -146,7 +140,6 @@ namespace OpenGaugeClient.Client
                 _panelManager.SetConnected(false);
             };
 
-            var hasSentAVar = false;
             client.OnMessage += async (msg) =>
             {
                 switch (msg.Type)
@@ -182,36 +175,20 @@ namespace OpenGaugeClient.Client
                         {
                             Dispatcher.UIThread.Post(() =>
                             {
-                                _panelManager.Initialize(config, GetSimVarValue, lastKnownVehicleName);
+                                _panelManager.Initialize(config, _varManager.GetInterpolatedSimVarValue, lastKnownVehicleName);
                             });
                         }
                         break;
 
                     case MessageType.Var:
-                        var simVarPayload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>() ?? throw new Exception("Payload is null");
+                        var simVarPayload = ((JsonElement)msg.Payload)
+                            .Deserialize<SimVarPayload>()
+                            ?? throw new Exception("Payload is null");
 
-                        var key = (simVarPayload.Name, simVarPayload.Unit);
-
-                        double? value = null;
-
-                        if (simVarPayload.Value is JsonElement je)
-                        {
-                            if (je.ValueKind == JsonValueKind.Number)
-                                value = je.GetDouble();
-                            else if (je.ValueKind != JsonValueKind.Null &&
-                                     je.ValueKind != JsonValueKind.Undefined)
-                                Console.WriteLine($"Invalid value for {key}: {je}");
-                        }
-
-                        simVarValues[key] = value;
-
-                        if (!hasSentAVar)
-                        {
-                            hasSentAVar = true;
-                            Console.WriteLine($"Our first SimVar: '{simVarPayload.Name}' ({simVarPayload.Unit}) => {simVarPayload.Value}");
-                        }
+                        _varManager.StoreVar(simVarPayload.Name, simVarPayload.Unit, simVarPayload.Value);
 
                         break;
+
                 }
             };
 
