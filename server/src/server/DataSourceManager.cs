@@ -7,7 +7,6 @@ namespace OpenGaugeServer
         private IDataSource _dataSource;
         private readonly Dictionary<(string VarName, string? Unit), object> _vars = [];
         private readonly Dictionary<(string VarName, string? Unit), object> _forcedVars = [];
-        private string? _currentVehicleName;
         private string? _forceVehicleName;
         private Action<string>? _vehicleCallback;
         private readonly Dictionary<(string VarName, string? Unit), Action<object?>> _varCallbacks = [];
@@ -129,7 +128,7 @@ namespace OpenGaugeServer
         {
             void managerCallback(string vehicleName)
             {
-                _currentVehicleName = vehicleName;
+                Console.WriteLine($"[DataSourceManager] New vehicle '{vehicleName}'");
                 callback(vehicleName);
             }
 
@@ -146,7 +145,7 @@ namespace OpenGaugeServer
             if (_forceVehicleName != null)
                 return _forceVehicleName;
 
-            return _currentVehicleName;
+            return _dataSource.CurrentVehicleName;
         }
 
         public void UnsubscribeFromUnusedVars(VarDef[] vars)

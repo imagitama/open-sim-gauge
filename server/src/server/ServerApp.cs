@@ -21,8 +21,6 @@ namespace OpenGaugeServer
 
             var configPath = Cli.GetConfigPathFromArgs(args);
 
-            Console.WriteLine($"Loading config {configPath}");
-
             var config = await ConfigManager.LoadConfig(configPath);
 
             var cliArgs = Cli.ParseArgs(args);

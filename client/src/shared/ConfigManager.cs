@@ -427,6 +427,10 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? Skip { get; set; } = false;
         /// <summary>
+        /// If to always render this panel.
+        /// </summary>
+        public bool? Force { get; set; } = false;
+        /// <summary>
         /// Extra console logging for this panel.
         /// </summary>
         public bool? Debug { get; set; } = false;

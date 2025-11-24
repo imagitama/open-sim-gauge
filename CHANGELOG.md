@@ -1,8 +1,11 @@
 # 0.0.11
 
 - SVG visual editor
+- fixed panels not unrendering on change/leave vehicle
 - fixed creating a new gauge by JSON duplicating into root config file
 - fixed `layer.Image` not saving as relative path
+- added `panel.Force = bool` to always a render a panel (transforms will still
+  freeze)
 
 # 0.0.10
 

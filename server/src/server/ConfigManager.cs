@@ -21,6 +21,8 @@ namespace OpenGaugeServer
         {
             var configPath = overridePath ?? PathHelper.GetFilePath("server.json", forceToGitRoot: false);
 
+            Console.WriteLine($"Load config: {configPath}");
+
             if (!File.Exists(configPath))
                 throw new Exception($"Config file not found: {configPath}");
 

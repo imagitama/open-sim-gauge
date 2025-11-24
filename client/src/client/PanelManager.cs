@@ -27,7 +27,7 @@ namespace OpenGaugeClient.Client
                 if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))
                 {
                     if (ConfigManager.Config.Debug)
-                        Console.WriteLine($"[PanelManager] Panel vehicle={panel.Vehicle} does not match provided={vehicleName}");
+                        Console.WriteLine($"[PanelManager] Panel should not be visible currentVehicle={vehicleName} panelVehicle={panel.Vehicle} panel={panel}");
 
                     UnrenderPanel(panel);
                     continue;
