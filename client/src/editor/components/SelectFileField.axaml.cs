@@ -30,6 +30,13 @@ namespace OpenGaugeClient.Editor.Components
             get => GetValue(DirectoryOnlyProperty);
             set => SetValue(DirectoryOnlyProperty, value);
         }
+        // public static readonly StyledProperty<bool> AbsoluteOnlyProperty =
+        //     AvaloniaProperty.Register<SelectFileField, bool>(nameof(AbsoluteOnly));
+        // public bool? AbsoluteOnly
+        // {
+        //     get => GetValue(AbsoluteOnlyProperty);
+        //     set => SetValue(AbsoluteOnlyProperty, value);
+        // }
         public IReactiveCommand PickCommand { get; }
         public event Action<string?>? FileCommitted;
         private readonly CompositeDisposable _cleanup = new();
@@ -66,18 +73,17 @@ namespace OpenGaugeClient.Editor.Components
             var dialog = new SelectFileDialog(AllowedExtensions ?? [], directoriesOnly: DirectoryOnly == true);
             var result = await dialog.ShowDialog<bool>(owner);
 
-            // TODO: do this better
-            var relative = dialog.ViewModel.RelativePath;
-            var absolute = dialog.ViewModel.AbsolutePath;
+            var relativePath = dialog.ViewModel.RelativePath;
+            var absolutePath = dialog.ViewModel.AbsolutePath;
 
-            Console.WriteLine($"[SelectFileField] Dialog complete relative={relative} absolute={absolute}");
+            Console.WriteLine($"[SelectFileField] Dialog complete relative={relativePath} absolute={absolutePath}");
 
-            if (!string.IsNullOrWhiteSpace(absolute))
-            {
-                Path = absolute;
-                Console.WriteLine($"[SelectFileField] Committing path={Path}");
-                FileCommitted?.Invoke(absolute);
-            }
+            if (string.IsNullOrEmpty(absolutePath))
+                return;
+
+            Path = absolutePath;
+            Console.WriteLine($"[SelectFileField] Committing path={Path}");
+            FileCommitted?.Invoke(Path);
         }
     }
 }

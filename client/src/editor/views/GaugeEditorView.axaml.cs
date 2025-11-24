@@ -402,7 +402,6 @@ namespace OpenGaugeClient.Editor
             var type = _gauge.GetType();
             var (target, prop) = GetNestedPropertyAndTarget(_gauge, fieldName);
 
-
             if (target == null)
             {
                 Console.WriteLine($"[GaugeEditorViewViewModel] Target not found for property '{fieldName}' on type {type.Name}");
@@ -636,6 +635,19 @@ namespace OpenGaugeClient.Editor
             else
             {
                 convertedValue = Convert.ChangeType(newValue, targetType);
+            }
+
+            switch (fieldName)
+            {
+                case nameof(ReactiveLayer.Image):
+                    if (newValue != null && _gauge.Source != null)
+                    {
+                        var absolutePath = (string)newValue;
+                        var relativePath = Path.GetRelativePath(Path.GetDirectoryName(_gauge.Source)!, absolutePath);
+                        Console.WriteLine($"[GaugeEditorViewViewModel] Map absolute={absolutePath} => relative={relativePath} source={_gauge.Source}");
+                        convertedValue = relativePath;
+                    }
+                    break;
             }
 
             Console.WriteLine($"[GaugeEditorViewViewModel] Setting prop '{type.Name}.{fieldName}' = '{convertedValue}' ('{newValue}')...");

@@ -74,8 +74,6 @@ namespace OpenGaugeClient.Client
 
             var configPath = Cli.GetConfigPathFromArgs(_args);
 
-            Console.WriteLine($"Loading config {configPath}");
-
             var config = await ConfigManager.LoadConfig(configPath);
 
             var cliArgs = Cli.ParseArgs(_args);

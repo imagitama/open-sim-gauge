@@ -30,5 +30,25 @@ namespace OpenGaugeClient
             var fileName = Path.GetFileName(path?.ToString() ?? string.Empty);
             return fileName;
         }
+
+        public static string Resolve(string? basePath, string pathToResolve)
+        {
+            if (basePath == null)
+            {
+                basePath = AppContext.BaseDirectory;
+            }
+            else if (File.Exists(basePath))
+            {
+                basePath = Path.GetDirectoryName(basePath);
+            }
+
+            if (basePath == null)
+                throw new Exception("Base path is null");
+
+            var relativePath = Path.Combine(basePath, pathToResolve);
+            string absolutePath = Path.GetFullPath(relativePath);
+
+            return absolutePath;
+        }
     }
 }

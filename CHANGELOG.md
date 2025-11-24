@@ -1,6 +1,8 @@
 # 0.0.11
 
 - SVG visual editor
+- fixed creating a new gauge by JSON duplicating into root config file
+- fixed `layer.Image` not saving as relative path
 
 # 0.0.10
 

@@ -256,18 +256,7 @@ namespace OpenGaugeClient
 
                                 if (layer.Image != null)
                                 {
-                                    var imagePath = layer.Image;
-
-                                    if (_gauge.Source != null && !Path.IsPathRooted(imagePath))
-                                    {
-                                        var baseDir = Path.GetDirectoryName(_gauge.Source);
-
-                                        if (baseDir != null)
-                                        {
-                                            var newPath = Path.Combine(baseDir, imagePath);
-                                            imagePath = newPath;
-                                        }
-                                    }
+                                    var imagePath = PathHelper.Resolve(_gauge.Source, layer.Image);
 
                                     Bitmap bmp = _imageCache.Load(imagePath, layer.Width != null ? layer.Width.Resolve(_gauge.Width) : null, layer.Height != null ? layer.Height.Resolve(_gauge.Height) : null, _renderScaling);
 

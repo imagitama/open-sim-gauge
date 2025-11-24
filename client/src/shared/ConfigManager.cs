@@ -59,6 +59,8 @@ namespace OpenGaugeClient
         {
             var configPath = overridePath ?? PathHelper.GetFilePath("client.json", forceToGitRoot: false);
 
+            Console.WriteLine($"Load config: {configPath}");
+
             var newConfig = await LoadTypedJson<Config>(configPath);
 
             if (_config?.Debug == true || newConfig.Debug)

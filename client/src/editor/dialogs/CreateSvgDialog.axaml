@@ -40,8 +40,6 @@
                     Text="{Binding JsonPath}"
                     TextWrapping="Wrap"
                     ToolTip.Tip="{Binding JsonPath}" />
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"
                     HorizontalContentAlignment="Center"

@@ -21,6 +21,7 @@ namespace OpenGaugeClient.Editor
             ViewModel.OnDeletePanel = index => _ = OnDeletePanel(index);
             ViewModel.OnDeleteGauge = index => _ = OnDeleteGauge(index);
             ViewModel.OnCreateSvg = OnCreateSvg;
+            ViewModel.OnLoadFromJson = OnLoadFromJson;
         }
 
         private async void OnCreateGauge()
@@ -157,6 +158,41 @@ namespace OpenGaugeClient.Editor
             }
         }
 
+        private async Task OnLoadFromJson()
+        {
+            try
+            {
+                Console.WriteLine($"[MainMenuView] On load from JSON");
+
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
+
+                var dialog = new SelectFileDialog(allowedExtensions: ["json"]);
+                var ok = await dialog.ShowDialog<bool>(window);
+
+                Console.WriteLine($"[MainMenuView] On load from JSON dialog ok={ok}");
+
+                if (ok)
+                {
+                    var path = dialog.ViewModel.EnteredPath;
+
+                    if (path == null)
+                        throw new Exception("Path is null");
+
+                    var gauge = await GaugeHelper.GetGaugeByPath(path);
+
+                    if (gauge == null)
+                        throw new Exception("Gauge is null");
+
+                    NavigationService.Instance.GoToView("GaugeEditor", [null, gauge]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainMenuView] Failed: {ex}");
+            }
+        }
+
         public class PanelEntry
         {
             public int Index { get; }
@@ -206,10 +242,12 @@ namespace OpenGaugeClient.Editor
             public ReactiveCommand<Unit, Unit> CreateGaugeCommand { get; }
             public ReactiveCommand<Unit, Unit> CreateSvgCommand { get; }
             public ReactiveCommand<Unit, Unit> ConnectToServerCommand { get; }
+            public ReactiveCommand<Unit, Unit> LoadFromJsonCommand { get; }
             public Action? OnCreateGauge;
             public Action<int>? OnDeletePanel;
             public Action<int>? OnDeleteGauge;
             public Func<Task>? OnCreateSvg;
+            public Func<Task>? OnLoadFromJson;
 
             public MainMenuViewViewModel()
             {
@@ -222,6 +260,7 @@ namespace OpenGaugeClient.Editor
                 CreateGaugeCommand = ReactiveCommand.Create(CreateGauge);
                 CreateSvgCommand = ReactiveCommand.Create(CreateSvg);
                 ConnectToServerCommand = ReactiveCommand.Create(ConnectToServer);
+                LoadFromJsonCommand = ReactiveCommand.Create(LoadFromJson);
 
                 Refresh();
             }
@@ -231,6 +270,13 @@ namespace OpenGaugeClient.Editor
                 Console.WriteLine("[MainMenuViewModel] Click create SVG");
 
                 OnCreateSvg?.Invoke();
+            }
+
+            private void LoadFromJson()
+            {
+                Console.WriteLine($"[MainMenuVieWModel] Click load from JSON");
+
+                OnLoadFromJson?.Invoke();
             }
 
             private void ConnectToServer()

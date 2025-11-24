@@ -25,12 +25,12 @@
                     Content="Browse" />
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal">
+            <!-- <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Relative:" />
                 <TextBlock Text="{Binding RelativePath}" />
-            </StackPanel>
+            </StackPanel>-->
 
-            <StackPanel Orientation="Horizontal">
+            <StackPanel IsVisible="{Binding !DirectoriesOnly}" Orientation="Horizontal">
                 <TextBlock Text="File Types:" />
                 <TextBlock Text="{Binding AllowedExtensionsDisplay}" />
             </StackPanel>

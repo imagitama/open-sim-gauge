@@ -125,7 +125,11 @@ namespace OpenGaugeClient.Editor
 
         private async Task Create()
         {
-            Console.WriteLine($"[CreateSvgDialogViewModel] On click create json={JsonPath}");
+            Console.WriteLine($"[CreateSvgDialogViewModel] On click create dir={DirPath}");
+
+            if (string.IsNullOrEmpty(DirPath))
+                return;
+
             OnCreate?.Invoke(JsonPath);
         }
 
