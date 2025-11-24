@@ -41,10 +41,11 @@ namespace OpenGaugeClient
             if (gaugeToSave.Source == null)
                 throw new Exception("Cannot save without a source");
 
-            await ConfigManager.SaveJson(gaugeToSave, gaugeToSave.Source);
+            var jsonPath = gaugeToSave.Source;
 
-            // note: do not save config here as we reference it by path
-            ConfigManager.Config.Gauges.Add(gaugeToSave);
+            Console.WriteLine($"[GaugeHelper] Save gauge to file gauge={gaugeToSave} path={jsonPath}");
+
+            await ConfigManager.SaveJson(gaugeToSave, jsonPath);
         }
 
         public static List<Gauge> FindGaugesReferencedByPathInAllPanels()

@@ -34,6 +34,8 @@ namespace OpenGaugeClient
 
         public static async Task SaveGauge(int gaugeIndex, Gauge gaugeToSave)
         {
+            Console.WriteLine($"[ConfigManager] Save gauge index={gaugeIndex} gauge={gaugeToSave}");
+
             Config!.Gauges[gaugeIndex] = gaugeToSave;
 
             await SaveConfig();

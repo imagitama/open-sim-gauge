@@ -53,6 +53,8 @@ namespace OpenGaugeClient.Editor
                     };
 
                     await GaugeHelper.SaveGaugeToFile(newGauge);
+
+                    NavigationService.Instance.GoToView("GaugeEditor", [null, newGauge]);
                 }
                 else if (!string.IsNullOrEmpty(name))
                 {
@@ -66,14 +68,18 @@ namespace OpenGaugeClient.Editor
                         Layers = []
                     };
 
+                    var gaugeCount = ConfigManager.Config.Gauges.Count;
+
                     await ConfigManager.AddGauge(newGauge);
+
+                    var gaugeIndex = gaugeCount + 1;
+
+                    NavigationService.Instance.GoToView("GaugeEditor", [gaugeIndex, null]);
                 }
                 else
                 {
                     throw new Exception("Need a name or path");
                 }
-
-                ViewModel.Refresh();
             }
             else
             {

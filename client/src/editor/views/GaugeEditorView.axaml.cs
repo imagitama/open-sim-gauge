@@ -152,7 +152,7 @@ namespace OpenGaugeClient.Editor
 
         private async void OnSave(ReactiveGauge gauge)
         {
-            Console.WriteLine($"[GaugeEditorView] Save '{gauge}'");
+            Console.WriteLine($"[GaugeEditorView] Save index={_gaugeIndex} gauge={gauge}");
 
             if (_gaugeIndex != null)
             {
@@ -178,7 +178,6 @@ namespace OpenGaugeClient.Editor
         {
             if (VisualRoot is not Window window)
                 return;
-
 
             var gaugeToRender = ViewModel.Gauge.ToModel();
 
@@ -212,7 +211,7 @@ namespace OpenGaugeClient.Editor
         public async Task RenderFrameAsync(DrawingContext ctx)
         {
             // handle unmount
-            if (VisualRoot is not Window window)
+            if (VisualRoot is not Window)
                 return;
 
             if (_gaugeRenderer == null)
@@ -375,21 +374,21 @@ namespace OpenGaugeClient.Editor
 
         private void OpenSource()
         {
-            Console.WriteLine($"[GaugeEditorViewViewModel] Open source");
+            Console.WriteLine($"[GaugeEditorViewViewModel] On click open source");
 
             OnOpenSource?.Invoke();
         }
 
         private void Reset()
         {
-            Console.WriteLine($"[GaugeEditorViewViewModel] Reset gauge");
+            Console.WriteLine($"[GaugeEditorViewViewModel] On click reset gauge");
 
             OnReset?.Invoke();
         }
 
         private void Save()
         {
-            Console.WriteLine($"[GaugeEditorViewViewModel] Save gauge");
+            Console.WriteLine($"[GaugeEditorViewViewModel] On click save gauge");
 
             OnSave?.Invoke(Gauge);
         }
