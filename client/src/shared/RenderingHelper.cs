@@ -88,6 +88,7 @@ namespace OpenGaugeClient
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[RenderingHelper] Render error: {ex}");
+                    throw;
                 }
 
                 try

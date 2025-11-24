@@ -1,71 +1,86 @@
 {
+  "width": 600,
+  "height": 600,
   "layers": [
     {
       "name": "needle_L",
-      "width": 600,
-      "height": 600,
       "shadow": true,
       "operations": [
         {
-          "type": "square",
-          "x": "50%",
-          "y": 200,
+          "type": "Square",
+          "position": [
+            "50%",
+            200
+          ],
           "width": 20,
           "height": 200,
           "fill": "rgb(230, 230, 230)"
         },
         {
-          "type": "triangle",
-          "x": "50%",
-          "y": 80,
+          "type": "Triangle",
+          "position": [
+            "50%",
+            80
+          ],
           "width": 20,
           "height": 40,
-          "rotation": 0,
           "fill": "rgb(230, 230, 230)"
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 330,
+          "type": "Square",
+          "position": [
+            "50%",
+            330
+          ],
           "width": 20,
           "height": 80,
           "fill": "rgb(75, 75, 75)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": 385,
+          "type": "Circle",
+          "position": [
+            "50%",
+            385
+          ],
           "radius": 20,
           "fill": "rgb(75, 75, 75)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "position": [
+            "50%",
+            "50%"
+          ],
           "radius": 15,
           "fill": "rgb(75, 75, 75)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "position": [
+            "50%",
+            "50%"
+          ],
           "radius": 5,
           "fill": "rgb(0, 0, 0)"
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 175,
+          "type": "Square",
+          "position": [
+            "50%",
+            175
+          ],
           "width": 35,
           "height": 50,
           "fill": "rgb(230, 230, 230)",
           "round": 10
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "L",
-          "x": "50%",
-          "y": 175,
+          "position": [
+            "50%",
+            175
+          ],
           "fill": "rgb(0, 0, 0)",
           "size": 32,
           "font": "Gordon"
@@ -74,70 +89,83 @@
     },
     {
       "name": "needle_R",
-      "width": 600,
-      "height": 600,
       "shadow": true,
       "operations": [
         {
-          "type": "square",
-          "x": "50%",
-          "y": 200,
+          "type": "Square",
+          "position": [
+            "50%",
+            200
+          ],
           "width": 20,
           "height": 200,
           "fill": "rgb(255, 255, 255)"
         },
         {
-          "type": "triangle",
-          "x": "50%",
-          "y": 80,
+          "type": "Triangle",
+          "position": [
+            "50%",
+            80
+          ],
           "width": 20,
           "height": 40,
-          "rotation": 0,
           "fill": "rgb(255, 255, 255)"
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 330,
+          "type": "Square",
+          "position": [
+            "50%",
+            330
+          ],
           "width": 20,
           "height": 80,
           "fill": "rgb(50, 50, 50)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": 385,
+          "type": "Circle",
+          "position": [
+            "50%",
+            385
+          ],
           "radius": 20,
           "fill": "rgb(50, 50, 50)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "position": [
+            "50%",
+            "50%"
+          ],
           "radius": 15,
           "fill": "rgb(50, 50, 50)"
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "position": [
+            "50%",
+            "50%"
+          ],
           "radius": 5,
           "fill": "rgb(0, 0, 0)"
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 230,
+          "type": "Square",
+          "position": [
+            "50%",
+            230
+          ],
           "width": 35,
           "height": 50,
           "fill": "rgb(255, 255, 255)",
           "round": 10
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "R",
-          "x": "50%",
-          "y": 230,
+          "position": [
+            "50%",
+            230
+          ],
           "fill": "rgb(0, 0, 0)",
           "size": 32,
           "font": "Gordon"
@@ -146,41 +174,43 @@
     },
     {
       "name": "bg",
-      "width": 600,
-      "height": 600,
       "operations": [
         {
           "name": "stroke",
-          "type": "circle",
+          "type": "Circle",
           "radius": 262.5,
           "strokeWidth": 25,
           "strokeFill": "rgb(25,25,25)"
         },
         {
           "name": "bg",
-          "type": "circle",
+          "type": "Circle",
           "radius": 250,
           "fill": "rgb(0, 0, 0)"
         },
         {
           "name": "dot1",
-          "type": "circle",
+          "type": "Circle",
           "radius": 10,
-          "x": "32.5%",
-          "y": "50%",
+          "position": [
+            "32.5%",
+            "50%"
+          ],
           "fill": "rgb(75, 75, 75)"
         },
         {
           "name": "dot2",
-          "type": "circle",
+          "type": "Circle",
           "radius": 10,
-          "x": "67.5%",
-          "y": "50%",
+          "position": [
+            "67.5%",
+            "50%"
+          ],
           "fill": "rgb(75, 75, 75)"
         },
         {
           "name": "Small Ticks",
-          "type": "gaugeTicks",
+          "type": "GaugeTicks",
           "radius": 250,
           "degreesStart": -90,
           "degreesEnd": 90,
@@ -191,7 +221,7 @@
         },
         {
           "name": "Large Ticks",
-          "type": "gaugeTicks",
+          "type": "GaugeTicks",
           "radius": 250,
           "degreesStart": -90,
           "degreesEnd": 90,
@@ -201,7 +231,7 @@
           "tickFill": "rgb(255, 255, 255)"
         },
         {
-          "type": "gaugeTickLabels",
+          "type": "GaugeTickLabels",
           "radius": 160,
           "degreesStart": -90,
           "degreesEnd": 90,
@@ -219,26 +249,32 @@
           "labelFont": "Gordon"
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "MANIFOLD",
-          "x": "50%",
-          "y": "70%",
+          "position": [
+            "50%",
+            "70%"
+          ],
           "size": 32,
           "font": "Gordon"
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "PRESSURE",
-          "x": "50%",
-          "y": "75%",
+          "position": [
+            "50%",
+            "75%"
+          ],
           "size": 32,
           "font": "Gordon"
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "IN HG ABS",
-          "x": "50%",
-          "y": "80%",
+          "position": [
+            "50%",
+            "80%"
+          ],
           "size": 32,
           "font": "Gordon"
         }

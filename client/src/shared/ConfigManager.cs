@@ -116,7 +116,12 @@ namespace OpenGaugeClient
 
         public static async Task SaveJson(object content, string relativePath, bool forceToGitRoot = true)
         {
-            var options = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
             string newJson = JsonSerializer.Serialize(content, options);
 
             string absoluteFilePath = PathHelper.GetFilePath(relativePath, forceToGitRoot);
@@ -218,7 +223,8 @@ namespace OpenGaugeClient
                     PropertyNameCaseInsensitive = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
                     AllowTrailingCommas = true,
-                    UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
+                    UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
                 };
 
                 var result = JsonSerializer.Deserialize<T>(ref reader, options);
@@ -568,6 +574,7 @@ namespace OpenGaugeClient
 
     public class InternalGauge
     {
+        [JsonIgnore]
         public string? Source { get; set; } // absolute path to JSON file
     }
 

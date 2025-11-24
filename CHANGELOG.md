@@ -1,3 +1,7 @@
+# 0.0.11
+
+- SVG visual editor
+
 # 0.0.10
 
 - renamed client and server `config.json` to `client.json` and `server.json`

@@ -3,8 +3,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:converters="using:OpenGaugeClient.Editor.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <UserControl.Resources>
+        <converters:EmptyListToBoolConverter x:Key="EmptyListToBoolConverter" />
+    </UserControl.Resources>
     <Grid
         Margin="50"
         ColumnDefinitions="*,*"
@@ -29,6 +33,12 @@
                     Margin="0,10,0,0"
                     Foreground="White"
                     Text="{Binding ConnectionStatus}" />
+                <components:PrimaryButton
+                    Margin="0,10,0,20"
+                    Command="{Binding DataContext.CreateSvgCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Debug="True"
+                    Label="SVG Editor"
+                    Positivity="0" />
             </StackPanel>
         </Grid>
         <ScrollViewer
@@ -82,6 +92,18 @@
                     FontSize="16"
                     Foreground="White"
                     Text="Gauges" />
+                <TextBlock
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    FontStyle="Italic"
+                    Foreground="Gray"
+                    Text="No gauges">
+                    <TextBlock.IsVisible>
+                        <MultiBinding Converter="{StaticResource EmptyListToBoolConverter}">
+                            <Binding Path="GaugesWithIndex.Count" />
+                        </MultiBinding>
+                    </TextBlock.IsVisible>
+                </TextBlock>
                 <ItemsControl ItemsSource="{Binding GaugesWithIndex}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

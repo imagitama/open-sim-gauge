@@ -36,7 +36,7 @@ namespace OpenGaugeClient
                 svg.Load(fileStream);
                 var pic = svg.Picture!;
 
-                var (viewBoxWidth, viewBoxHeight) = SvgUtils.GetSvgDimensionsFromViewBox(absolutePath);
+                var (viewBoxWidth, viewBoxHeight) = SvgUtils.GetSvgDimensionsFromFileViewBox(absolutePath);
 
                 int dipWidth = (int)(imageWidth != null ? imageWidth : viewBoxWidth > 0 ? (int)viewBoxWidth : 0);
                 int dipHeight = (int)(imageHeight != null ? imageHeight : viewBoxHeight > 0 ? (int)viewBoxHeight : 0);
@@ -88,6 +88,65 @@ namespace OpenGaugeClient
                 return bmp;
             }
         }
+
+        public Bitmap LoadFromSvgText(string svgText, double? imageWidth, double? imageHeight, double renderScaling)
+        {
+            if (string.IsNullOrWhiteSpace(svgText))
+                throw new ArgumentException("SVG text is empty");
+
+            string hash = svgText.GetHashCode().ToString();
+            var key = ($"__inline_svg_{hash}", imageWidth, imageHeight);
+
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+
+            var svg = new SKSvg();
+
+            if (_skFontProvider is { } provider && svg?.Settings?.TypefaceProviders != null)
+                svg.Settings.TypefaceProviders.Insert(0, provider);
+
+            using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(svgText)))
+            {
+                svg!.Load(memoryStream);
+            }
+
+            var pic = svg.Picture ?? throw new Exception("Failed to parse inline SVG");
+
+            var (viewBoxWidth, viewBoxHeight) = SvgUtils.GetSvgDimensionsFromViewBox(svgText);
+
+            int dipWidth = (int)(imageWidth != null ? imageWidth : viewBoxWidth > 0 ? (int)viewBoxWidth : 0);
+            int dipHeight = (int)(imageHeight != null ? imageHeight : viewBoxHeight > 0 ? (int)viewBoxHeight : 0);
+
+            if (dipWidth == 0 || dipHeight == 0)
+                throw new Exception("Inline SVG has no dimensions (width/height/viewBox missing)");
+
+            int pxWidth = (int)Math.Ceiling(dipWidth * renderScaling);
+            int pxHeight = (int)Math.Ceiling(dipHeight * renderScaling);
+
+            using var skiaBitmap = new SKBitmap(pxWidth, pxHeight);
+            using var skiaCanvas = new SKCanvas(skiaBitmap);
+            skiaCanvas.Clear(SKColors.Transparent);
+
+            var picBounds = pic.CullRect;
+            float scaleX = (float)(pxWidth / picBounds.Width);
+            float scaleY = (float)(pxHeight / picBounds.Height);
+
+            skiaCanvas.Scale(scaleX, scaleY);
+            skiaCanvas.DrawPicture(pic);
+            skiaCanvas.Flush();
+
+            using var image = SKImage.FromBitmap(skiaBitmap);
+            using var png = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var pngStream = png.AsStream();
+            var avaloniaBmp = new Bitmap(pngStream);
+
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[ImageCache] Loaded Inline SVG len={svgText.Length} => {dipWidth}x{dipHeight} => {pxWidth}x{pxHeight}");
+
+            _cache[key] = avaloniaBmp;
+            return avaloniaBmp;
+        }
+
 
         public void Dispose()
         {

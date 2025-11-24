@@ -9,7 +9,7 @@ namespace OpenGaugeClient
 {
     public static class SvgUtils
     {
-        public static (float Width, float Height) GetSvgDimensionsFromViewBox(string svgPath)
+        public static (float Width, float Height) GetSvgDimensionsFromFileViewBox(string svgPath)
         {
             string absolutePath = PathHelper.GetFilePath(svgPath);
 
@@ -17,6 +17,25 @@ namespace OpenGaugeClient
 
             var svgElement = doc.Root
                 ?? throw new Exception($"SVG '{svgPath}' has no root <svg> element");
+
+            float viewBoxWidth = 0;
+            float viewBoxHeight = 0;
+            var viewBox = svgElement.Attribute("viewBox")?.Value?.Split(' ');
+            if (viewBox?.Length == 4)
+            {
+                viewBoxWidth = float.Parse(viewBox[2], CultureInfo.InvariantCulture);
+                viewBoxHeight = float.Parse(viewBox[3], CultureInfo.InvariantCulture);
+            }
+
+            return (viewBoxWidth, viewBoxHeight);
+        }
+
+        public static (float Width, float Height) GetSvgDimensionsFromViewBox(string svgText)
+        {
+            var doc = XDocument.Parse(svgText);
+
+            var svgElement = doc.Root
+                ?? throw new Exception($"SVG has no root <svg> element");
 
             float viewBoxWidth = 0;
             float viewBoxHeight = 0;

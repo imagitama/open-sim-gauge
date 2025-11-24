@@ -33,7 +33,7 @@ namespace OpenGaugeClient.Editor
         public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .UseReactiveUI()
-             .LogToTrace(Avalonia.Logging.LogEventLevel.Verbose);
+            .LogToTrace(Avalonia.Logging.LogEventLevel.Verbose);
     }
 
     public partial class App : Application
@@ -76,6 +76,7 @@ namespace OpenGaugeClient.Editor
                     NavigationService.Instance.Register("Main", _ => new MainMenuView());
                     NavigationService.Instance.Register("PanelEditor", param => new PanelEditorView((int)param[0]!));
                     NavigationService.Instance.Register("GaugeEditor", param => new GaugeEditorView((int?)param[0], (Gauge?)param[1]));
+                    NavigationService.Instance.Register("SvgCreatorEditor", param => new SvgCreatorEditorView((SvgCreator?)param[0]!));
 
                     desktop.MainWindow = new MainWindow();
 

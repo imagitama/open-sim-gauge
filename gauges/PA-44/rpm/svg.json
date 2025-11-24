@@ -2,209 +2,515 @@
   "layers": [
     {
       "name": "needle_L",
-      "width": 600,
-      "height": 600,
-      "shadow": true,
       "operations": [
         {
-          "type": "square",
-          "x": "50%",
-          "y": 200,
+          "type": "Square",
+          "fill": "rgb(230, 230, 230)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 200,
-          "fill": "rgb(230, 230, 230)"
+          "position": [
+            "50%",
+            200
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "triangle",
-          "x": "50%",
-          "y": 80,
+          "type": "Triangle",
+          "fill": "rgb(230, 230, 230)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 40,
-          "rotation": 0,
-          "fill": "rgb(230, 230, 230)"
+          "position": [
+            "50%",
+            80
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": 0,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 330,
+          "type": "Square",
+          "fill": "rgb(75, 75, 75)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 80,
-          "fill": "rgb(75, 75, 75)"
+          "position": [
+            "50%",
+            330
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": 385,
+          "type": "Circle",
+          "fill": "rgb(75, 75, 75)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 20,
-          "fill": "rgb(75, 75, 75)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            385
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "fill": "rgb(75, 75, 75)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 15,
-          "fill": "rgb(75, 75, 75)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "fill": "rgb(0, 0, 0)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 5,
-          "fill": "rgb(0, 0, 0)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 175,
+          "type": "Square",
+          "fill": "rgb(230, 230, 230)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": 10,
+          "name": null,
           "width": 35,
           "height": 50,
-          "fill": "rgb(230, 230, 230)",
-          "round": 10
+          "position": [
+            "50%",
+            175
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "L",
-          "x": "50%",
-          "y": 175,
-          "fill": "rgb(0, 0, 0)",
           "size": 32,
-          "font": "Gordon"
+          "font": "Gordon",
+          "fill": "rgb(0, 0, 0)",
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            175
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         }
-      ]
+      ],
+      "shadow": true
     },
     {
       "name": "needle_R",
-      "width": 600,
-      "height": 600,
-      "shadow": true,
       "operations": [
         {
-          "type": "square",
-          "x": "50%",
-          "y": 200,
+          "type": "Square",
+          "fill": "rgb(255, 255, 255)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 200,
-          "fill": "rgb(255, 255, 255)"
+          "position": [
+            "50%",
+            200
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "triangle",
-          "x": "50%",
-          "y": 80,
+          "type": "Triangle",
+          "fill": "rgb(255, 255, 255)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 40,
-          "rotation": 0,
-          "fill": "rgb(255, 255, 255)"
+          "position": [
+            "50%",
+            80
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": 0,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 330,
+          "type": "Square",
+          "fill": "rgb(50, 50, 50)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": null,
+          "name": null,
           "width": 20,
           "height": 80,
-          "fill": "rgb(50, 50, 50)"
+          "position": [
+            "50%",
+            330
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": 385,
+          "type": "Circle",
+          "fill": "rgb(50, 50, 50)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 20,
-          "fill": "rgb(50, 50, 50)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            385
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "fill": "rgb(50, 50, 50)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 15,
-          "fill": "rgb(50, 50, 50)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
-          "x": "50%",
-          "y": "50%",
+          "type": "Circle",
+          "fill": "rgb(0, 0, 0)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 5,
-          "fill": "rgb(0, 0, 0)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "square",
-          "x": "50%",
-          "y": 230,
+          "type": "Square",
+          "fill": "rgb(255, 255, 255)",
+          "strokeFill": null,
+          "strokeWidth": null,
+          "round": 10,
+          "name": null,
           "width": 35,
           "height": 50,
-          "fill": "rgb(255, 255, 255)",
-          "round": 10
+          "position": [
+            "50%",
+            230
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "R",
-          "x": "50%",
-          "y": 230,
-          "fill": "rgb(0, 0, 0)",
           "size": 32,
-          "font": "Gordon"
+          "font": "Gordon",
+          "fill": "rgb(0, 0, 0)",
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            230
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         }
-      ]
+      ],
+      "shadow": true
     },
     {
       "name": "bg",
-      "width": 600,
-      "height": 600,
       "operations": [
         {
-          "name": "stroke",
-          "type": "circle",
-          "radius": 262.5,
+          "type": "Circle",
+          "fill": "rgb(255,255,255)",
+          "strokeFill": "rgb(25,25,25)",
           "strokeWidth": 25,
-          "strokeFill": "rgb(25,25,25)"
+          "radius": 262.5,
+          "name": "stroke",
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
+          "type": "Circle",
+          "fill": "rgb(16, 16, 16)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 250,
-          "fill": "rgb(16, 16, 16)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "name": "Green Arc",
-          "type": "arc",
+          "type": "Arc",
           "radius": 250,
           "degreesStart": -125,
           "degreesEnd": 95,
           "innerThickness": 40,
-          "fill": "rgb(74, 160, 65)"
+          "fill": "rgb(74, 160, 65)",
+          "name": "Green Arc",
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "name": "Small Ticks",
-          "type": "gaugeTicks",
+          "type": "GaugeTicks",
           "radius": 250,
           "degreesStart": -125,
           "degreesEnd": 125,
           "degreesGap": 10,
-          "tickWidth": 5,
           "tickLength": 35,
-          "tickFill": "rgb(255, 255, 255)"
+          "tickWidth": 5,
+          "tickFill": "rgb(255, 255, 255)",
+          "name": "Small Ticks",
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "name": "Large Ticks",
-          "type": "gaugeTicks",
+          "type": "GaugeTicks",
           "radius": 250,
           "degreesStart": -125,
           "degreesEnd": 125,
           "degreesGap": 50,
-          "tickWidth": 10,
           "tickLength": 45,
-          "tickFill": "rgb(255, 255, 255)"
+          "tickWidth": 10,
+          "tickFill": "rgb(255, 255, 255)",
+          "name": "Large Ticks",
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "name": "Redline",
-          "type": "gaugeTicks",
+          "type": "GaugeTicks",
           "radius": 250,
           "degreesStart": 95.5,
           "degreesEnd": 95.5,
           "degreesGap": 10,
-          "tickWidth": 6,
           "tickLength": 45,
-          "tickFill": "rgb(230, 66, 84)"
+          "tickWidth": 6,
+          "tickFill": "rgb(230, 66, 84)",
+          "name": "Redline",
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "gaugeTickLabels",
+          "type": "GaugeTickLabels",
           "radius": 165,
           "degreesStart": -125,
           "degreesEnd": 125,
@@ -217,24 +523,73 @@
             "25",
             "30"
           ],
-          "labelFill": "rgb(255, 255, 255)",
           "labelSize": 64,
-          "labelFont": "Gordon"
+          "labelFill": "rgb(255, 255, 255)",
+          "labelFont": "Gordon",
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "circle",
+          "type": "Circle",
+          "fill": "rgb(255, 255, 255)",
+          "strokeFill": null,
+          "strokeWidth": null,
           "radius": 5,
-          "fill": "rgb(255, 255, 255)"
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "50%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         },
         {
-          "type": "text",
+          "type": "Text",
           "text": "RPM",
-          "x": "50%",
-          "y": "80%",
           "size": 64,
-          "font": "Gordon"
+          "font": "Gordon",
+          "fill": "rgb(255, 255, 255)",
+          "name": null,
+          "width": null,
+          "height": null,
+          "position": [
+            "50%",
+            "80%"
+          ],
+          "origin": [
+            "50%",
+            "50%"
+          ],
+          "rotate": null,
+          "translateX": null,
+          "translateY": null,
+          "skip": false
         }
-      ]
+      ],
+      "shadow": null
     }
-  ]
+  ],
+  "width": 600,
+  "height": 600
 }

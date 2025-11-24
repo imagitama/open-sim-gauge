@@ -9,17 +9,18 @@ namespace OpenGaugeClient.Editor
 {
     public partial class MainMenuView : UserControl
     {
-        MainMenuViewViewModel _vm;
+        MainMenuViewViewModel ViewModel;
 
         public MainMenuView()
         {
             InitializeComponent();
-            _vm = new MainMenuViewViewModel();
-            DataContext = _vm;
+            ViewModel = new MainMenuViewViewModel();
+            DataContext = ViewModel;
 
-            _vm.OnCreateGauge = OnCreateGauge;
-            _vm.OnDeletePanel = index => _ = OnDeletePanel(index);
-            _vm.OnDeleteGauge = index => _ = OnDeleteGauge(index);
+            ViewModel.OnCreateGauge = OnCreateGauge;
+            ViewModel.OnDeletePanel = index => _ = OnDeletePanel(index);
+            ViewModel.OnDeleteGauge = index => _ = OnDeleteGauge(index);
+            ViewModel.OnCreateSvg = OnCreateSvg;
         }
 
         private async void OnCreateGauge()
@@ -36,15 +37,11 @@ namespace OpenGaugeClient.Editor
             {
                 Console.WriteLine($"[MainMenuView] On create gauge - dialog ok lastValue={dialog.LastValue}");
 
-                var (name, path) = dialog.LastValue;
+                var (name, jsonPath) = dialog.LastValue;
 
-                if (!string.IsNullOrEmpty(path))
+                if (!string.IsNullOrEmpty(jsonPath))
                 {
-                    Console.WriteLine($"[MainMenuView] Create gauge into directory={path}");
-
-                    var gaugeJsonPath = Path.Combine(path, "gauge.json");
-
-                    Console.WriteLine($"[MainMenuView] Create gauge dir={path} json={gaugeJsonPath}");
+                    Console.WriteLine($"[MainMenuView] Create gauge path={jsonPath}");
 
                     var newGauge = new Gauge()
                     {
@@ -52,7 +49,7 @@ namespace OpenGaugeClient.Editor
                         Width = 500,
                         Height = 500,
                         Layers = [],
-                        Source = gaugeJsonPath
+                        Source = jsonPath
                     };
 
                     await GaugeHelper.SaveGaugeToFile(newGauge);
@@ -76,7 +73,7 @@ namespace OpenGaugeClient.Editor
                     throw new Exception("Need a name or path");
                 }
 
-                _vm.Refresh();
+                ViewModel.Refresh();
             }
             else
             {
@@ -97,7 +94,7 @@ namespace OpenGaugeClient.Editor
             if (result)
             {
                 await ConfigManager.DeletePanel(panelIndex);
-                _vm.Refresh();
+                ViewModel.Refresh();
             }
 
             Console.WriteLine($"[MainMenuViewViewModel] Delete panel done result={result}");
@@ -116,256 +113,298 @@ namespace OpenGaugeClient.Editor
             if (result)
             {
                 await ConfigManager.DeleteGauge(gaugeIndex);
-                _vm.Refresh();
+                ViewModel.Refresh();
             }
 
             Console.WriteLine($"[MainMenuViewViewModel] Delete gauge done result={result}");
         }
-    }
 
-    public class PanelEntry
-    {
-        public int Index { get; }
-        public Panel Panel { get; }
-
-        public PanelEntry(int index, Panel panel)
+        private async Task OnCreateSvg()
         {
-            Index = index;
-            Panel = panel;
-        }
-    }
-
-    public class GaugeEntry
-    {
-        public int Index { get; }
-        public string? OutputPath { get; }
-        public ReactiveGauge Gauge { get; }
-
-        public GaugeEntry(int index, ReactiveGauge gauge, string? outputPath = null)
-        {
-            Index = index;
-            Gauge = gauge;
-            // need replace as avalonia strips underscores
-            OutputPath = outputPath != null ? PathHelper.GetFileName(outputPath).Replace("_", "__") : null;
-        }
-    }
-
-    public class MainMenuViewViewModel : ReactiveObject
-    {
-        private string _connectionStatus = GetConnectionStatus();
-        public string ConnectionStatus
-        {
-            get => _connectionStatus;
-            set => this.RaiseAndSetIfChanged(ref _connectionStatus, value);
-        }
-
-        public ObservableCollection<PanelEntry> PanelsWithIndex { get; } = [];
-        public ReactiveCommand<int, Unit> OpenPanelEditorCommand { get; }
-        public ReactiveCommand<int, Unit> DeletePanelCommand { get; }
-        public ReactiveCommand<int, Unit> DuplicatePanelCommand { get; }
-        public ReactiveCommand<Panel?, Unit> CreatePanelCommand { get; }
-
-        public ObservableCollection<GaugeEntry> GaugesWithIndex { get; } = [];
-        public ObservableCollection<GaugeEntry> GaugesWithPath { get; } = [];
-        public ReactiveCommand<int, Unit> DeleteGaugeCommand { get; }
-        public ReactiveCommand<object, Unit> OpenGaugeEditorCommand { get; }
-        public ReactiveCommand<Unit, Unit> CreateGaugeCommand { get; }
-        public ReactiveCommand<Unit, Unit> ConnectToServerCommand { get; }
-        public Action? OnCreateGauge;
-        public Action<int>? OnDeletePanel;
-        public Action<int>? OnDeleteGauge;
-
-        public MainMenuViewViewModel()
-        {
-            OpenPanelEditorCommand = ReactiveCommand.Create<int>(OpenPanelEditor);
-            DeletePanelCommand = ReactiveCommand.CreateFromTask<int>(DeletePanel);
-            DuplicatePanelCommand = ReactiveCommand.CreateFromTask<int>(DuplicatePanel);
-            CreatePanelCommand = ReactiveCommand.CreateFromTask<Panel?>(CreatePanel);
-            DeleteGaugeCommand = ReactiveCommand.Create<int>(DeleteGauge);
-            OpenGaugeEditorCommand = ReactiveCommand.CreateFromTask<object>(OpenGaugeEditor);
-            CreateGaugeCommand = ReactiveCommand.Create(CreateGauge);
-            ConnectToServerCommand = ReactiveCommand.Create(ConnectToServer);
-
-            Refresh();
-        }
-
-        private void ConnectToServer()
-        {
-            Console.WriteLine($"[MainMenuViewModel] Connect to server");
-
-            ConnectionStatus = GetConnectionStatus();
-
-            Action OnConnect = () =>
+            try
             {
-                Console.WriteLine("[MainMenuViewModel] We connected");
+                Console.WriteLine($"[MainMenuView] On create SVG");
+
+                if (VisualRoot is not Window window)
+                    throw new Exception("Window is null");
+
+                var dialog = new CreateSvgDialog();
+                var ok = await dialog.ShowDialog<bool>(window);
+
+                Console.WriteLine($"[MainMenuView] On create SVG dialog ok={ok}");
+
+                if (ok)
+                {
+                    Console.WriteLine($"[MainMenuView] On create SVG - dialog");
+
+                    var svgCreator = dialog.SvgCreator;
+
+                    if (svgCreator == null)
+                        throw new Exception("SVG creator is null");
+
+                    NavigationService.Instance.GoToView("SvgCreatorEditor", [svgCreator]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainMenuView] Failed: {ex}");
+            }
+        }
+
+        public class PanelEntry
+        {
+            public int Index { get; }
+            public Panel Panel { get; }
+
+            public PanelEntry(int index, Panel panel)
+            {
+                Index = index;
+                Panel = panel;
+            }
+        }
+
+        public class GaugeEntry
+        {
+            public int Index { get; }
+            public string? OutputPath { get; }
+            public ReactiveGauge Gauge { get; }
+
+            public GaugeEntry(int index, ReactiveGauge gauge, string? outputPath = null)
+            {
+                Index = index;
+                Gauge = gauge;
+                // need replace as avalonia strips underscores
+                OutputPath = outputPath != null ? PathHelper.GetFileName(outputPath).Replace("_", "__") : null;
+            }
+        }
+
+        public class MainMenuViewViewModel : ReactiveObject
+        {
+            private string _connectionStatus = GetConnectionStatus();
+            public string ConnectionStatus
+            {
+                get => _connectionStatus;
+                set => this.RaiseAndSetIfChanged(ref _connectionStatus, value);
+            }
+
+            public ObservableCollection<PanelEntry> PanelsWithIndex { get; } = [];
+            public ReactiveCommand<int, Unit> OpenPanelEditorCommand { get; }
+            public ReactiveCommand<int, Unit> DeletePanelCommand { get; }
+            public ReactiveCommand<int, Unit> DuplicatePanelCommand { get; }
+            public ReactiveCommand<Panel?, Unit> CreatePanelCommand { get; }
+
+            public ObservableCollection<GaugeEntry> GaugesWithIndex { get; } = [];
+            public ObservableCollection<GaugeEntry> GaugesWithPath { get; } = [];
+            public ReactiveCommand<int, Unit> DeleteGaugeCommand { get; }
+            public ReactiveCommand<object, Unit> OpenGaugeEditorCommand { get; }
+            public ReactiveCommand<Unit, Unit> CreateGaugeCommand { get; }
+            public ReactiveCommand<Unit, Unit> CreateSvgCommand { get; }
+            public ReactiveCommand<Unit, Unit> ConnectToServerCommand { get; }
+            public Action? OnCreateGauge;
+            public Action<int>? OnDeletePanel;
+            public Action<int>? OnDeleteGauge;
+            public Func<Task>? OnCreateSvg;
+
+            public MainMenuViewViewModel()
+            {
+                OpenPanelEditorCommand = ReactiveCommand.Create<int>(OpenPanelEditor);
+                DeletePanelCommand = ReactiveCommand.CreateFromTask<int>(DeletePanel);
+                DuplicatePanelCommand = ReactiveCommand.CreateFromTask<int>(DuplicatePanel);
+                CreatePanelCommand = ReactiveCommand.CreateFromTask<Panel?>(CreatePanel);
+                DeleteGaugeCommand = ReactiveCommand.Create<int>(DeleteGauge);
+                OpenGaugeEditorCommand = ReactiveCommand.CreateFromTask<object>(OpenGaugeEditor);
+                CreateGaugeCommand = ReactiveCommand.Create(CreateGauge);
+                CreateSvgCommand = ReactiveCommand.Create(CreateSvg);
+                ConnectToServerCommand = ReactiveCommand.Create(ConnectToServer);
+
+                Refresh();
+            }
+
+            private void CreateSvg()
+            {
+                Console.WriteLine("[MainMenuViewModel] Click create SVG");
+
+                OnCreateSvg?.Invoke();
+            }
+
+            private void ConnectToServer()
+            {
+                Console.WriteLine($"[MainMenuViewModel] Click connect to server");
 
                 ConnectionStatus = GetConnectionStatus();
-            };
 
-            Action<Exception?> OnDisconnect = (reason) =>
-            {
-                Console.WriteLine($"[MainMenuViewModel] We disconnected: {reason}");
+                Action OnConnect = () =>
+                {
+                    Console.WriteLine("[MainMenuViewModel] We connected");
 
-                ConnectionStatus = GetConnectionStatus();
-            };
+                    ConnectionStatus = GetConnectionStatus();
+                };
 
-            Action<string?> OnVehicle = (vehicleName) =>
-            {
-                Console.WriteLine($"[MainMenuViewModel] New vehicle '{vehicleName}'");
+                Action<Exception?> OnDisconnect = (reason) =>
+                {
+                    Console.WriteLine($"[MainMenuViewModel] We disconnected: {reason}");
 
-                ConnectionStatus = GetConnectionStatus(vehicleName);
-            };
+                    ConnectionStatus = GetConnectionStatus();
+                };
 
-            ConnectionService.Instance.OnConnect += OnConnect;
-            ConnectionService.Instance.OnDisconnect += OnDisconnect;
-            ConnectionService.Instance.OnVehicle += OnVehicle;
+                Action<string?> OnVehicle = (vehicleName) =>
+                {
+                    Console.WriteLine($"[MainMenuViewModel] New vehicle '{vehicleName}'");
 
-            _ = ConnectionService.Instance.Connect();
-        }
+                    ConnectionStatus = GetConnectionStatus(vehicleName);
+                };
 
-        private static string GetConnectionStatus(string? vehicleName = null)
-        {
-            if (ConnectionService.Instance.IsConnected && vehicleName != null)
-                return $"Vehicle: {vehicleName}";
+                ConnectionService.Instance.OnConnect += OnConnect;
+                ConnectionService.Instance.OnDisconnect += OnDisconnect;
+                ConnectionService.Instance.OnVehicle += OnVehicle;
 
-            if (ConnectionService.Instance.IsConnected && ConnectionService.Instance.LastKnownVehicleName is { } name)
-                return $"Vehicle: {name}";
-
-            if (ConnectionService.Instance.IsConnected)
-                return "Connected successfully";
-
-            if (ConnectionService.Instance.IsConnecting)
-                return "Connecting..."; ;
-
-            if (ConnectionService.Instance.LastFailReason != null)
-                return $"Failed to connect: {ConnectionService.Instance.LastFailReason.Message}";
-
-            return "";
-        }
-
-        public void Refresh()
-        {
-            PanelsWithIndex.Clear();
-
-            var panels = ConfigManager.Config!.Panels;
-            foreach (var (panel, i) in panels.Select((panel, i) => (panel, i)))
-            {
-                PanelsWithIndex.Add(new PanelEntry(i, panel));
+                _ = ConnectionService.Instance.Connect();
             }
 
-            GaugesWithIndex.Clear();
-
-            var rootGauges = ConfigManager.Config!.Gauges;
-            foreach (var (rootGauge, i) in rootGauges.Select((rootGauge, i) => (rootGauge, i)))
+            private static string GetConnectionStatus(string? vehicleName = null)
             {
-                GaugesWithIndex.Add(new GaugeEntry(i, new ReactiveGauge(rootGauge)));
+                if (ConnectionService.Instance.IsConnected && vehicleName != null)
+                    return $"Vehicle: {vehicleName}";
+
+                if (ConnectionService.Instance.IsConnected && ConnectionService.Instance.LastKnownVehicleName is { } name)
+                    return $"Vehicle: {name}";
+
+                if (ConnectionService.Instance.IsConnected)
+                    return "Connected successfully";
+
+                if (ConnectionService.Instance.IsConnecting)
+                    return "Connecting..."; ;
+
+                if (ConnectionService.Instance.LastFailReason != null)
+                    return $"Failed to connect: {ConnectionService.Instance.LastFailReason.Message}";
+
+                return "";
             }
 
-            GaugesWithPath.Clear();
-
-            var gaugesInPanels = GaugeHelper.FindGaugesReferencedByPathInAllPanels();
-            foreach (var (gauge, i) in gaugesInPanels.Select((gauge, i) => (gauge, i)))
+            public void Refresh()
             {
-                GaugesWithPath.Add(new GaugeEntry(i, new ReactiveGauge(gauge), gauge.Source));
+                PanelsWithIndex.Clear();
+
+                var panels = ConfigManager.Config!.Panels;
+                foreach (var (panel, i) in panels.Select((panel, i) => (panel, i)))
+                {
+                    PanelsWithIndex.Add(new PanelEntry(i, panel));
+                }
+
+                GaugesWithIndex.Clear();
+
+                var rootGauges = ConfigManager.Config!.Gauges;
+                foreach (var (rootGauge, i) in rootGauges.Select((rootGauge, i) => (rootGauge, i)))
+                {
+                    GaugesWithIndex.Add(new GaugeEntry(i, new ReactiveGauge(rootGauge)));
+                }
+
+                GaugesWithPath.Clear();
+
+                var gaugesInPanels = GaugeHelper.FindGaugesReferencedByPathInAllPanels();
+                foreach (var (gauge, i) in gaugesInPanels.Select((gauge, i) => (gauge, i)))
+                {
+                    GaugesWithPath.Add(new GaugeEntry(i, new ReactiveGauge(gauge), gauge.Source));
+                }
+
+                Console.WriteLine($"[MainMenuViewViewModel] Loaded {PanelsWithIndex.Count} panels, {GaugesWithIndex.Count} root gauges, {GaugesWithPath.Count} referenced gauges");
             }
 
-            Console.WriteLine($"[MainMenuViewViewModel] Loaded {PanelsWithIndex.Count} panels, {GaugesWithIndex.Count} root gauges, {GaugesWithPath.Count} referenced gauges");
-        }
-
-        // TODO: Move to window
-        private async Task CreatePanel(Panel? existingPanel)
-        {
-            var newPanel = existingPanel ?? new Panel()
+            // TODO: Move to window
+            private async Task CreatePanel(Panel? existingPanel)
             {
-                Name = $"Panel #{ConfigManager.Config.Panels.Count + 1}",
-                Gauges = []
-            };
+                var newPanel = existingPanel ?? new Panel()
+                {
+                    Name = $"Panel #{ConfigManager.Config.Panels.Count + 1}",
+                    Gauges = []
+                };
 
-            Console.WriteLine($"[MainMenuViewViewModel] Create panel={newPanel}");
+                Console.WriteLine($"[MainMenuViewViewModel] Create panel={newPanel}");
 
-            await ConfigManager.AddPanel(newPanel);
+                await ConfigManager.AddPanel(newPanel);
 
-            Refresh();
-        }
-
-        // TODO: Move to window
-        private void OpenPanelEditor(int panelIndex)
-        {
-            Console.WriteLine($"[MainMenuViewViewModel] Open panel editor index={panelIndex}");
-            NavigationService.Instance.GoToView("PanelEditor", [panelIndex]);
-        }
-
-        // TODO: Move to window
-        private async Task DeletePanel(int panelIndex)
-        {
-            Console.WriteLine($"[MainMenuViewViewModel] Delete index={panelIndex}");
-
-            OnDeletePanel?.Invoke(panelIndex);
-        }
-
-        // TODO: Move to window
-        private async Task DuplicatePanel(int panelIndex)
-        {
-            Console.WriteLine($"[MainMenuViewViewModel] Duplicate index={panelIndex}");
-
-            var panelToDupe = ConfigManager.Config.Panels[panelIndex];
-            var newPanel = panelToDupe.Clone();
-
-            // increment number if present
-            newPanel.Name = Regex.Replace(
-                newPanel.Name,
-                @"(\d+)$",
-                m => (int.Parse(m.Value) + 1).ToString()
-            );
-
-            if (newPanel.Name == panelToDupe.Name)
-                newPanel.Name += " 1";
-
-            await CreatePanel(newPanel);
-
-            Console.WriteLine($"[MainMenuViewViewModel] Duplicate success index={panelIndex} {panelToDupe.Name} => {newPanel.Name}");
-        }
-
-        // TODO: Move to window
-        private void CreateGauge()
-        {
-            Console.WriteLine("[MainMenuViewViewModel] Clicked create gauge");
-
-            OnCreateGauge?.Invoke();
-        }
-
-        private void DeleteGauge(int index)
-        {
-            Console.WriteLine($"[MainMenuViewViewModel] Clicked delete gauge index={index}");
-
-            OnDeleteGauge?.Invoke(index);
-        }
-
-        // TODO: Move to window
-        private async Task OpenGaugeEditor(object indexOrPath)
-        {
-            Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor indexOrPath={indexOrPath}");
-
-            if (indexOrPath is string gaugePath)
-            {
-                Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor path={gaugePath}");
-
-                var gauge = await GaugeHelper.GetGaugeByPath(gaugePath);
-
-                if (gauge == null)
-                    throw new Exception("Gauge is null");
-
-                NavigationService.Instance.GoToView("GaugeEditor", [null, gauge]);
+                Refresh();
             }
-            else if (indexOrPath is int gaugeIndex)
-            {
-                Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor index={gaugeIndex}");
 
-                NavigationService.Instance.GoToView("GaugeEditor", [gaugeIndex, null]);
-            }
-            else
+            // TODO: Move to window
+            private void OpenPanelEditor(int panelIndex)
             {
-                throw new Exception("Need to provide an index or path");
+                Console.WriteLine($"[MainMenuViewViewModel] Open panel editor index={panelIndex}");
+                NavigationService.Instance.GoToView("PanelEditor", [panelIndex]);
+            }
+
+            // TODO: Move to window
+            private async Task DeletePanel(int panelIndex)
+            {
+                Console.WriteLine($"[MainMenuViewViewModel] Delete index={panelIndex}");
+
+                OnDeletePanel?.Invoke(panelIndex);
+            }
+
+            // TODO: Move to window
+            private async Task DuplicatePanel(int panelIndex)
+            {
+                Console.WriteLine($"[MainMenuViewViewModel] Duplicate index={panelIndex}");
+
+                var panelToDupe = ConfigManager.Config.Panels[panelIndex];
+                var newPanel = panelToDupe.Clone();
+
+                // increment number if present
+                newPanel.Name = Regex.Replace(
+                    newPanel.Name,
+                    @"(\d+)$",
+                    m => (int.Parse(m.Value) + 1).ToString()
+                );
+
+                if (newPanel.Name == panelToDupe.Name)
+                    newPanel.Name += " 1";
+
+                await CreatePanel(newPanel);
+
+                Console.WriteLine($"[MainMenuViewViewModel] Duplicate success index={panelIndex} {panelToDupe.Name} => {newPanel.Name}");
+            }
+
+            // TODO: Move to window
+            private void CreateGauge()
+            {
+                Console.WriteLine("[MainMenuViewViewModel] Clicked create gauge");
+
+                OnCreateGauge?.Invoke();
+            }
+
+            private void DeleteGauge(int index)
+            {
+                Console.WriteLine($"[MainMenuViewViewModel] Clicked delete gauge index={index}");
+
+                OnDeleteGauge?.Invoke(index);
+            }
+
+            // TODO: Move to window
+            private async Task OpenGaugeEditor(object indexOrPath)
+            {
+                Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor indexOrPath={indexOrPath}");
+
+                if (indexOrPath is string gaugePath)
+                {
+                    Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor path={gaugePath}");
+
+                    var gauge = await GaugeHelper.GetGaugeByPath(gaugePath);
+
+                    if (gauge == null)
+                        throw new Exception("Gauge is null");
+
+                    NavigationService.Instance.GoToView("GaugeEditor", [null, gauge]);
+                }
+                else if (indexOrPath is int gaugeIndex)
+                {
+                    Console.WriteLine($"[MainMenuViewViewModel] Open gauge editor index={gaugeIndex}");
+
+                    NavigationService.Instance.GoToView("GaugeEditor", [gaugeIndex, null]);
+                }
+                else
+                {
+                    throw new Exception("Need to provide an index or path");
+                }
             }
         }
     }

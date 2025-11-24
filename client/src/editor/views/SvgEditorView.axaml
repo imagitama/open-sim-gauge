@@ -1,0 +1,627 @@
+<UserControl
+    x:Class="OpenGaugeClient.Editor.SvgCreatorEditorView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:components="using:OpenGaugeClient.Editor.Components"
+    xmlns:conv="clr-namespace:OpenGaugeClient.Editor.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:editor="using:OpenGaugeClient.Editor"
+    xmlns:local="clr-namespace:OpenGaugeClient"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:CompileBindings="True"
+    x:DataType="editor:SvgCreatorEditorViewViewModel">
+    <UserControl.Resources>
+        <conv:ObjectNullToggleConverter x:Key="ObjectNullToggleConverter" />
+        <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+
+        <DataTemplate x:Key="LayerTemplate_List" DataType="local:ReactiveSvgLayer">
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.Circle}"
+                    Label="+Circle"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.Arc}"
+                    Label="+Arc"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.GaugeTicks}"
+                    Label="+GaugeTicks"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.GaugeTickLabels}"
+                    Label="+GaugeTickLabels"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.Text}"
+                    Label="+Text"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.Square}"
+                    Label="+Square"
+                    Size="Small" />
+                <components:PrimaryButton
+                    Command="{Binding ViewModel.AddSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}"
+                    CommandParameter="{x:Static editor:SvgOperationType.Triangle}"
+                    Label="+Triangle"
+                    Size="Small" />
+                <ItemsControl ItemsSource="{Binding ViewModel.OperationsWithSelected, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <components:PrimaryButton
+                                    Width="125"
+                                    Command="{Binding ViewModel.SelectSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                    CommandParameter="{Binding}"
+                                    Label="{Binding SvgOperation.Label}"
+                                    Selected="{Binding IsSelected}" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.DeleteSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                    CommandParameter="{Binding}"
+                                    Label="🗑️" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.DuplicateSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                    CommandParameter="{Binding}"
+                                    Label="📄" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.MoveSvgOperationUpCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                    CommandParameter="{Binding}"
+                                    Label="↑" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.MoveSvgOperationDownCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                    CommandParameter="{Binding}"
+                                    Label="↓" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="LayerTemplate_Info" DataType="local:ReactiveSvgLayer">
+            <components:ToolPanel>
+                <StackPanel HorizontalAlignment="Left">
+                    <components:EditableField
+                        Content="{Binding Name, Mode=TwoWay}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgLayerCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Name"
+                        Label="Name"
+                        OriginalObj="{Binding}" />
+                    <CheckBox Content="Shadow" IsChecked="{Binding HasShadow, Mode=TwoWay}" />
+                    <components:EditableField
+                        Content="{Binding ForceRotate, Mode=TwoWay}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgLayerCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="ForceRotate"
+                        FieldType="Number"
+                        Hint="Visually rotate the entire layer"
+                        Label="Temp Rotate"
+                        OriginalObj="{Binding}" />
+                </StackPanel>
+            </components:ToolPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="BaseSvgEditorTemplate" DataType="local:ReactiveSvgOperation">
+            <components:ToolPanel>
+                <StackPanel Width="250">
+                    <components:TransformControl Command="{Binding ViewModel.TransformSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}" CommandTarget="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Name, Mode=TwoWay}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Name"
+                        Label="Name"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Width}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Width"
+                        FieldType="FlexibleDimension"
+                        Label="Width"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Height}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Height"
+                        FieldType="FlexibleDimension"
+                        Label="Height"
+                        OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.MakeSvgOperationFillCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Fill"
+                            Size="Small" />
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Position}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Position"
+                        FieldType="FlexibleVector2"
+                        Label="Position"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Origin}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Origin"
+                        FieldType="FlexibleVector2"
+                        Label="Origin"
+                        OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.CenterSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Center"
+                            Size="Small" />
+                    </StackPanel>
+                    <components:EditableField
+                        Content="{Binding Rotate}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Rotate"
+                        FieldType="Number"
+                        Label="Rotate"
+                        OriginalObj="{Binding}" />
+                    <components:EditableField
+                        Content="{Binding Skip}"
+                        EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                        FieldName="Skip"
+                        Label="Skip"
+                        OriginalObj="{Binding}" />
+                </StackPanel>
+            </components:ToolPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="local:ReactiveCircleSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Circle Properties" />
+                <components:EditableField
+                    Content="{Binding Radius}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Radius"
+                    FieldType="Number"
+                    Label="Radius"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Fill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Fill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeFill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Stroke"
+                    FieldType="Text"
+                    Label="Stroke Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeWidth}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Stroke"
+                    FieldType="Number"
+                    Label="Stroke Width"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveSquareSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Square Properties" />
+                <components:EditableField
+                    Content="{Binding Fill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Fill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeFill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="StrokeFill"
+                    FieldType="Text"
+                    Label="Stroke Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeWidth}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="StrokeWidth"
+                    FieldType="Number"
+                    Label="Stroke Width"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Round}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Round"
+                    FieldType="Number"
+                    Label="Round"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveTriangleSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Triangle Properties" />
+                <components:EditableField
+                    Content="{Binding Fill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Fill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeFill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="StrokeFill"
+                    FieldType="Text"
+                    Label="Stroke Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding StrokeWidth}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="StrokeWidth"
+                    FieldType="Number"
+                    Label="Stroke Width"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Round}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Round"
+                    FieldType="Number"
+                    Label="Round"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveArcSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Arc Properties" />
+                <components:EditableField
+                    Content="{Binding Radius}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Radius"
+                    FieldType="Number"
+                    Label="Radius"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesStart}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesStart"
+                    FieldType="Number"
+                    Label="Degrees Start"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesEnd}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesEnd"
+                    FieldType="Number"
+                    Label="Degrees End"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding InnerThickness}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="InnerThickness"
+                    FieldType="Number"
+                    Label="Inner Thickness"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Fill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Fill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveGaugeTicksSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Gauge Ticks Properties" />
+                <components:EditableField
+                    Content="{Binding Radius}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Radius"
+                    FieldType="Number"
+                    Label="Radius"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesStart}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesStart"
+                    FieldType="Number"
+                    Label="Degrees Start"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesEnd}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesEnd"
+                    FieldType="Number"
+                    Label="Degrees End"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesGap}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesGap"
+                    FieldType="Number"
+                    Label="Degrees Gap"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding TickLength}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="TickLength"
+                    FieldType="Number"
+                    Label="Tick Length"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding TickWidth}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="TickWidth"
+                    FieldType="Number"
+                    Label="Tick Width"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding TickFill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="TickFill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveGaugeTickLabelsSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+
+                <TextBlock Text="Gauge Tick Labels Properties" />
+                <components:EditableField
+                    Content="{Binding Radius}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Radius"
+                    FieldType="Number"
+                    Label="Radius"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesStart}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesStart"
+                    FieldType="Number"
+                    Label="Degrees Start"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesEnd}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesEnd"
+                    FieldType="Number"
+                    Label="Degrees End"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding DegreesGap}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="DegreesGap"
+                    FieldType="Number"
+                    Label="Degrees Gap"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Labels}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Labels"
+                    FieldType="TextList"
+                    Label="Labels"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding LabelSize}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="LabelSize"
+                    FieldType="Number"
+                    Label="Size"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding LabelFill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="LabelFill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding LabelFont}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="LabelFont"
+                    FieldType="Text"
+                    Label="Font Family"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="local:ReactiveTextSvgOperation">
+            <StackPanel>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource BaseSvgEditorTemplate}" />
+                <TextBlock Text="Text Properties" />
+                <components:EditableField
+                    Content="{Binding Text}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Text"
+                    FieldType="Text"
+                    Label="Text"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Size}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Size"
+                    FieldType="Number"
+                    Label="Size"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Font}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Font"
+                    FieldType="Text"
+                    Label="Font"
+                    OriginalObj="{Binding}" />
+                <components:EditableField
+                    Content="{Binding Fill}"
+                    EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                    FieldName="Fill"
+                    FieldType="Text"
+                    Label="Fill"
+                    OriginalObj="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+    <Grid>
+        <Image
+            x:Name="RenderTargetImage"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Stretch="UniformToFill" />
+        <DockPanel
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            LastChildFill="True">
+            <components:NavBar DockPanel.Dock="Top" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="250" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!--  Top Left Panel  -->
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <StackPanel>
+                        <components:PrimaryButton
+                            Command="{Binding ResetCommand}"
+                            Label="Reset"
+                            Positivity="-1" />
+                        <Border IsVisible="{Binding SvgCreator.Source, Converter={StaticResource NullToBoolConverter}}">
+                            <components:PrimaryButton Command="{Binding OpenSourceCommand}" Label="Open JSON File" />
+                        </Border>
+                        <components:PrimaryButton
+                            Command="{Binding SaveCommand}"
+                            Label="Save JSON"
+                            Positivity="1" />
+                        <components:PrimaryButton
+                            Command="{Binding GenerateCommand}"
+                            Label="Generate SVG"
+                            Positivity="1" />
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="5,5,0,0">
+                            <components:ToolPanel>
+                                <StackPanel>
+                                    <Border IsVisible="{Binding SvgCreator.Source, Converter={StaticResource NullToBoolConverter}}">
+                                        <components:EditableField
+                                            Content="{Binding SvgCreator.Source}"
+                                            FieldName="Source"
+                                            FieldType="JsonFile"
+                                            Label="Source"
+                                            ReadOnly="True" />
+                                    </Border>
+                                    <components:EditableField
+                                        Content="{Binding SvgCreator.Width}"
+                                        EditCommittedCommand="{Binding ViewModel.EditSvgCreatorCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                        FieldName="Width"
+                                        FieldType="Number"
+                                        Label="Width"
+                                        OriginalObj="{Binding}" />
+                                    <components:EditableField
+                                        Content="{Binding SvgCreator.Height}"
+                                        EditCommittedCommand="{Binding ViewModel.EditSvgCreatorCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                        FieldName="Height"
+                                        FieldType="Number"
+                                        Label="Height"
+                                        OriginalObj="{Binding}" />
+                                </StackPanel>
+                            </components:ToolPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1" />
+                <Grid Grid.Row="0" Grid.Column="2" />
+                <!--  Top Right Panel  -->
+                <Grid Grid.Row="0" Grid.Column="3">
+                    <ContentControl Content="{Binding SelectedSvgLayer}" ContentTemplate="{StaticResource LayerTemplate_Info}" />
+                </Grid>
+                <!--  Bottom Left Panel  -->
+                <Grid Grid.Row="1" Grid.Column="0">
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                        <components:PrimaryButton
+                            Command="{Binding AddSvgLayerCommand}"
+                            Label="Add Layer"
+                            Size="Small" />
+                        <ItemsControl ItemsSource="{Binding LayersWithSelected}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <components:PrimaryButton
+                                            Width="125"
+                                            Command="{Binding ViewModel.SelectSvgLayerCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="{Binding SvgLayer.Label}"
+                                            Selected="{Binding IsSelected}" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.DeleteSvgLayerCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="🗑️" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.DuplicateSvgLayerCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="📄" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveSvgLayerUpCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↑" />
+                                        <components:PrimaryButton
+                                            Command="{Binding ViewModel.MoveSvgLayerDownCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="↓" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+                <!--  Bottom Left Panel - Layers  -->
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Hidden">
+                        <ContentControl Content="{Binding SelectedSvgLayer}" ContentTemplate="{StaticResource LayerTemplate_List}" />
+                    </ScrollViewer>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="2" />
+                <!--  Bottom Right Panel  -->
+                <Grid Grid.Row="1" Grid.Column="3">
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Hidden">
+                        <ContentControl Content="{Binding SelectedSvgOperation}" />
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

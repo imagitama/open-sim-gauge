@@ -26,7 +26,8 @@ namespace OpenGaugeClient.Editor.Components
         SvgFile,
         FontFile,
         VarConfig,
-        FlexibleDimension
+        FlexibleDimension,
+        TextList
     }
 
     public partial class EditableField : UserControl
@@ -229,8 +230,13 @@ namespace OpenGaugeClient.Editor.Components
                         return ischecked ? "True" : "False";
                     else
                         return "null";
+                case FieldType.TextList:
+                    if (Content == null)
+                        return "(none)";
+                    else
+                        return string.Join(",", (List<string>)Content);
                 default:
-                    return Content?.ToString()?.Replace("_", "__") ?? "-";
+                    return Content?.ToString() ?? "-";
             }
         }
 
@@ -296,52 +302,58 @@ namespace OpenGaugeClient.Editor.Components
             switch (fieldType)
             {
                 case FieldType.Bool:
-                    var cb = new CheckBox();
-                    cb.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(EditValue))
                     {
-                        Mode = BindingMode.TwoWay,
-                        Source = this,
-                        Converter = Converters.BoolNullableConverter.Instance
-                    });
+                        var cb = new CheckBox();
+                        cb.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(EditValue))
+                        {
+                            Mode = BindingMode.TwoWay,
+                            Source = this,
+                            Converter = Converters.BoolNullableConverter.Instance
+                        });
 
-                    editor = cb;
+                        editor = cb;
 
-                    cb.GetObservable(CheckBox.IsCheckedProperty)
-                        .Skip(1)
-                        .Subscribe(_ => CommitEdit()).DisposeWith(_cleanup);
+                        cb.GetObservable(CheckBox.IsCheckedProperty)
+                            .Skip(1)
+                            .Subscribe(_ => CommitEdit()).DisposeWith(_cleanup);
+                    }
                     break;
 
                 case FieldType.Number:
-                    var nb = new TextBox { MinWidth = 100 };
-                    nb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
                     {
-                        Mode = BindingMode.TwoWay,
-                        Source = this
-                    });
-                    nb.Watermark = "(number)";
-                    nb.KeyDown += (_, e) =>
-                    {
-                        if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
-                        else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
-                    };
-                    editor = nb;
+                        var tb = new TextBox { MinWidth = 100 };
+                        tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                        {
+                            Mode = BindingMode.TwoWay,
+                            Source = this
+                        });
+                        tb.Watermark = "(number)";
+                        tb.KeyDown += (_, e) =>
+                        {
+                            if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
+                            else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
+                        };
+                        editor = tb;
+                    }
                     break;
 
                 case FieldType.FlexibleDimension:
-                    var flexibleDimensionTextBox = new TextBox { MinWidth = 100 };
-                    flexibleDimensionTextBox.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
                     {
-                        Mode = BindingMode.TwoWay,
-                        Source = this,
-                        Converter = Converters.FlexibleDimensionConverter.Instance
-                    });
-                    flexibleDimensionTextBox.Watermark = "(dimension)";
-                    flexibleDimensionTextBox.KeyDown += (_, e) =>
-                    {
-                        if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
-                        else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
-                    };
-                    editor = flexibleDimensionTextBox;
+                        var tb = new TextBox { MinWidth = 100 };
+                        tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                        {
+                            Mode = BindingMode.TwoWay,
+                            Source = this,
+                            Converter = Converters.FlexibleDimensionConverter.Instance
+                        });
+                        tb.Watermark = "(dimension)";
+                        tb.KeyDown += (_, e) =>
+                        {
+                            if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
+                            else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
+                        };
+                        editor = tb;
+                    }
                     break;
 
                 case FieldType.Color:
@@ -415,20 +427,44 @@ namespace OpenGaugeClient.Editor.Components
                         break;
                     }
 
+                case FieldType.TextList:
+                    {
+                        var tb = new TextBox { MinWidth = 100 };
+
+                        tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                        {
+                            Mode = BindingMode.TwoWay,
+                            Source = this,
+                            Converter = Converters.CommaSeparatedStringConverter.Instance
+                        });
+
+                        tb.KeyDown += (_, e) =>
+                        {
+                            if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
+                            else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
+                        };
+
+                        tb.Watermark = "a, b, c";
+                        editor = tb;
+                        break;
+                    }
+
                 default:
-                    var tb = new TextBox { MinWidth = 100 };
-                    tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
                     {
-                        Mode = BindingMode.TwoWay,
-                        Source = this
-                    });
-                    tb.KeyDown += (_, e) =>
-                    {
-                        if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
-                        else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
-                    };
-                    if (value == null) tb.Watermark = "(null)";
-                    editor = tb;
+                        var tb = new TextBox { MinWidth = 100 };
+                        tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                        {
+                            Mode = BindingMode.TwoWay,
+                            Source = this
+                        });
+                        tb.KeyDown += (_, e) =>
+                        {
+                            if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
+                            else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
+                        };
+                        if (value == null) tb.Watermark = "(null)";
+                        editor = tb;
+                    }
                     break;
             }
 

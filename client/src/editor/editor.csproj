@@ -30,6 +30,21 @@
     <None Include="..\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
+    <Gauges Include="..\..\..\gauges\**\*.*" />
+  </ItemGroup>
+  <Target Name="CopyGauges" AfterTargets="Build">
+    <Copy 
+      SourceFiles="@(Gauges)" 
+      DestinationFolder="$(OutDir)gauges\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyGaugesAfterPublish" AfterTargets="Publish">
+    <Copy 
+      SourceFiles="@(Gauges)" 
+      DestinationFolder="$(PublishDir)gauges\%(RecursiveDir)"
+      SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
     <Fonts Include="..\fonts\**\*.*" />
   </ItemGroup>
   <Target Name="CopyFonts" AfterTargets="Build">
@@ -38,10 +53,16 @@
       DestinationFolder="$(OutDir)fonts\%(RecursiveDir)"
       SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyFontsAfterPublish" AfterTargets="Publish">
+    <Copy
+        SourceFiles="@(Fonts)"
+        DestinationFolder="$(PublishDir)fonts\%(RecursiveDir)"
+        SkipUnchangedFiles="true" />
+  </Target>
   <ItemGroup>
     <Svgs Include="..\tests\**\*.svg" />
   </ItemGroup>
-  <Target Name="CopySvgs" AfterTargets="Build">
+  <Target Name="CopyTestSvgs" AfterTargets="Build;Publish">
     <Copy 
       SourceFiles="@(Svgs)" 
       DestinationFolder="$(OutDir)tests\%(RecursiveDir)"

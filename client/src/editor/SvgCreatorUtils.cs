@@ -1,0 +1,19 @@
+namespace OpenGaugeClient.Editor
+{
+    public static class SvgCreatorUtils
+    {
+        public static async Task<SvgCreator> LoadSvgCreator(string path)
+        {
+            Console.WriteLine($"[SvgCreatorUtils] Load path={path}");
+            var svgCreator = await ConfigManager.LoadTypedJson<SvgCreator>(path);
+            svgCreator.Source = path;
+            return svgCreator;
+        }
+
+        public static async Task SaveSvgCreator(SvgCreator svgCreator, string path)
+        {
+            Console.WriteLine($"[SvgCreatorUtils] Save creator={svgCreator} path={path}");
+            await ConfigManager.SaveJson(svgCreator, path);
+        }
+    }
+}

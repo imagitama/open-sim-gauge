@@ -7,7 +7,7 @@ namespace OpenGaugeClient.Editor
 {
     public partial class CreateGaugeDialog : Window
     {
-        public (string, string) LastValue { get; private set; }
+        public (string, string DirPath) LastValue { get; private set; }
 
         public CreateGaugeDialog()
         {
@@ -32,19 +32,26 @@ namespace OpenGaugeClient.Editor
 
     public class CreateGaugeDialogViewModel : ReactiveObject
     {
-        public Interaction<(bool, (string, string)), bool?> CloseRequested { get; }
+        public Interaction<(bool, (string, string DirPath)), bool?> CloseRequested { get; }
         private string _name = "";
         public string Name
         {
             get => _name;
             set => this.RaiseAndSetIfChanged(ref _name, value);
         }
-        private string _path = "";
-        public string Path
+        private string _dirPath = "";
+        public string DirPath
         {
-            get => _path;
-            set => this.RaiseAndSetIfChanged(ref _path, value);
+            get => _dirPath;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _dirPath, value);
+                this.RaisePropertyChanged(nameof(HasDirPath));
+            }
         }
+        public bool HasDirPath => !string.IsNullOrWhiteSpace(DirPath);
+        private readonly ObservableAsPropertyHelper<string> _jsonPath;
+        public string JsonPath => _jsonPath.Value;
         public ReactiveCommand<Unit, Unit> OkCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
@@ -54,11 +61,15 @@ namespace OpenGaugeClient.Editor
 
             OkCommand = ReactiveCommand.Create(OnOk);
             CancelCommand = ReactiveCommand.Create(OnCancel);
+
+            this.WhenAnyValue(x => x.DirPath)
+                .Select(dir => Path.Combine(dir ?? "", "gauge.json"))
+                .ToProperty(this, x => x.JsonPath, out _jsonPath);
         }
 
         public void OnOk()
         {
-            Console.WriteLine($"[CreateGaugeDialogViewModel] Clicked ok name='{Name}' unit='{Path}'");
+            Console.WriteLine($"[CreateGaugeDialogViewModel] Clicked ok name={Name} path={DirPath}");
 
             _ = CloseWindow(true);
         }
@@ -66,15 +77,16 @@ namespace OpenGaugeClient.Editor
         public void OnCancel()
         {
             Console.WriteLine($"[CreateGaugeDialogViewModel] Clicked cancel");
+
             _ = CloseWindow(false);
         }
 
         private async Task CloseWindow(bool result)
         {
-            Console.WriteLine($"[CreateGaugeDialogViewModel] Close window result={result} name='{Name}' path='{Path}'");
+            Console.WriteLine($"[CreateGaugeDialogViewModel] Close window result={result} name={Name} path={DirPath} json={JsonPath}");
 
             await CloseRequested.Handle(
-                (result, (Name, Path))
+                (result, (Name, JsonPath))
             );
         }
     }

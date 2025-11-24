@@ -2,7 +2,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using ReactiveUI;
 
@@ -62,7 +61,7 @@ namespace OpenGaugeClient.Editor.Components
             if (VisualRoot is not Window owner)
                 throw new Exception("Owner is null");
 
-            Console.WriteLine($"[SelectFileField] Dialog owner={owner}");
+            Console.WriteLine($"[SelectFileField] Clicked pick - showing dialog");
 
             var dialog = new SelectFileDialog(AllowedExtensions ?? [], directoriesOnly: DirectoryOnly == true);
             var result = await dialog.ShowDialog<bool>(owner);
@@ -76,6 +75,7 @@ namespace OpenGaugeClient.Editor.Components
             if (!string.IsNullOrWhiteSpace(absolute))
             {
                 Path = absolute;
+                Console.WriteLine($"[SelectFileField] Committing path={Path}");
                 FileCommitted?.Invoke(absolute);
             }
         }
