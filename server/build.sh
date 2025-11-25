@@ -21,7 +21,7 @@ generate_readme()
 {
     echo "Generating README..."
 
-    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/abstractions/Config.cs"
+    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/abstractions" "$ROOT_DIR"/tools/generate-md-table-from-cs/Config.md
 
     python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/Config.md
 }
