@@ -10,6 +10,8 @@ using ReactiveUI;
 using Avalonia.Layout;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Disposables;
+using DynamicData;
+using System.Collections.Specialized;
 
 namespace OpenGaugeClient.Editor.Components
 {
@@ -105,6 +107,7 @@ namespace OpenGaugeClient.Editor.Components
             set => SetValue(LabelProperty, value);
         }
         private readonly CompositeDisposable _cleanup = new();
+        private IDisposable? _contentCollectionSubscription;
 
         public EditableField()
         {
@@ -118,8 +121,11 @@ namespace OpenGaugeClient.Editor.Components
             Hydrate(presenter);
 
             this.GetObservable(ContentProperty)
-                .Subscribe(_ =>
+                .Subscribe(newValue =>
                 {
+                    _contentCollectionSubscription?.Dispose();
+                    _contentCollectionSubscription = null;
+
                     try
                     {
                         Hydrate(presenter);
@@ -129,6 +135,27 @@ namespace OpenGaugeClient.Editor.Components
                         Console.WriteLine($"Failed to hydrate: {ex}");
                         throw;
                     }
+
+                    if (newValue is INotifyCollectionChanged incc)
+                    {
+                        _contentCollectionSubscription =
+                            Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                                    h => (s, e) => h(e),
+                                    h => incc.CollectionChanged += h,
+                                    h => incc.CollectionChanged -= h)
+                                .Subscribe(_ =>
+                                {
+                                    try
+                                    {
+                                        Hydrate(presenter);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Failed to hydrate (collection change): {ex}");
+                                        throw;
+                                    }
+                                });
+                    }
                 })
                 .DisposeWith(_cleanup);
         }
@@ -136,6 +163,10 @@ namespace OpenGaugeClient.Editor.Components
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnDetachedFromVisualTree(e);
+
+            if (_contentCollectionSubscription != null)
+                _contentCollectionSubscription.Dispose();
+
             _cleanup.Dispose();
         }
 
@@ -233,8 +264,11 @@ namespace OpenGaugeClient.Editor.Components
                 case FieldType.TextList:
                     if (Content == null)
                         return "(none)";
-                    else
-                        return string.Join(",", (List<string>)Content);
+
+                    if (Content is IEnumerable<string> strings)
+                        return string.Join(", ", strings);
+
+                    return Content.ToString() ?? "(no items)";
                 default:
                     return Content?.ToString() ?? "-";
             }
@@ -429,23 +463,16 @@ namespace OpenGaugeClient.Editor.Components
 
                 case FieldType.TextList:
                     {
-                        var tb = new TextBox { MinWidth = 100 };
-
-                        tb.Bind(TextBox.TextProperty, new Binding(nameof(EditValue))
+                        var field = new StringListField();
+                        field.Bind(StringListField.ValuesProperty, new Binding(nameof(EditValue))
                         {
                             Mode = BindingMode.TwoWay,
-                            Source = this,
-                            Converter = Converters.CommaSeparatedStringConverter.Instance
+                            Source = this
                         });
 
-                        tb.KeyDown += (_, e) =>
-                        {
-                            if (e.Key == Key.Enter) { CommitEdit(); e.Handled = true; }
-                            else if (e.Key == Key.Escape) { CancelEdit(); e.Handled = true; }
-                        };
+                        field.ValuesCommitted += _ => CommitEdit();
 
-                        tb.Watermark = "a, b, c";
-                        editor = tb;
+                        editor = field;
                         break;
                     }
 

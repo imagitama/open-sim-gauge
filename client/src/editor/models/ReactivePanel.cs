@@ -1,5 +1,6 @@
 using DynamicData;
 using ReactiveUI;
+using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 
 namespace OpenGaugeClient
@@ -11,7 +12,7 @@ namespace OpenGaugeClient
         public ReactivePanel(Panel panel)
         {
             Name = panel.Name;
-            Vehicle = panel.Vehicle;
+            Vehicle = new ObservableCollection<string>(panel.Vehicle);
             Skip = panel.Skip;
             Screen = panel.Screen;
             Width = panel.Width;
@@ -39,8 +40,8 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _name, value);
         }
 
-        private string? _vehicle;
-        public string? Vehicle
+        private ObservableCollection<string> _vehicle;
+        public ObservableCollection<string> Vehicle
         {
             get => _vehicle;
             set => this.RaiseAndSetIfChanged(ref _vehicle, value);
@@ -133,7 +134,12 @@ namespace OpenGaugeClient
         public void Replace(Panel panel)
         {
             Name = panel.Name;
-            Vehicle = panel.Vehicle;
+            Vehicle = new ObservableCollection<string>(panel.Vehicle);
+            Gauges.Edit(inner =>
+            {
+                inner.Clear();
+                inner.AddRange(panel.Gauges.Select(l => new ReactiveGaugeRef(l)));
+            });
             Skip = panel.Skip;
             Screen = panel.Screen;
             Width = panel.Width;
@@ -145,12 +151,6 @@ namespace OpenGaugeClient
             Transparent = panel.Transparent;
             OnTop = panel.OnTop;
             Debug = panel.Debug;
-
-            Gauges.Edit(inner =>
-            {
-                inner.Clear();
-                inner.AddRange(panel.Gauges.Select(l => new ReactiveGaugeRef(l)));
-            });
         }
 
         public Panel ToPanel()
@@ -158,7 +158,7 @@ namespace OpenGaugeClient
             return new Panel
             {
                 Name = Name,
-                Vehicle = Vehicle,
+                Vehicle = Vehicle.ToList(),
                 Gauges = Gauges.Items.Select(g => g.ToGaugeRef()).ToList(),
                 Skip = Skip,
                 Screen = Screen,

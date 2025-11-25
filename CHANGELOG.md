@@ -1,3 +1,7 @@
+# 0.0.12
+
+- changed `panel.Vehicle` to either string or strings of glob patterns
+
 # 0.0.11
 
 - SVG visual editor

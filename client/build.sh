@@ -20,53 +20,69 @@ generate_readme()
 {
     echo "Generating README..."
 
-    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/shared/ConfigManager.cs"
+    python3 "$ROOT_DIR"/tools/generate-md-table-from-cs/main.py "$SCRIPT_DIR/src/shared/models" "$ROOT_DIR"/tools/generate-md-table-from-cs/models.md
 
-    python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/ConfigManager.md
+    python3 "$ROOT_DIR"/tools/insert-into-readme/main.py --file "$SCRIPT_DIR"/README.md --section config --input "$ROOT_DIR"/tools/generate-md-table-from-cs/models.md
 }
 
-build_project() {
+build_project()
+{
     local project_path=$1
     local project_name=$2
-    local startup_object=$3
-    local type=$4
+    local platform=$3
 
-    for platform in "${platforms[@]}"; do
-        echo "Building project '$project_name' path '$project_path' for '$platform' with startup '$startup_object'..."
+    echo "Building project '$project_name' path '$project_path' for '$platform'..."
 
-        dotnet publish "$project_path" \
-            -c Release \
-            -r "$platform" \
-            --self-contained true \
-            -v:detailed \
-            /p:PublishSingleFile=true \
-            /p:PublishTrimmed=false \
-            /p:PublishDir=../../dist/"$platform"
-        
-        echo "Renaming..."
+    out_dir="$SCRIPT_DIR/dist/$project_name-$platform"
 
-        ext=""
-        if [[ "$platform" == win* ]]; then
-            ext=".exe"
-        fi
+    echo "Into: $out_dir"
 
-        echo "Copying resources..."
+    dotnet publish "$project_path" \
+        -c Release \
+        -r "$platform" \
+        --self-contained true \
+        -v:detailed \
+        /p:PublishSingleFile=true \
+        /p:PublishTrimmed=false \
+        /p:PublishDir=$out_dir
 
-        cp "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/dist/$platform"
+    echo "Copying resources..."
 
-        echo "Zipping..."
-        zip_name="client-${version}-${platform}.zip"
-        (
-            cd "$SCRIPT_DIR/dist/$platform" || exit
-            zip -r "../$zip_name" . -x "*.DS_Store" "__MACOSX/*"
-        )
-    done
+    cp "$SCRIPT_DIR/README.md" $out_dir
+
+    echo "Built successfully"
+}
+
+package()
+{
+    local platform=$1
+
+    echo "Packaging $platform..."
+
+    combined_output_dir="$SCRIPT_DIR/dist/client-editor-$platform"
+
+    echo "From: $combined_output_dir"
+
+    cp -R "$SCRIPT_DIR/dist/client-$platform/" $combined_output_dir
+    cp -R "$SCRIPT_DIR/dist/editor-$platform/" $combined_output_dir
+
+    zip_name="client-editor-${version}-${platform}.zip"
+    (
+        cd $combined_output_dir || exit
+        zip -r "../$zip_name" . -x "*.DS_Store" "__MACOSX/*"
+    )
+
+    echo "Result: $zip_name"
 }
 
 generate_readme
 
-build_project "$SCRIPT_DIR/src/client/client.csproj" "OpenSimGaugeClient" "OpenGaugeClient.Client.Program" client
+for platform in "${platforms[@]}"; do
+    build_project "$SCRIPT_DIR/src/client/client.csproj" client $platform
 
-build_project "$SCRIPT_DIR/src/editor/editor.csproj" "OpenSimGaugeEditor" "OpenGaugeEditor.Editor.Program" editor
+    build_project "$SCRIPT_DIR/src/editor/editor.csproj" editor $platform
+
+    package $platform
+done;
 
 echo "Done!"

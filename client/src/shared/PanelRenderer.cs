@@ -239,7 +239,7 @@ namespace OpenGaugeClient
             var canvasHeight = (int)_window!.Height;
 
             var formattedText = new FormattedText(
-                $"'{_panel.Name}'\n" +
+                $"'{_panel.Name}'" + (_panel.Vehicle != null ? $" (vehicle={string.Join(",", _panel.Vehicle)})" : "") + "\n" +
                 $"{_panel.Position.X},{_panel.Position.Y} => {_window.Position.X},{_window.Position.Y}\n" +
                 $"{_panel.Width}x{_panel.Height} => {_window.Width}x{_window.Height}\n" +
                 GetScreenSummary(_window),

@@ -1,17 +1,11 @@
-using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using Avalonia.Media;
 
 namespace OpenGaugeClient
 {
     public class ColorDefConverter : JsonConverter<ColorDef>
     {
-        private static readonly Regex RgbaRegex = new(@"rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)", RegexOptions.IgnoreCase);
-        private static readonly Regex HslaRegex = new(@"hsla?\((\d+),\s*(\d+)%?,\s*(\d+)%?(?:,\s*([\d.]+))?\)", RegexOptions.IgnoreCase);
-
         public override ColorDef Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.String)

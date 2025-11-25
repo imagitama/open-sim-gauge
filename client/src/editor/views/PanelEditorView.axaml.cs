@@ -97,7 +97,7 @@ namespace OpenGaugeClient.Editor
 
             AttachedToVisualTree += (_, _) =>
             {
-                SubscribeToPanelChanges();
+                SubscribeToPanel();
                 SubscribeToSettings();
 
                 RebuildPanelRenderer();
@@ -109,7 +109,7 @@ namespace OpenGaugeClient.Editor
                 window.Activate();
 
                 window.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
-                window.Background = Brushes.Transparent;
+                window.Background = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
             };
             DetachedFromVisualTree += (_, _) =>
             {
@@ -125,6 +125,7 @@ namespace OpenGaugeClient.Editor
             ViewModel.OnSave += OnSave;
             ViewModel.OnAddGaugeRef += () => _ = OnAddGaugeRef();
             ViewModel.OnCenter += OnCenter;
+            ViewModel.OnClearVehicles += OnClearVehicles;
         }
 
         private void RebuildPanelRenderer()
@@ -180,6 +181,15 @@ namespace OpenGaugeClient.Editor
             ViewModel.Panel.Position = centeredPos;
 
             Console.WriteLine($"[PanelEditorView] On center done oldPos={oldPos} newPos={centeredPos}");
+        }
+
+        private void OnClearVehicles()
+        {
+            Console.WriteLine("[PanelEditorView] On clear panel vehicles");
+
+            ViewModel.Panel.Vehicle.Clear();
+
+            Console.WriteLine($"[PanelEditorView] Panel vehicles cleared");
         }
 
         private async Task OnAddGaugeRef()
@@ -240,7 +250,7 @@ namespace OpenGaugeClient.Editor
             }
         }
 
-        private void SubscribeToPanelChanges()
+        private void SubscribeToPanel()
         {
             if (VisualRoot is not Window window)
                 throw new Exception("Window is null");
@@ -262,6 +272,16 @@ namespace OpenGaugeClient.Editor
                 Console.WriteLine($"[PanelEditorView] Panel changed prop={change.PropertyName}");
                 RebuildPanelRenderer();
             }).DisposeWith(_cleanup);
+
+            _reactivePanel.Vehicle.ObserveCollectionChanges()
+                .Subscribe(e =>
+                {
+                    if (_ignorePanelChanges) return;
+
+                    Console.WriteLine($"[PanelEditorView] Vehicle list changed: {e.Action}");
+                    RebuildPanelRenderer();
+                })
+                .DisposeWith(_cleanup);
 
             ViewModel.WhenAnyValue(ViewModel => ViewModel.SelectedGaugeRefIndex)
                .Subscribe(index =>
@@ -373,11 +393,13 @@ namespace OpenGaugeClient.Editor
         public ReactiveCommand<Unit, Unit> CenterCommand { get; }
         public ReactiveCommand<ReactiveGaugeRef, Unit> CenterGaugeRefCommand { get; }
         public ReactiveCommand<object, Unit> TransformGaugeRefCommand { get; }
+        public ReactiveCommand<Unit, Unit> ClearVehiclesCommand { get; }
         public event Action? OnGaugeRefsChanged;
         public event Action<ReactivePanel>? OnSave;
         public event Action? OnReset;
         public event Action? OnAddGaugeRef;
         public event Action? OnCenter;
+        public event Action? OnClearVehicles;
         public Func<IWindowGeometryProvider> GetGeometry;
 
         public PanelEditorViewViewModel(ReactivePanel panel)
@@ -398,6 +420,7 @@ namespace OpenGaugeClient.Editor
             FillScreenCommand = ReactiveCommand.Create(FillScreen);
             CenterCommand = ReactiveCommand.Create(Center);
             TransformGaugeRefCommand = ReactiveCommand.Create<object>(obj => TransformGaugeRef((ReactiveGaugeRef)((dynamic)obj).Target, ((dynamic)obj).Action));
+            ClearVehiclesCommand = ReactiveCommand.Create(ClearVehicles);
 
             UpdateScreens();
             BuildSelectedGaugeRef();
@@ -606,18 +629,20 @@ namespace OpenGaugeClient.Editor
 
         private void Center()
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Center panel");
-
-            // Window = true;
-
-            // EditPanel(("Position", new FlexibleVector2() { X = "50%", Y = "50%" }, null));
+            Console.WriteLine($"[PanelEditorViewViewModel] On click center panel");
 
             OnCenter?.Invoke();
         }
 
+        private void ClearVehicles()
+        {
+            Console.WriteLine($"[PanelEditorViewViewModel] On click clear vehicles");
+            OnClearVehicles?.Invoke();
+        }
+
         private void FillScreen()
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Make panel fill screen");
+            Console.WriteLine($"[PanelEditorViewViewModel] On click fill screen");
 
             var geometry = GetGeometry.Invoke();
             var w = geometry.ScreenWidth;
@@ -629,22 +654,23 @@ namespace OpenGaugeClient.Editor
 
         private void Reset()
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Reset panel");
+            Console.WriteLine($"[PanelEditorViewViewModel] On click reset panel");
 
             OnReset?.Invoke();
         }
 
         private void Save()
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Save panel");
+            Console.WriteLine($"[PanelEditorViewViewModel] On click save panel");
 
             OnSave?.Invoke(Panel);
         }
 
         private void CenterGaugeRef(ReactiveGaugeRef gaugeRef)
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Center gaugeRef={gaugeRef}");
+            Console.WriteLine($"[PanelEditorViewViewModel] On click center gauge gaugeRef={gaugeRef}");
 
+            // 
             EditGaugeRef(("Position", new FlexibleVector2() { X = "50%", Y = "50%" }, gaugeRef));
         }
 
@@ -824,7 +850,7 @@ namespace OpenGaugeClient.Editor
 
         private void MoveToScreen(int screenIndex)
         {
-            Console.WriteLine($"[PanelEditorViewViewModel] Move to screen index={screenIndex}");
+            Console.WriteLine($"[PanelEditorViewViewModel] On click move to screen index={screenIndex}");
 
             _panel.Screen = screenIndex;
 

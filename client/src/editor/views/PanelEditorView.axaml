@@ -151,7 +151,16 @@
                                 Content="{Binding ViewModel.Panel.Vehicle, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 FieldName="Vehicle"
-                                Label="Vehicle" />
+                                FieldType="TextList"
+                                Hint="Use glob patterns to include or exclude specific names"
+                                Label="Vehicles" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Width="80" />
+                                <components:PrimaryButton
+                                    Command="{Binding ViewModel.ClearVehiclesCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                    Label="Set To All"
+                                    Size="Small" />
+                            </StackPanel>
                             <components:EditableField
                                 Content="{Binding ViewModel.Panel.Screen, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"

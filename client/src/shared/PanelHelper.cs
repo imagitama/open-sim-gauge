@@ -215,8 +215,8 @@ namespace OpenGaugeClient
             if (vehicleName == null)
                 return false;
 
-            if (panel.Vehicle != null)
-                return Utils.GetIsVehicle(panel.Vehicle, vehicleName);
+            if (panel.Vehicle != null && panel.Vehicle.Count > 0)
+                return VehicleUtils.GetIsVehicle(panel.Vehicle, vehicleName);
 
             return true;
         }

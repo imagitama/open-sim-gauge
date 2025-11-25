@@ -27,7 +27,7 @@ namespace OpenGaugeClient.Client
                 if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))
                 {
                     if (ConfigManager.Config.Debug)
-                        Console.WriteLine($"[PanelManager] Panel should not be visible currentVehicle={vehicleName} panelVehicle={panel.Vehicle} panel={panel}");
+                        Console.WriteLine($"[PanelManager] Panel should not be visible currentVehicle={vehicleName} panelVehicle={(panel.Vehicle != null ? string.Join(",", panel.Vehicle) : "null")} panel={panel}");
 
                     UnrenderPanel(panel);
                     continue;
@@ -45,7 +45,7 @@ namespace OpenGaugeClient.Client
                 if (_panelRenderers.ContainsKey(panel.Name))
                     continue;
 
-                Console.WriteLine($"Panel '{panel.Name}' (vehicle: {panel.Vehicle ?? "all"})");
+                Console.WriteLine($"Panel '{panel.Name}' (vehicle: {(panel.Vehicle != null ? string.Join(", ", panel.Vehicle) : "all")})");
 
                 var renderer = new PanelRenderer(
                     panel,

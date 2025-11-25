@@ -13,9 +13,6 @@ if [ ${#platforms[@]} -eq 0 ]; then
     platforms=("${default_platforms[@]}")
 fi
 
-echo "Cleaning..."
-rm -rf "$SCRIPT_DIR/dist"
-
 generate_readme()
 {
     echo "Generating README..."
@@ -65,43 +62,59 @@ build_data_sources()
     done
 }
 
-build_project() {
+build_project()
+{
     local project_path=$1
     local project_name=$2
-    local startup_object=$3
-    local type=$4
+    local platform=$3
 
-    for platform in "${platforms[@]}"; do
-        echo "Building project '$project_name' path '$project_path' for '$platform' with startup '$startup_object'..."
+    echo "Building project '$project_name' path '$project_path' for '$platform'..."
 
-        dotnet publish "$project_path" \
-            -c Release \
-            -r "$platform" \
-            --self-contained true \
-            -v:detailed \
-            /p:PublishSingleFile=true \
-            /p:PublishTrimmed=false \
-            /p:PublishDir=./dist/"$platform"
+    out_dir="$SCRIPT_DIR/dist/$platform"
 
-        build_data_sources $platform
+    echo "Into: $out_dir"
 
-        echo "Copying resources..."
+    dotnet publish "$project_path" \
+        -c Release \
+        -r "$platform" \
+        --self-contained true \
+        -v:detailed \
+        /p:PublishSingleFile=true \
+        /p:PublishTrimmed=false \
+        /p:PublishDir=$out_dir
 
-        cp "$SCRIPT_DIR/../README.md" "$SCRIPT_DIR/dist/$platform"
-        cp "$SCRIPT_DIR/../client/README.md" "$SCRIPT_DIR/dist/$platform/README-client.md"
-        cp "$SCRIPT_DIR/../server/README.md" "$SCRIPT_DIR/dist/$platform/README-server.md"
-
-        echo "Zipping..."
-        zip_name="OpenSimGauge-${version}-${platform}.zip"
-        (
-            cd "$SCRIPT_DIR/dist/$platform" || exit
-            zip -r "../$zip_name" . -x "*.DS_Store" "__MACOSX/*"
-        )
-    done
+    build_data_sources $platform
 }
 
-build_project "$SCRIPT_DIR/combined.csproj" "Combined" "Program" combined
+package()
+{
+    echo "Zipping..."
+    zip_name="OpenSimGauge-${version}-${platform}.zip"
+    (
+        cd "$SCRIPT_DIR/dist/$platform" || exit
+        zip -r "../$zip_name" . -x "*.DS_Store" "__MACOSX/*"
+    )
 
-# generate_readme
+    echo "Done: $zip_name"
+}
+
+echo "Cleaning..."
+rm -rf "$SCRIPT_DIR/dist"
+
+echo "Building client and editor..."
+
+./client/build.sh $@
+
+for platform in "${platforms[@]}"; do
+    build_project "$SCRIPT_DIR/combined.csproj" "Combined" $platform
+
+    cp -R "$SCRIPT_DIR/../client/dist/editor-$platform/" "$SCRIPT_DIR/dist/$platform"
+
+    cp "$SCRIPT_DIR/../README.md" "$SCRIPT_DIR/dist/$platform"
+    cp "$SCRIPT_DIR/../client/README.md" "$SCRIPT_DIR/dist/$platform/README-client.md"
+    cp "$SCRIPT_DIR/../server/README.md" "$SCRIPT_DIR/dist/$platform/README-server.md"
+
+    package
+done
 
 echo "Done!"

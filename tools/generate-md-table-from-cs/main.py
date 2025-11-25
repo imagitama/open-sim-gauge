@@ -3,22 +3,21 @@ import sys
 import os
 
 if len(sys.argv) < 2:
-    print("Usage: python generate_docs.py <input.cs> <output_dir> (defaults to same directory as script)")
+    print("Usage: python generate_docs.py <input_dir> <output_file>")
     sys.exit(1)
 
-input_path = sys.argv[1]
-output_dir = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(os.path.abspath(__file__))
+input_dir = sys.argv[1]
+output_file = sys.argv[2]
 
-if not os.path.exists(input_path):
-    print(f"Input file not found: {input_path}")
+if not os.path.isdir(input_dir):
+    print(f"Input file not found: {input_dir}")
     sys.exit(1)
 
-if not os.path.isdir(output_dir):
-    print(f"Output directory not found: {output_dir}")
+if os.path.isdir(output_file):
+    print(f"Output file is a directory: {output_file}")
     sys.exit(1)
 
-base_name = os.path.splitext(os.path.basename(input_path))[0]
-output_path = os.path.join(output_dir, base_name + ".md")
+base_name = os.path.splitext(os.path.basename(input_dir))[0]
 
 def parse_file(path, lines):
     classes = []
@@ -148,15 +147,30 @@ def generate_markdown(classes):
         lines.append("")
     return "\n".join(lines)
 
-with open(input_path, encoding="utf-8") as f:
-    lines = f.readlines()
+def collect_classes(input_dir):
+    all_classes = []
 
-classes = parse_file(input_path, lines)
+    for root, _, files in os.walk(input_dir):
+        for name in files:
+            if not name.lower().endswith(".cs"):
+                continue
+
+            path = os.path.join(root, name)
+            with open(path, encoding="utf-8") as f:
+                lines = f.readlines()
+
+            classes = parse_file(path, lines)
+            if classes:
+                all_classes.extend(classes)
+
+    return all_classes
+
+classes = collect_classes(input_dir)
 
 if not classes:
     print("No classes found with [GenerateMarkdownTable].")
 else:
     markdown = generate_markdown(classes)
-    with open(output_path, "w", encoding="utf-8") as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(markdown)
-    print(f"Documentation written to {output_path}")
+    print(f"Documentation written to {output_file}")

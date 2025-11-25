@@ -13,10 +13,17 @@ namespace OpenGaugeClient
         /// </summary>
         public required string Name { get; set; }
         /// <summary>
-        /// The name of a vehicle (ie. aircraft) to only render this panel for. Wildcards supported (eg. `"*Skyhawk*"`).
-        /// Uses aircraft title eg. "Cessna Skyhawk G1000 Asobo".        
+        /// The name or names of vehicles this panel should render for.
+        /// A vehicle's name is determined by the data source. eg. a C172 in MSFS2020/24 is "Cessna Skyhawk G1000 Asobo". 
+        /// Include specific vehicles by providing a glob pattern like: ["\*Cessna\*", "\*PA44\*"]
+        /// Exclude specific vehicles by providing a "exclude" glob pattern like: ["!\*Cessna\*"]
+        /// More info on glob patterns: https://code.visualstudio.com/docs/editor/glob-patterns
+        /// Tester: https://www.digitalocean.com/community/tools/glob?comments=true&glob=%2ACessna%2A&matches=false&tests=Cessna%20172&tests=Cessna&tests=PA44
+        /// Omit or use empty array to use for all vehicles.
+        /// <type>string | string[]</type>  
         /// </summary>
-        public string? Vehicle { get; set; }
+        [JsonConverter(typeof(StringOrStringListConverter))]
+        public List<string> Vehicle { get; set; } = [];
         /// <summary>
         /// Which gauges to render in this panel.
         /// </summary>
