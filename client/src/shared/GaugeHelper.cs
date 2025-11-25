@@ -26,7 +26,7 @@ namespace OpenGaugeClient
         {
             var absolutePath = PathHelper.GetFilePath(path, forceToGitRoot: true);
 
-            var gauge = await ConfigManager.LoadTypedJson<Gauge>(absolutePath);
+            var gauge = await JsonHelper.LoadTypedJson<Gauge>(absolutePath);
 
             if (gauge == null)
                 throw new Exception($"Failed to get gauge by path: {path}");
@@ -45,7 +45,7 @@ namespace OpenGaugeClient
 
             Console.WriteLine($"[GaugeHelper] Save gauge to file gauge={gaugeToSave} path={jsonPath}");
 
-            await ConfigManager.SaveJson(gaugeToSave, jsonPath);
+            await JsonHelper.SaveJson(gaugeToSave, jsonPath);
         }
 
         public static List<Gauge> FindGaugesReferencedByPathInAllPanels()

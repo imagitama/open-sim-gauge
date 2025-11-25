@@ -9,7 +9,7 @@ namespace OpenGaugeClient
             if (_cache.TryGetValue(path, out var cached))
                 return cached;
 
-            var gauge = await ConfigManager.LoadTypedJson<Gauge>(path, forceToGitRoot: true);
+            var gauge = await JsonHelper.LoadTypedJson<Gauge>(path, forceToGitRoot: true);
 
             gauge.Source = PathHelper.GetFilePath(path);
 
