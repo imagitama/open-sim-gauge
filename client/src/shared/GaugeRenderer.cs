@@ -308,7 +308,7 @@ namespace OpenGaugeClient
                                             if (textRef.Template != null)
                                                 text = string.Format(textRef.Template, varValue);
                                             else
-                                                text = varValue.ToString();
+                                                text = varValue.ToString()!;
                                         }
                                     }
                                     else if (textRef.Template != null)
