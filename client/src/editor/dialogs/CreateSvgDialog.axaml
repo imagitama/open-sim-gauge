@@ -19,39 +19,41 @@
                 Margin="0,5"
                 FontSize="16"
                 Text="Load existing SVG" />
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                <components:SelectFileField AllowedExtensions="json" Path="{Binding FilePath, Mode=TwoWay}" />
-                <Button
-                    Width="80"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding LoadCommand}"
-                    Content="Load" />
-            </StackPanel>
+            <components:SelectFileField AllowedExtensions="json" Path="{Binding FilePath, Mode=TwoWay}" />
+            <Button
+                Width="80"
+                HorizontalContentAlignment="Center"
+                Command="{Binding LoadCommand}"
+                Content="Load" />
             <TextBlock
                 Margin="0,5"
                 FontSize="16"
                 Text="Create New SVG" />
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                <components:SelectFileField DirectoryOnly="True" Path="{Binding DirPath, Mode=TwoWay}" />
-                <TextBlock
-                    Margin="0,5"
-                    FontSize="12"
-                    IsVisible="{Binding HasDirPath}"
-                    Text="{Binding JsonPath}"
-                    TextWrapping="Wrap"
-                    ToolTip.Tip="{Binding JsonPath}" />
-                <Button
-                    Width="80"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding CreateCommand}"
-                    Content="Create" />
-            </StackPanel>
+            <components:SelectFileField DirectoryOnly="True" Path="{Binding DirPath, Mode=TwoWay}" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="12"
+                IsVisible="{Binding HasDirPath}"
+                Text="{Binding JsonPath}"
+                TextWrapping="Wrap"
+                ToolTip.Tip="{Binding JsonPath}" />
+            <Button
+                Width="80"
+                HorizontalContentAlignment="Center"
+                Command="{Binding CreateCommand}"
+                Content="Create" />
+
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"
                     HorizontalContentAlignment="Center"
                     Command="{Binding CancelCommand}"
                     Content="Cancel" />
+                <Button
+                    Width="80"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding LoadTestSvgCommand}"
+                    Content="Load Test SVG" />
             </StackPanel>
         </StackPanel>
     </Border>

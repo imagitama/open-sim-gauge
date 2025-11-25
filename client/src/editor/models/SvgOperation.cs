@@ -105,7 +105,7 @@ namespace OpenGaugeClient.Editor
         /// <summary>
         /// The color of the text. Use a SVG-friendly color like rgb(0,0,0) or hex.
         /// </summary>
-        public string Fill { get; set; } = "rgb(0,0,0)";
+        public string Fill { get; set; } = "rgb(255,255,255)";
     }
 
     public class GaugeTicksSvgOperation : SvgOperation
@@ -144,7 +144,7 @@ namespace OpenGaugeClient.Editor
         /// <summary>
         /// The color of the shape. Use a SVG-friendly color like rgb(0,0,0) or hex.
         /// </summary>
-        public string Fill { get; set; } = "rgb(255,255,255)";
+        public string Fill { get; set; } = "rgb(50,50,50)";
         /// <summary>
         /// The color of the stroke (border). Use a SVG-friendly color like rgb(0,0,0) or hex.
         /// </summary>

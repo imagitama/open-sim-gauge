@@ -221,8 +221,8 @@ namespace OpenGaugeClient
             Override = cfg.Override;
         }
 
-        private VarConfig _var;
-        public VarConfig Var
+        private SimVarConfig _var;
+        public SimVarConfig Var
         {
             get => _var;
             set => this.RaiseAndSetIfChanged(ref _var, value);
@@ -256,8 +256,8 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _max, value);
         }
 
-        private bool _invert;
-        public bool Invert
+        private bool? _invert;
+        public bool? Invert
         {
             get => _invert;
             set => this.RaiseAndSetIfChanged(ref _invert, value);

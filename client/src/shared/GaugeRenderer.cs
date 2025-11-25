@@ -13,14 +13,14 @@ namespace OpenGaugeClient
         private int _canvasWidth;
         private int _canvasHeight;
         private double _renderScaling;
-        private Func<string, string, object?> _getSimVarValue { get; set; }
+        private Func<string, string, double?> _getSimVarValue { get; set; }
         private ImageCache _imageCache;
         private FontProvider _fontProvider;
         private SvgCache _svgCache;
         private bool _debug;
         private int _debugOutputCount = 0;
 
-        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, object?> getSimVarValue, bool debug = false)
+        public GaugeRenderer(Gauge gauge, GaugeRef gaugeRef, int canvasWidth, int canvasHeight, double renderScaling, ImageCache imageCache, FontProvider fontProvider, SvgCache svgCache, Func<string, string, double?> getSimVarValue, bool debug = false)
         {
             _gauge = gauge;
             _gaugeRef = gaugeRef;
@@ -157,15 +157,16 @@ namespace OpenGaugeClient
                                 var rotateConfig = layer.Transform.Rotate;
                                 var varName = rotateConfig.Var.Name;
                                 var unit = rotateConfig.Var.Unit;
+
                                 var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(varName, unit);
 
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
-                                rotationAngle = ComputeValue(rotateConfig, varValue, layer);
+                                rotationAngle = GaugeHelper.MapSimVarValueToOffset(rotateConfig, varValue);
 
-                                if (rotateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] Rotate '{varName}' ({unit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
+                                if (rotateConfig.Debug == true || rotateConfig.Override != null)
+                                    Console.WriteLine($"[GaugeRenderer] Rotate '{varName}' ({unit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
                             }
 
                             if (layer.Transform?.TranslateX?.Var != null && layer.Transform.TranslateX.Skip != true)
@@ -178,10 +179,10 @@ namespace OpenGaugeClient
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
-                                offsetX = ComputeValue(translateConfig, varValue);
+                                offsetX = GaugeHelper.MapSimVarValueToOffset(translateConfig, varValue);
 
-                                if (translateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] TranslateX '{varName}' ({unit}) {varValue} => {offsetX}°");
+                                if (translateConfig.Debug == true || translateConfig.Override != null)
+                                    Console.WriteLine($"[GaugeRenderer] TranslateX '{varName}' ({unit}) {varValue} => {offsetX}°");
                             }
 
                             if (layer.Transform?.TranslateY?.Var != null && layer.Transform.TranslateY.Skip != true)
@@ -194,10 +195,10 @@ namespace OpenGaugeClient
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
-                                offsetY = ComputeValue(translateConfig, varValue);
+                                offsetY = GaugeHelper.MapSimVarValueToOffset(translateConfig, varValue);
 
-                                if (translateConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] TranslateY '{varName}' ({unit}) {varValue} => {offsetY}°");
+                                if (translateConfig.Debug == true || translateConfig.Override != null)
+                                    Console.WriteLine($"[GaugeRenderer] TranslateY '{varName}' ({unit}) {varValue} => {offsetY}°");
                             }
 
                             SKPoint? pathPositionResult = null;
@@ -223,8 +224,8 @@ namespace OpenGaugeClient
 
                                 pathPositionResult = SvgUtils.GetPathPosition(_svgCache, absolutePathImagePath, pathConfig, layerWidth, layerHeight, value, useCachedPositions);
 
-                                if (pathConfig.Debug == true)
-                                    Console.WriteLine($"[PanelRenderer] Path '{varName}' ({unit}) {varValue} => {pathPositionResult}");
+                                if (pathConfig.Debug == true || pathConfig.Override != null)
+                                    Console.WriteLine($"[GaugeRenderer] Path '{varName}' ({unit}) {varValue} => {pathPositionResult}");
                             }
 
                             var initialRotation = layer.Rotate;
@@ -418,102 +419,6 @@ namespace OpenGaugeClient
 
             if (_gauge.Grid != null && _gauge.Grid > 0)
                 RenderingHelper.DrawGrid(ctx, _gauge.Width, _gauge.Height, (double)_gauge.Grid);
-        }
-
-        static double ComputeValue(TransformConfig config, object? varValue, Layer? layer = null)
-        {
-            if (varValue == null)
-                return 0;
-
-            double value = Convert.ToDouble(varValue);
-
-            if (config.Multiply != null)
-                value *= (double)config.Multiply;
-
-            if (config.Invert == true)
-                value *= -1;
-
-            var varConfig = config.Var;
-            string unit = varConfig.Unit;
-
-            var calibration = config.Calibration;
-            if (calibration != null && calibration.Count > 0)
-            {
-                // clamp
-                if (value <= calibration[0].Value)
-                    return calibration[0].Degrees;
-                if (value >= calibration[^1].Value)
-                    return calibration[^1].Degrees;
-
-                // find nearest two calibration points and interpolate
-                for (int i = 0; i < calibration.Count - 1; i++)
-                {
-                    var a = calibration[i];
-                    var b = calibration[i + 1];
-                    if (value >= a.Value && value <= b.Value)
-                    {
-                        double t = (value - a.Value) / (b.Value - a.Value);
-                        double angle = a.Degrees + t * (b.Degrees - a.Degrees);
-
-                        return angle;
-                    }
-                }
-            }
-
-            // if user doesnt want any clamping or anything
-            if (config.Min == null && config.Max == null && config.From == null && config.To == null)
-                return value;
-
-            if (unit == "radians")
-            {
-                // normalize wrap-around radians into a centered -π..+π range
-                if (value > Math.PI)
-                    value -= 2 * Math.PI;
-            }
-
-            // TODO: document this
-            double defaultMin, defaultMax;
-            switch (unit)
-            {
-                case "feet": defaultMin = 0; defaultMax = 10000; break;
-                case "knots": defaultMin = 0; defaultMax = 200; break;
-                case "rpm": defaultMin = 0; defaultMax = 3000; break;
-                case "fpm": defaultMin = -2000; defaultMax = 2000; break;
-                case "position": defaultMin = -127; defaultMax = 127; break;
-                case "radians":
-                    defaultMin = -Math.PI;
-                    defaultMax = Math.PI;
-                    break;
-                default:
-                    defaultMin = 0;
-                    defaultMax = 1;
-                    break;
-            }
-
-            double inputMin = config.Min ?? defaultMin;
-            double inputMax = config.Max ?? defaultMax;
-            double outputFrom = config.From ?? 0;
-            double outputTo = config.To ?? 1;
-
-            double range = inputMax - inputMin;
-            if (range <= 0)
-                return outputFrom;
-
-            double normalized;
-            if (config is RotateConfig rotate && rotate.Wrap)
-            {
-                double revolutions = (value - inputMin) / range;
-                normalized = revolutions - Math.Floor(revolutions);
-            }
-            else
-            {
-                normalized = (value - inputMin) / range;
-                normalized = Math.Clamp(normalized, 0, 1);
-            }
-
-            var finalValue = outputFrom + (outputTo - outputFrom) * normalized;
-
-            return finalValue;
         }
 
         private void DrawDebugText(DrawingContext ctx, string text, IBrush brush, Point? pos = null, double scaleText = 1)

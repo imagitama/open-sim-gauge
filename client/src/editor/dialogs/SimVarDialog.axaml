@@ -13,14 +13,14 @@
             <TextBlock
                 Margin="0,5"
                 FontSize="16"
-                Text="SimVar Name eg. 'AIRSPEED INDICATED'" />
-            <TextBox Text="{Binding SimVarName}" />
+                Text="Name eg. 'AIRSPEED INDICATED'" />
+            <TextBox Text="{Binding VarName}" />
             <TextBlock
                 Margin="0,5"
                 FontSize="16"
-                Text="SimVar Unit eg. 'degrees' or 'knots' or 'feet' or 'position'" />
-            <TextBox Text="{Binding SimVarUnit}" />
-            <Button Click="OpenWebsite_Click" Content="View SimVar Website" />
+                Text="Unit eg. 'degrees' or 'knots' or 'feet' or 'kph'" />
+            <TextBox Text="{Binding VarUnit}" />
+            <Button Click="OpenWebsite_Click" Content="View SimConnect Website" />
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"

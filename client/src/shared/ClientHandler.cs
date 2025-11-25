@@ -82,7 +82,7 @@ namespace OpenGaugeClient.Client
             await _stream!.WriteAsync(bytes, 0, bytes.Length);
         }
 
-        public async Task SendInitMessage(string? vehicleName, VarDef[] vars, string[] simEvents)
+        public async Task SendInitMessage(string? vehicleName, SimVarDef[] vars, string[] simEvents)
         {
             await SendMessage(MessageType.Init, new InitPayload { VehicleName = vehicleName, Vars = vars, Events = simEvents });
         }
@@ -137,11 +137,15 @@ namespace OpenGaugeClient.Client
         }
     }
 
-    public class VarDef
+    public class SimVarDef
     {
         public required string Name { get; set; }
         public required string Unit { get; set; }
         public bool? Debug { get; set; } // if we want the server to print extra debugging stuff
+        public override string ToString()
+        {
+            return $"SimVarDef(name={Name}, unit={Unit}, debug={Debug})";
+        }
     }
 
     public class ServerMessage<T>
@@ -151,7 +155,7 @@ namespace OpenGaugeClient.Client
 
         public override string ToString()
         {
-            return $"ServerMessage type={Type} payload={Payload}";
+            return $"ServerMessage(type={Type}, payload={Payload})";
         }
     }
 
@@ -159,19 +163,25 @@ namespace OpenGaugeClient.Client
     {
         public required string Name { get; set; }
         public required string Unit { get; set; }
-        public required object Value { get; set; }
+        // TODO: support other data types and map them here
+        // (be careful as setting it to just "object" means accidental conversion of float/double to int)
+        public required double? Value { get; set; }
 
         public override string ToString()
         {
-            return $"SimVarPayload name={Name} unit={Unit} value={Value}";
+            return $"SimVarPayload(name={Name}, unit={Unit}, value={Value})";
         }
     }
 
     public class InitPayload
     {
         public required string? VehicleName { get; set; }
-        public required VarDef[] Vars { get; set; }
+        public required SimVarDef[] Vars { get; set; }
         public required string[] Events { get; set; }
+        public override string ToString()
+        {
+            return $"InitPayload(vehicleName={VehicleName} vars={string.Join(",", Vars.Select(x => x.ToString()))} value={string.Join(",", Events)})";
+        }
     }
 
     public enum MessageType

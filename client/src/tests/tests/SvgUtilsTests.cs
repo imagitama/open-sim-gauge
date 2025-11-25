@@ -14,7 +14,7 @@ public class SvgUtilsTests
     {
         var pathConfig = new PathConfig
         {
-            Var = new VarConfig
+            Var = new SimVarConfig
             {
                 Name = "TURN_BALL_COORDINATOR",
                 Unit = "position"

@@ -1,3 +1,7 @@
+# 0.0.13
+
+- fixed SVG operation position/origin/rotation
+
 # 0.0.12
 
 - changed `panel.Vehicle` to either string or strings of glob patterns

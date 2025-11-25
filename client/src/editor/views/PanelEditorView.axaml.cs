@@ -140,7 +140,7 @@ namespace OpenGaugeClient.Editor
                     _imageCache,
                     _fontProvider,
                     _svgCache,
-                    VarManager.Instance.GetInterpolatedSimVarValue,
+                    SimVarManager.Instance.GetBestSimVarValue,
                     isConnected: null,
                     disableRenderOnTop: true,
                     gridSize: SettingsService.Instance.GridVisible ? SettingsService.Instance.SnapAmount : null

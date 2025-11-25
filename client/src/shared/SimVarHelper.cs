@@ -1,10 +1,10 @@
 namespace OpenGaugeClient.Client
 {
-    public static class VarHelper
+    public static class SimVarHelper
     {
-        public static List<VarDef> GetVarDefsToSubscribeTo(Config config, string? vehicleName, bool includeSkipped = false)
+        public static List<SimVarDef> GetSimVarDefsToSubscribeTo(Config config, string? vehicleName, bool includeSkipped = false)
         {
-            var simVarDefs = new List<VarDef>();
+            var simSimVarDefs = new List<SimVarDef>();
 
             if (config.Panels == null || config.Panels.Count == 0)
                 throw new Exception("No panels");
@@ -30,33 +30,33 @@ namespace OpenGaugeClient.Client
 
                     foreach (var layer in layers)
                     {
-                        void AddSimVar(VarConfig varConfig)
+                        void AddVar(SimVarConfig varConfig)
                         {
-                            simVarDefs.Add(new VarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
+                            simSimVarDefs.Add(new SimVarDef { Name = varConfig.Name, Unit = varConfig.Unit, Debug = layer.Debug == true });
                         }
 
                         if (layer.Text?.Var is not null)
-                            AddSimVar(layer.Text.Var!);
+                            AddVar(layer.Text.Var!);
 
                         if (layer.Transform is { } transform)
                         {
                             if (transform.Rotate?.Var is not null)
-                                AddSimVar(transform.Rotate.Var!);
+                                AddVar(transform.Rotate.Var!);
 
                             if (transform.TranslateX?.Var is not null)
-                                AddSimVar(transform.TranslateX.Var!);
+                                AddVar(transform.TranslateX.Var!);
 
                             if (transform.TranslateY?.Var is not null)
-                                AddSimVar(transform.TranslateY.Var!);
+                                AddVar(transform.TranslateY.Var!);
 
                             if (transform.Path?.Var is not null)
-                                AddSimVar(transform.Path.Var!);
+                                AddVar(transform.Path.Var!);
                         }
                     }
                 }
             }
 
-            return simVarDefs;
+            return simSimVarDefs;
         }
     }
 }

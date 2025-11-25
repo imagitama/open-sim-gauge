@@ -113,6 +113,8 @@ namespace OpenGaugeClient.Editor
 
             using (ctx.PushTransform(svgCreatorTransform))
             {
+                ctx.DrawRectangle(null, new Pen(Brushes.LightBlue, 1), new Rect(0, 0, svgWidth, svgHeight));
+
                 var layersToRender = _svgCreator.Layers.ToArray().Reverse().ToArray();
 
                 for (var i = 0; i < layersToRender.Length; i++)

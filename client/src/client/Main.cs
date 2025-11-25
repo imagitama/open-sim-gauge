@@ -3,8 +3,6 @@ using Avalonia;
 using Avalonia.Threading;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls;
-using Avalonia.Themes.Fluent;
-using ReactiveUI.Avalonia;
 using OpenGaugeClient.Shared;
 
 namespace OpenGaugeClient.Client
@@ -35,7 +33,7 @@ namespace OpenGaugeClient.Client
     public partial class ClientApp : Application
     {
         private PanelManager? _panelManager;
-        private VarManager? _varManager;
+        private SimVarManager? _simVarManager;
         private string? lastKnownVehicleName;
 
         private readonly string[] _args;
@@ -90,11 +88,11 @@ namespace OpenGaugeClient.Client
                 Console.WriteLine($"Last known vehicle was '{lastKnownVehicleName}'");
             }
 
-            _varManager = new VarManager();
+            _simVarManager = new SimVarManager();
             _panelManager = new PanelManager();
 
             if (ConfigManager.Config.RequireConnection != true)
-                _panelManager.Initialize(config, _varManager.GetInterpolatedSimVarValue, lastKnownVehicleName);
+                _panelManager.Initialize(config, _simVarManager.GetBestSimVarValue, lastKnownVehicleName);
 
             var client = new ClientHandler(config.Server.IpAddress, config.Server.Port);
 
@@ -103,7 +101,7 @@ namespace OpenGaugeClient.Client
                 if (config.Debug)
                     Console.WriteLine($"[Main] Tell server to initialize (vehicle '{lastKnownVehicleName}')...");
 
-                var varsToSubscribeTo = VarHelper.GetVarDefsToSubscribeTo(config, lastKnownVehicleName);
+                var varsToSubscribeTo = SimVarHelper.GetSimVarDefsToSubscribeTo(config, lastKnownVehicleName);
 
                 if (config.Debug)
                     Console.WriteLine($"[Main] Vars: {string.Join(", ", varsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
@@ -129,53 +127,61 @@ namespace OpenGaugeClient.Client
 
             client.OnMessage += async (msg) =>
             {
-                switch (msg.Type)
+                try
                 {
-                    case MessageType.ReInit:
-                    case MessageType.Init:
-                        if (ConfigManager.Config.Debug)
-                            if (msg.Type == MessageType.ReInit)
+                    switch (msg.Type)
+                    {
+                        case MessageType.ReInit:
+                        case MessageType.Init:
                             {
-                                Console.WriteLine("[Main] Re-initializing...");
+                                if (ConfigManager.Config.Debug)
+                                    if (msg.Type == MessageType.ReInit)
+                                        Console.WriteLine("[Main] Re-initializing...");
+                                    else
+                                        Console.WriteLine("[Main] Initializing...");
+
+                                var payload = ((JsonElement)msg.Payload).Deserialize<InitPayload>() ?? throw new Exception("Payload is null");
+
+                                if (payload.VehicleName != lastKnownVehicleName)
+                                {
+                                    Console.WriteLine($"Vehicle changed to '{payload.VehicleName}'");
+
+                                    lastKnownVehicleName = payload.VehicleName;
+
+                                    _ = PersistanceManager.Persist("LastKnownVehicleName", lastKnownVehicleName);
+                                }
+
+                                if (msg.Type == MessageType.ReInit)
+                                {
+                                    await TellServerWeWantToInit();
+                                }
+                                else
+                                {
+                                    Dispatcher.UIThread.Post(() =>
+                                    {
+                                        _panelManager.Initialize(config, _simVarManager.GetBestSimVarValue, lastKnownVehicleName);
+                                    });
+                                }
+                                break;
                             }
-                            else
+
+                        case MessageType.Var:
                             {
-                                Console.WriteLine("[Main] Initializing...");
+                                var payload = ((JsonElement)msg.Payload)
+                                    .Deserialize<SimVarPayload>()
+                                    ?? throw new Exception("Payload is null");
+
+                                if (ConfigManager.Config.Debug)
+                                    Console.WriteLine($"[Main] Var {payload}");
+
+                                _simVarManager.StoreSimVar(payload.Name, payload.Unit, payload.Value);
+                                break;
                             }
-
-                        var initPayload = ((JsonElement)msg.Payload).Deserialize<InitPayload>() ?? throw new Exception("Payload is null");
-
-                        if (initPayload.VehicleName != lastKnownVehicleName)
-                        {
-                            Console.WriteLine($"Vehicle changed to '{initPayload.VehicleName}'");
-
-                            lastKnownVehicleName = initPayload.VehicleName;
-
-                            _ = PersistanceManager.Persist("LastKnownVehicleName", lastKnownVehicleName);
-                        }
-
-                        if (msg.Type == MessageType.ReInit)
-                        {
-                            await TellServerWeWantToInit();
-                        }
-                        else
-                        {
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                _panelManager.Initialize(config, _varManager.GetInterpolatedSimVarValue, lastKnownVehicleName);
-                            });
-                        }
-                        break;
-
-                    case MessageType.Var:
-                        var simVarPayload = ((JsonElement)msg.Payload)
-                            .Deserialize<SimVarPayload>()
-                            ?? throw new Exception("Payload is null");
-
-                        _varManager.StoreVar(simVarPayload.Name, simVarPayload.Unit, simVarPayload.Value);
-
-                        break;
-
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Main] OnMessage error: {ex}");
                 }
             };
 

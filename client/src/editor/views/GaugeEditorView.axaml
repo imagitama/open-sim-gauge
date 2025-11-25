@@ -34,14 +34,14 @@
                             Content="{Binding Text.Var}"
                             EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                             FieldName="Text.Var"
-                            FieldType="VarConfig"
-                            Label="SimVar"
+                            FieldType="SimVarConfig"
+                            Label="Var"
                             OriginalObj="{Binding}" />
                         <components:EditableField
                             Content="{Binding Text.Default}"
                             EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                             FieldName="Text.Default"
-                            Hint="Text shown when there is no SimVar value."
+                            Hint="Text shown when there is no Var value."
                             Label="Default"
                             OriginalObj="{Binding}" />
                         <components:EditableField
@@ -131,7 +131,7 @@
                             Size="Small" />
                     </StackPanel>
                     <StackPanel Margin="0" Spacing="0">
-                        <CheckBox Content="Transform With SimVar" IsChecked="{Binding HasTransform}" />
+                        <CheckBox Content="Transform With Var" IsChecked="{Binding HasTransform}" />
                         <StackPanel
                             Margin="5,0,0,0"
                             IsVisible="{Binding HasTransform}"
@@ -142,8 +142,8 @@
                                     Content="{Binding Transform.Rotate.Var}"
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Rotate.Var"
-                                    FieldType="VarConfig"
-                                    Label="SimVar"
+                                    FieldType="SimVarConfig"
+                                    Label="Var"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
                                     Content="{Binding Transform.Rotate.From}"
@@ -166,7 +166,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Rotate.Min"
                                     FieldType="Number"
-                                    Hint="The minimum possible value of the SimVar."
+                                    Hint="The minimum possible value of the Var."
                                     Label="Min"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -174,7 +174,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Rotate.Max"
                                     FieldType="Number"
-                                    Hint="The maximum possible value of the SimVar."
+                                    Hint="The maximum possible value of the Var."
                                     Label="Max"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -190,7 +190,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Rotate.Multiply"
                                     FieldType="Number"
-                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Hint="How much to multiply the Var value by (eg. 0.5 would be 50% the Var value)."
                                     Label="Multiply"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -219,7 +219,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Rotate.Override"
                                     FieldType="Number"
-                                    Hint="Force the SimVar value for debugging."
+                                    Hint="Force the Var value for debugging."
                                     Label="Override"
                                     OriginalObj="{Binding}" />
                             </StackPanel>
@@ -229,8 +229,8 @@
                                     Content="{Binding Transform.TranslateX.Var}"
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateX.Var"
-                                    FieldType="VarConfig"
-                                    Label="SimVar"
+                                    FieldType="SimVarConfig"
+                                    Label="Var"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
                                     Content="{Binding Transform.TranslateX.From}"
@@ -253,7 +253,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateX.Min"
                                     FieldType="Number"
-                                    Hint="The minimum possible value of the SimVar."
+                                    Hint="The minimum possible value of the Var."
                                     Label="Min"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -261,7 +261,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateX.Max"
                                     FieldType="Number"
-                                    Hint="The maximum possible value of the SimVar."
+                                    Hint="The maximum possible value of the Var."
                                     Label="Max"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -277,7 +277,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateX.Multiply"
                                     FieldType="Number"
-                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Hint="How much to multiply the Var value by (eg. 0.5 would be 50% the Var value)."
                                     Label="Multiply"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -306,7 +306,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Override"
                                     FieldType="Number"
-                                    Hint="Force the SimVar value for debugging."
+                                    Hint="Force the Var value for debugging."
                                     Label="Override"
                                     OriginalObj="{Binding}" />
                             </StackPanel>
@@ -316,8 +316,8 @@
                                     Content="{Binding Transform.TranslateY.Var}"
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateY.Var"
-                                    FieldType="VarConfig"
-                                    Label="SimVar"
+                                    FieldType="SimVarConfig"
+                                    Label="Var"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
                                     Content="{Binding Transform.TranslateY.From}"
@@ -340,7 +340,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateY.Min"
                                     FieldType="Number"
-                                    Hint="The minimum possible value of the SimVar."
+                                    Hint="The minimum possible value of the Var."
                                     Label="Min"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -348,7 +348,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateY.Max"
                                     FieldType="Number"
-                                    Hint="The maximum possible value of the SimVar."
+                                    Hint="The maximum possible value of the Var."
                                     Label="Max"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -364,7 +364,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.TranslateY.Multiply"
                                     FieldType="Number"
-                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Hint="How much to multiply the Var value by (eg. 0.5 would be 50% the Var value)."
                                     Label="Multiply"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -393,7 +393,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Override"
                                     FieldType="Number"
-                                    Hint="Force the SimVar value for debugging."
+                                    Hint="Force the Var value for debugging."
                                     Label="Override"
                                     OriginalObj="{Binding}" />
                             </StackPanel>
@@ -403,8 +403,8 @@
                                     Content="{Binding Transform.Path.Var}"
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Path.Var"
-                                    FieldType="VarConfig"
-                                    Label="SimVar"
+                                    FieldType="SimVarConfig"
+                                    Label="Var"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
                                     Content="{Binding Transform.Path.From}"
@@ -427,7 +427,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Path.Min"
                                     FieldType="Number"
-                                    Hint="The minimum possible value of the SimVar."
+                                    Hint="The minimum possible value of the Var."
                                     Label="Min"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -435,7 +435,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Path.Max"
                                     FieldType="Number"
-                                    Hint="The maximum possible value of the SimVar."
+                                    Hint="The maximum possible value of the Var."
                                     Label="Max"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -451,7 +451,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Transform.Path.Multiply"
                                     FieldType="Number"
-                                    Hint="How much to multiply the SimVar value by (eg. 0.5 would be 50% the SimVar value)."
+                                    Hint="How much to multiply the Var value by (eg. 0.5 would be 50% the Var value)."
                                     Label="Multiply"
                                     OriginalObj="{Binding}" />
                                 <components:EditableField
@@ -473,7 +473,7 @@
                                     EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
                                     FieldName="Override"
                                     FieldType="Number"
-                                    Hint="Force the SimVar value for debugging."
+                                    Hint="Force the Var value for debugging."
                                     Label="Override"
                                     OriginalObj="{Binding}" />
                                 <!--  CUSTOM  -->

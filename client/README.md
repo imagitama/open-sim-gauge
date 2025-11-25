@@ -41,6 +41,7 @@ The config for your client.
 | `gauges` | `List<Gauge>` | `[]` | The gauges that are available to your panels. Optional because your panels can reference gauge JSON files by path. |
 | `debug` | `bool` | `false` | Log extra info to the console. |
 | `requireConnection` | `bool` | `true` | If to only render panels if connected.<br>Note: There should always be a console open on launch. |
+| `interpolate` | `bool` | `true` | If to interpolate SimVar values for smoother rendering. |
 
 ### RotateConfig
 
@@ -81,8 +82,8 @@ An object that describes what kind of text to render in the layer.
 
 | Property | Type | Default | Description |
 |-----------|------|----------|--------------|
-| `var` | `[string, string]` |  | How to subscribe to a SimVar (and its unit) as the source of the text. eg. ["AIRSPEED INDICATED", "knots"]<br>Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
-| `default` | `string?` |  | The default text to render when there is no SimVar value. |
+| `var` | `[string, string]` |  | How to subscribe to a SimVar (and its unit) as the source of the text. eg. ["AIRSPEED INDICATED", "knots"]<br>SimConnect note: all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
+| `default` | `string?` |  | The default text to render when there is no value. |
 | `template` | `string?` |  | How to format the text. [Cheatsheet](https://gist.github.com/luizcentennial/c6353c2ae21815420e616a6db3897b4c) |
 | `fontSize` | `double` | `64` | The size of the text. |
 | `fontFamily` | `string?` |  | The family of the text. Supports any system font plus any inside the `fonts/` directory (currently only "Gordon").<br>If you specify a font path this lets you choose a family inside it.<br><default>OS default ("Segoe UI" on Windows)<default> |
@@ -124,7 +125,7 @@ An object that describes how a layer should translate. Inherits from `TransformC
 
 ### CalibrationPoint
 
-An object that describes how to "map" a SimVar value into a specific degrees. Useful for non-linear gauges like a C172 airspeed indicator. When rendering the actual degrees is interpolated between calibration points.
+An object that describes how to "map" a Var value into a specific degrees. Useful for non-linear gauges like a C172 airspeed indicator. When rendering the actual degrees is interpolated between calibration points.
 
 | Property | Type | Default | Description |
 |-----------|------|----------|--------------|
@@ -133,21 +134,21 @@ An object that describes how to "map" a SimVar value into a specific degrees. Us
 
 ### TransformConfig
 
-How to transform a layer using a SimVar.
+How to transform a layer using a Var.
 
 | Property | Type | Default | Description |
 |-----------|------|----------|--------------|
-| `var` | `[string, string]` |  | The SimVar and its unit to subscribe to. eg. ["AIRSPEED INDICATED", "knots"]<br>Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
+| `var` | `[string, string]` |  | The var and its unit to subscribe to. eg. ["AIRSPEED INDICATED", "knots"]<br>SimConnect note: all vars are requested as floats so units like "position" -127..127 are mapped to -1..1. |
 | `from` | `double?` |  | The minimum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to. |
 | `to` | `double?` |  | The maximum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to. |
-| `min` | `double?` |  | The minimum possible value for the SimVar. eg. for airspeed it would be 0 for 0 knots |
-| `max` | `double?` |  | The maximum possible value for the SimVar. |
+| `min` | `double?` |  | The minimum possible value for the var. eg. for airspeed it would be 0 for 0 knots |
+| `max` | `double?` |  | The maximum possible value for the var. |
 | `invert` | `bool` | `false` | If to invert the resulting rotation/translation. |
-| `multiply` | `double?` |  | How much to multiply the SimVar amount by. Useful to convert "feet per second" into "feet per minute". |
-| `calibration` | `List<CalibrationPoint>?` |  | How to "calibrate" raw SimVar values to specific angles because there is not a linear relationship.<br>Some gauges are not linear so require calibration (such as the C172 ASI). |
+| `multiply` | `double?` |  | How much to multiply the value amount by. Useful to convert "feet per second" into "feet per minute". |
+| `calibration` | `List<CalibrationPoint>?` |  | How to "calibrate" raw values to specific angles because there is not a linear relationship.<br>Some gauges are not linear so require calibration (such as the C172 ASI). |
 | `skip` | `bool?` |  | If to skip applying this transform. |
 | `debug` | `bool?` |  | Extra logging. Beware of console spam! |
-| `override` | `double?` |  | Force a SimVar value for debugging purposes. |
+| `override` | `double?` |  | Force a value for debugging purposes. |
 
 ### ClipConfig
 

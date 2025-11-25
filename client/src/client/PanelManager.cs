@@ -18,7 +18,7 @@ namespace OpenGaugeClient.Client
             _imageCache = new ImageCache(_skFontProvider);
         }
 
-        public void Initialize(Config config, Func<string, string, object?> _getSimVarValue, string? vehicleName)
+        public void Initialize(Config config, Func<string, string, double?> _getSimVarValue, string? vehicleName)
         {
             Console.WriteLine($"Initializing panels...{(vehicleName != null ? $" (vehicle '{vehicleName}')" : "")}");
 

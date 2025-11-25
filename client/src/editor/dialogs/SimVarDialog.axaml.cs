@@ -8,9 +8,9 @@ namespace OpenGaugeClient.Editor
 {
     public partial class SimVarDialog : Window
     {
-        public VarConfig? SelectedVarConfig { get; private set; }
+        public SimVarConfig? SelectedSimVarConfig { get; private set; }
 
-        public SimVarDialog(VarConfig? initial)
+        public SimVarDialog(SimVarConfig? initial)
         {
             InitializeComponent();
             var _vm = new SimVarDialogViewModel(initial);
@@ -20,7 +20,7 @@ namespace OpenGaugeClient.Editor
             {
                 var (result, simVar) = ctx.Input;
 
-                SelectedVarConfig = simVar;
+                SelectedSimVarConfig = simVar;
 
                 Console.WriteLine($"[SimVarDialog] CloseRequested handler result={result} simVar={simVar}");
 
@@ -51,15 +51,15 @@ namespace OpenGaugeClient.Editor
 
     public class SimVarDialogViewModel : ReactiveObject
     {
-        public Interaction<(bool, VarConfig), bool?> CloseRequested { get; }
+        public Interaction<(bool, SimVarConfig), bool?> CloseRequested { get; }
         private string _simVarName = "";
-        public string SimVarName
+        public string VarName
         {
             get => _simVarName;
             set => this.RaiseAndSetIfChanged(ref _simVarName, value);
         }
         private string _simVarUnit = "";
-        public string SimVarUnit
+        public string VarUnit
         {
             get => _simVarUnit;
             set => this.RaiseAndSetIfChanged(ref _simVarUnit, value);
@@ -67,23 +67,23 @@ namespace OpenGaugeClient.Editor
         public ReactiveCommand<Unit, Unit> OkCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
-        public SimVarDialogViewModel(VarConfig? initial)
+        public SimVarDialogViewModel(SimVarConfig? initial)
         {
-            CloseRequested = new Interaction<(bool, VarConfig), bool?>();
+            CloseRequested = new Interaction<(bool, SimVarConfig), bool?>();
 
             OkCommand = ReactiveCommand.Create(OnOk);
             CancelCommand = ReactiveCommand.Create(OnCancel);
 
             if (initial != null)
             {
-                SimVarName = initial.Name;
-                SimVarUnit = initial.Unit;
+                VarName = initial.Name;
+                VarUnit = initial.Unit;
             }
         }
 
         public void OnOk()
         {
-            Console.WriteLine($"[SimVarDialogViewModel] Clicked ok name='{SimVarName}' unit='{SimVarUnit}'");
+            Console.WriteLine($"[SimVarDialogViewModel] Clicked ok name='{VarName}' unit='{VarUnit}'");
 
             _ = CloseWindow(true);
         }
@@ -97,10 +97,10 @@ namespace OpenGaugeClient.Editor
 
         private async Task CloseWindow(bool result)
         {
-            var varConfig = new VarConfig()
+            var varConfig = new SimVarConfig()
             {
-                Name = SimVarName,
-                Unit = SimVarUnit
+                Name = VarName,
+                Unit = VarUnit
             };
 
             Console.WriteLine($"[SimVarDialogViewModel] Close window result={result} var={varConfig}");

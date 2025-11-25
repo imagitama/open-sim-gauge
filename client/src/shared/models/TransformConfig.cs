@@ -4,7 +4,7 @@ namespace OpenGaugeClient
 {
     [GenerateMarkdownTable]
     /// <summary>
-    /// An object that describes how to "map" a SimVar value into a specific degrees.
+    /// An object that describes how to "map" a Var value into a specific degrees.
     /// Useful for non-linear gauges like a C172 airspeed indicator.
     /// When rendering the actual degrees is interpolated between calibration points.
     /// </summary>
@@ -16,17 +16,17 @@ namespace OpenGaugeClient
 
     [GenerateMarkdownTable]
     /// <summary>
-    /// How to transform a layer using a SimVar.
+    /// How to transform a layer using a Var.
     /// </summary>
     public class TransformConfig
     {
-        [JsonConverter(typeof(VarConfigConverter))]
+        [JsonConverter(typeof(SimVarConfigConverter))]
         /// <summary>
-        /// The SimVar and its unit to subscribe to. eg. ["AIRSPEED INDICATED", "knots"]
-        /// Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1.
+        /// The var and its unit to subscribe to. eg. ["AIRSPEED INDICATED", "knots"]
+        /// SimConnect note: all vars are requested as floats so units like "position" -127..127 are mapped to -1..1.
         /// <type>[string, string]</type>
         /// </summary>
-        public required VarConfig Var { get; set; }
+        public required SimVarConfig Var { get; set; }
         /// <summary>
         /// The minimum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to.
         /// </summary>
@@ -36,23 +36,23 @@ namespace OpenGaugeClient
         /// </summary>
         public double? To { get; set; }
         /// <summary>
-        /// The minimum possible value for the SimVar. eg. for airspeed it would be 0 for 0 knots
+        /// The minimum possible value for the var. eg. for airspeed it would be 0 for 0 knots
         /// </summary>
         public double? Min { get; set; }
         /// <summary>
-        /// The maximum possible value for the SimVar.
+        /// The maximum possible value for the var.
         /// </summary>
         public double? Max { get; set; }
         /// <summary>
         /// If to invert the resulting rotation/translation.
         /// </summary>
-        public bool Invert { get; set; } = false;
+        public bool? Invert { get; set; }
         /// <summary>
-        /// How much to multiply the SimVar amount by. Useful to convert "feet per second" into "feet per minute".
+        /// How much to multiply the value amount by. Useful to convert "feet per second" into "feet per minute".
         /// </summary>
         public double? Multiply { get; set; }
         /// <summary>
-        /// How to "calibrate" raw SimVar values to specific angles because there is not a linear relationship.
+        /// How to "calibrate" raw values to specific angles because there is not a linear relationship.
         /// Some gauges are not linear so require calibration (such as the C172 ASI).
         /// </summary>
         public List<CalibrationPoint>? Calibration { get; set; }
@@ -65,7 +65,7 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? Debug { get; set; }
         /// <summary>
-        /// Force a SimVar value for debugging purposes.
+        /// Force a value for debugging purposes.
         /// </summary>
         public double? Override { get; set; }
         public override string ToString()

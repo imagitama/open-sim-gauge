@@ -27,7 +27,7 @@ namespace OpenGaugeClient.Editor.Components
         ImageFile,
         SvgFile,
         FontFile,
-        VarConfig,
+        SimVarConfig,
         FlexibleDimension,
         TextList
     }
@@ -244,8 +244,8 @@ namespace OpenGaugeClient.Editor.Components
                     if (string.IsNullOrEmpty(Content as string))
                         return "(nothing)";
                     return PathHelper.GetShortFileName((Content as string)!);
-                case FieldType.VarConfig:
-                    if (Content is VarConfig a)
+                case FieldType.SimVarConfig:
+                    if (Content is SimVarConfig a)
                     {
                         var name = a.Name;
                         if (name.Length > 10)
@@ -285,8 +285,8 @@ namespace OpenGaugeClient.Editor.Components
                     if (string.IsNullOrEmpty(Content as string))
                         return "(nothing)";
                     return (Content as string)!;
-                case FieldType.VarConfig:
-                    if (Content is VarConfig a)
+                case FieldType.SimVarConfig:
+                    if (Content is SimVarConfig a)
                         return $"{a.Name} ({a.Unit})";
                     else
                         return "-";
@@ -427,7 +427,7 @@ namespace OpenGaugeClient.Editor.Components
                         break;
                     }
 
-                case FieldType.VarConfig:
+                case FieldType.SimVarConfig:
                     {
                         var field = new SimVarField()
                         {
@@ -439,7 +439,7 @@ namespace OpenGaugeClient.Editor.Components
                             Source = this
                         });
 
-                        field.VarConfigCommitted += _ => CommitEdit();
+                        field.SimVarConfigCommitted += _ => CommitEdit();
 
                         editor = field;
                         break;

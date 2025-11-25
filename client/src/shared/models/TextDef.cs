@@ -22,15 +22,15 @@ namespace OpenGaugeClient
     /// </summary>
     public class TextDef
     {
-        [JsonConverter(typeof(VarConfigConverter))]
+        [JsonConverter(typeof(SimVarConfigConverter))]
         /// <summary>
         /// How to subscribe to a SimVar (and its unit) as the source of the text. eg. ["AIRSPEED INDICATED", "knots"]
-        /// Note all vars are requested as floats so units like "position" -127..127 are mapped to -1..1.
+        /// SimConnect note: all vars are requested as floats so units like "position" -127..127 are mapped to -1..1.
         /// <type>[string, string]</type>
         /// </summary>
-        public VarConfig? Var { get; set; }
+        public SimVarConfig? Var { get; set; }
         /// <summary>
-        /// The default text to render when there is no SimVar value.
+        /// The default text to render when there is no value.
         /// </summary>
         public string? Default { get; set; }
         /// <summary>

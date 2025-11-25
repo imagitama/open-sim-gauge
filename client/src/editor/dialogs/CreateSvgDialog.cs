@@ -100,6 +100,7 @@ namespace OpenGaugeClient.Editor
         public ReactiveCommand<Unit, Unit> LoadCommand { get; }
         public ReactiveCommand<Unit, Unit> CreateCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+        public ReactiveCommand<Unit, Unit> LoadTestSvgCommand { get; }
         public Func<string, Task> OnLoad;
         public Func<string, Task> OnCreate;
         public Action OnCancel;
@@ -111,6 +112,7 @@ namespace OpenGaugeClient.Editor
             LoadCommand = ReactiveCommand.Create(Load);
             CreateCommand = ReactiveCommand.CreateFromTask(Create);
             CancelCommand = ReactiveCommand.Create(Cancel);
+            LoadTestSvgCommand = ReactiveCommand.Create(LoadTestSvg);
 
             this.WhenAnyValue(x => x.DirPath)
                 .Select(dir => Path.Combine(dir ?? "", "svg.json"))
@@ -137,6 +139,12 @@ namespace OpenGaugeClient.Editor
         {
             Console.WriteLine($"[CreateSvgDialogViewModel] On click cancel");
             OnCancel?.Invoke();
+        }
+
+        private void LoadTestSvg()
+        {
+            var path = PathHelper.GetFilePath("test-svg.json");
+            OnLoad?.Invoke(path);
         }
     }
 }

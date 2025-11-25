@@ -33,6 +33,10 @@ namespace OpenGaugeClient
         /// Note: There should always be a console open on launch.
         /// </summary>
         public bool RequireConnection { get; set; } = true;
+        /// <summary>
+        /// If to interpolate SimVar values for smoother rendering.
+        /// </summary>
+        public bool Interpolate { get; set; } = true;
 
         // internal
         public Gauge GetGauge(int? rootLevelIndex, string? gaugePath)

@@ -153,6 +153,18 @@
                     FontSize="24"
                     Foreground="White"
                     Text="Gauges In Panels" />
+                <TextBlock
+                    Margin="0,20,0,5"
+                    HorizontalAlignment="Center"
+                    FontStyle="Italic"
+                    Foreground="Gray"
+                    Text="No gauges">
+                    <TextBlock.IsVisible>
+                        <MultiBinding Converter="{StaticResource EmptyListToBoolConverter}">
+                            <Binding Path="GaugesWithPath.Count" />
+                        </MultiBinding>
+                    </TextBlock.IsVisible>
+                </TextBlock>
                 <ItemsControl ItemsSource="{Binding GaugesWithPath}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

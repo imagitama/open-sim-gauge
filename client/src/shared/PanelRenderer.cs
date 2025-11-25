@@ -13,7 +13,7 @@ namespace OpenGaugeClient
         private readonly ImageCache _imageCache;
         private readonly FontProvider _fontProvider;
         private readonly SvgCache _svgCache;
-        private Func<string, string, object?> _getSimVarValue { get; set; }
+        private Func<string, string, double?> _getSimVarValue { get; set; }
         private readonly Dictionary<int, GaugeRenderer> _gaugeRenderers = [];
         private bool? _disableRenderOnTop = false;
         private bool? _isConnected = false;
@@ -40,7 +40,7 @@ namespace OpenGaugeClient
             ImageCache imageCache,
             FontProvider fontProvider,
             SvgCache svgCache,
-            Func<string, string, object?> getSimVarValue,
+            Func<string, string, double?> getSimVarValue,
             bool? isConnected = null,
             bool? disableRenderOnTop = false,
             int? gridSize = null

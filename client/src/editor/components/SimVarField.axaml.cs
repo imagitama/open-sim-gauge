@@ -10,11 +10,11 @@ namespace OpenGaugeClient.Editor.Components
 {
     public partial class SimVarField : UserControl
     {
-        public static readonly StyledProperty<VarConfig?> ValueProperty =
-            AvaloniaProperty.Register<SimVarField, VarConfig?>(nameof(Value));
+        public static readonly StyledProperty<SimVarConfig?> ValueProperty =
+            AvaloniaProperty.Register<SimVarField, SimVarConfig?>(nameof(Value));
         public IReactiveCommand PickCommand { get; }
-        public event Action<VarConfig?>? VarConfigCommitted;
-        public VarConfig? Value
+        public event Action<SimVarConfig?>? SimVarConfigCommitted;
+        public SimVarConfig? Value
         {
             get => GetValue(ValueProperty);
             set => SetValue(ValueProperty, value);
@@ -36,7 +36,7 @@ namespace OpenGaugeClient.Editor.Components
             _cleanup.Dispose();
         }
 
-        private void UpdatePreview(VarConfig? varConfig)
+        private void UpdatePreview(SimVarConfig? varConfig)
         {
             if (varConfig == null)
             {
@@ -68,12 +68,12 @@ namespace OpenGaugeClient.Editor.Components
             var dialog = new SimVarDialog(Value);
             var ok = await dialog.ShowDialog<bool>(owner);
 
-            Console.WriteLine($"[SimVarField] Pick ok={ok} selected={dialog.SelectedVarConfig}");
+            Console.WriteLine($"[SimVarField] Pick ok={ok} selected={dialog.SelectedSimVarConfig}");
 
             if (ok)
             {
-                Value = dialog.SelectedVarConfig;
-                VarConfigCommitted?.Invoke(dialog.SelectedVarConfig);
+                Value = dialog.SelectedSimVarConfig;
+                SimVarConfigCommitted?.Invoke(dialog.SelectedSimVarConfig);
             }
         }
     }

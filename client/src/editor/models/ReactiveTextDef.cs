@@ -17,8 +17,8 @@ namespace OpenGaugeClient
             Color = def.Color;
         }
 
-        private VarConfig? _var;
-        public VarConfig? Var
+        private SimVarConfig? _var;
+        public SimVarConfig? Var
         {
             get => _var;
             set => this.RaiseAndSetIfChanged(ref _var, value);

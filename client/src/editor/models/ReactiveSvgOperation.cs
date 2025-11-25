@@ -651,16 +651,46 @@ namespace OpenGaugeClient
 
     public static class ReactiveSvgOperationFactory
     {
+        private static string RandomSvgColor()
+        {
+            var rnd = new Random();
+            return $"#{rnd.Next(0x1000000):X6}";
+        }
+
         public static ReactiveSvgOperation Create(SvgOperation op)
         {
             return op switch
             {
-                CircleSvgOperation c => new ReactiveCircleSvgOperation(c),
-                SquareSvgOperation s => new ReactiveSquareSvgOperation(s),
-                TriangleSvgOperation t => new ReactiveTriangleSvgOperation(t),
-                ArcSvgOperation arc => new ReactiveArcSvgOperation(arc),
-                GaugeTicksSvgOperation ticks => new ReactiveGaugeTicksSvgOperation(ticks),
-                GaugeTickLabelsSvgOperation lbl => new ReactiveGaugeTickLabelsSvgOperation(lbl),
+                CircleSvgOperation c => new ReactiveCircleSvgOperation(c)
+                {
+                    Radius = 100,
+                    Fill = RandomSvgColor()
+                },
+                SquareSvgOperation s => new ReactiveSquareSvgOperation(s)
+                {
+                    Width = new FlexibleDimension(100),
+                    Height = new FlexibleDimension(100),
+                    Fill = RandomSvgColor()
+                },
+                TriangleSvgOperation t => new ReactiveTriangleSvgOperation(t)
+                {
+                    Width = new FlexibleDimension(100),
+                    Height = new FlexibleDimension(100),
+                    Fill = RandomSvgColor()
+                },
+                ArcSvgOperation arc => new ReactiveArcSvgOperation(arc)
+                {
+                    Radius = 100,
+                    Fill = RandomSvgColor()
+                },
+                GaugeTicksSvgOperation ticks => new ReactiveGaugeTicksSvgOperation(ticks)
+                {
+                    Radius = 100
+                },
+                GaugeTickLabelsSvgOperation lbl => new ReactiveGaugeTickLabelsSvgOperation(lbl)
+                {
+                    Radius = 100
+                },
                 TextSvgOperation txt => new ReactiveTextSvgOperation(txt),
 
                 // If something unexpected appears

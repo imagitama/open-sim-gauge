@@ -16,8 +16,6 @@ namespace OpenGaugeClient
         {
             _svgLayer = svgLayer ?? throw new ArgumentNullException(nameof(svgLayer));
 
-            Console.WriteLine(svgLayer.GetHashCode());
-
             Name = svgLayer.Name;
             Shadow = svgLayer.Shadow;
             Operations.Edit(inner =>

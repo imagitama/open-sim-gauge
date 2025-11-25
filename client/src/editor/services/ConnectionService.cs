@@ -42,7 +42,7 @@ namespace OpenGaugeClient.Editor.Services
 
                 // ensure we pass null to subscribe to all
                 // TODO: make this optional for re-use with client
-                var varsToSubscribeTo = VarHelper.GetVarDefsToSubscribeTo(ConfigManager.Config, null);
+                var varsToSubscribeTo = SimVarHelper.GetSimVarDefsToSubscribeTo(ConfigManager.Config, null);
 
                 if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[ConnectionService] Vars: {string.Join(", ", varsToSubscribeTo.Select(x => $"{x.Name} ({x.Unit})"))}");
@@ -98,12 +98,12 @@ namespace OpenGaugeClient.Editor.Services
                     case MessageType.Var:
                         var simVarPayload = ((JsonElement)msg.Payload).Deserialize<SimVarPayload>() ?? throw new Exception("Payload is null");
 
-                        VarManager.Instance.StoreVar(simVarPayload.Name, simVarPayload.Unit, simVarPayload.Value);
+                        SimVarManager.Instance.StoreSimVar(simVarPayload.Name, simVarPayload.Unit, simVarPayload.Value);
 
                         if (!hasSentAVar)
                         {
                             hasSentAVar = true;
-                            Console.WriteLine($"Our first SimVar: '{simVarPayload.Name}' ({simVarPayload.Unit}) => {simVarPayload.Value}");
+                            Console.WriteLine($"Our first Var: '{simVarPayload.Name}' ({simVarPayload.Unit}) => {simVarPayload.Value}");
                         }
 
                         break;

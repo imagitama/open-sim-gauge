@@ -3,9 +3,9 @@ using System.Text.Json;
 
 namespace OpenGaugeClient
 {
-    public class VarManager
+    public class SimVarManager
     {
-        public static VarManager Instance { get; } = new();
+        public static SimVarManager Instance { get; } = new();
 
         public struct SimVarSample
         {
@@ -19,15 +19,33 @@ namespace OpenGaugeClient
         private readonly Dictionary<(string Name, string Unit), SimVarSample> simVarValues
             = new();
 
-        public void StoreVar(string name, string unit, object? value)
+        public void StoreSimVar(string name, string unit, object? value)
         {
             var key = (name, unit);
 
             double? parsed = null;
-            if (value is JsonElement je)
+
+            switch (value)
             {
-                if (je.ValueKind == JsonValueKind.Number)
+                case JsonElement je when je.ValueKind == JsonValueKind.Number:
                     parsed = je.GetDouble();
+                    break;
+
+                case double d:
+                    parsed = d;
+                    break;
+
+                case float f:
+                    parsed = f;
+                    break;
+
+                case int i:
+                    parsed = i;
+                    break;
+
+                case long l:
+                    parsed = l;
+                    break;
             }
 
             if (parsed is double newValue)
@@ -55,17 +73,28 @@ namespace OpenGaugeClient
 
                 simVarValues[key] = sample;
             }
+
+            if (parsed == null)
+                throw new Exception($"Failed to parse {name} ({unit}) value >>{value}<< type {(value != null ? value.GetType() : "null")}");
         }
 
-        public object? GetSimVarValue(string name, string unit)
+        public double? GetSimVarValue(string name, string unit)
         {
             if (simVarValues.TryGetValue((name, unit), out var s))
-                return s;
+                return s.LastValue;
             else
                 return null;
         }
 
-        public object? GetInterpolatedSimVarValue(string name, string unit)
+        public double? GetBestSimVarValue(string name, string unit)
+        {
+            if (ConfigManager.Config.Interpolate != false)
+                return GetInterpolatedSimVarValue(name, unit);
+
+            return GetSimVarValue(name, unit);
+        }
+
+        public double? GetInterpolatedSimVarValue(string name, string unit)
         {
             if (!simVarValues.TryGetValue((name, unit), out var s))
                 return null;

@@ -47,13 +47,13 @@
                 <Button
                     Width="80"
                     HorizontalContentAlignment="Center"
-                    Command="{Binding CancelCommand}"
-                    Content="Cancel" />
+                    Command="{Binding OkCommand}"
+                    Content="OK" />
                 <Button
                     Width="80"
                     HorizontalContentAlignment="Center"
-                    Command="{Binding OkCommand}"
-                    Content="OK" />
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel" />
             </StackPanel>
         </StackPanel>
     </Border>
