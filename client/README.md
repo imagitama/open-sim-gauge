@@ -47,6 +47,7 @@ An object that describes a panel.
 | `grid` | `double?` |  | Renders a grid with the provided cell size. |
 | `clip` | `bool?` | `true` | If to clip all gauges. |
 | `skip` | `bool?` | `false` | If to skip rendering this panel. |
+| `force` | `bool?` | `false` | If to always render this panel. |
 | `debug` | `bool?` | `false` | Extra console logging for this panel. |
 
 ### GaugeRef

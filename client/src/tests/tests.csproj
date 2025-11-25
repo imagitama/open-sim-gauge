@@ -6,7 +6,7 @@
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../shared/OpenSimGaugeShared.csproj" />
+        <ProjectReference Include="../shared/shared.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="TUnit" Version="1.2.3" />

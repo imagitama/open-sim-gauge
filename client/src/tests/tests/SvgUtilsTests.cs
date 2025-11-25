@@ -3,11 +3,12 @@ using OpenGaugeClient;
 public class SvgUtilsTests
 {
     [Test]
+    [DisplayName("GetPathPosition (inside 400x400 with a single line) with value '$value' => $expectedX,$expectedY")]
     [Arguments(-1.0, 100, 200)]
     [Arguments(0.0, 200, 200)]
     [Arguments(1.0, 300, 200)]
-    public async Task GetPathPosition(
-        double simVarValue,
+    public async Task GetPathPosition_Works(
+        double value,
         float expectedX,
         float expectedY)
     {
@@ -32,7 +33,7 @@ public class SvgUtilsTests
             pathConfig,
             400,
             400,
-            simVarValue,
+            value,
             false
         );
 

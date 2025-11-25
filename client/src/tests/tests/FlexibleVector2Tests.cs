@@ -4,10 +4,11 @@ using TUnit.Assertions.Exceptions;
 public class FlexibleVector2Tests
 {
     [Test]
+    [DisplayName("Does FlexibleVector2 $inputX,$inputY resolve to $expectedX,$expectedY")]
     [Arguments("50%", "50%", 500, 500)]
     [Arguments("100", "100", 100, 100)]
     [Arguments("-100", "-100", 900, 900)]
-    public async Task ResolveGood(
+    public async Task FlexibleVector2Resolve_ResolvesGood(
         object inputX,
         object inputY,
         float expectedX,
@@ -26,8 +27,9 @@ public class FlexibleVector2Tests
     }
 
     [Test]
+    [DisplayName("Does FlexibleVector2 $inputX,$inputY resolve to $expectedX,$expectedY - by throwing")]
     [Arguments("50%", "50%", 1234, 1234)]
-    public async Task ResolveBad(
+    public async Task FlexibleVector2Resolve_ResolvesBad(
         object inputX,
         object inputY,
         float expectedX,
