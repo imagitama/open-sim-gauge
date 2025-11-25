@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Splat.ModeDetection;
 
 namespace OpenGaugeClient.Editor
 {
@@ -6,55 +7,52 @@ namespace OpenGaugeClient.Editor
     {
         public static readonly XNamespace Ns = "http://www.w3.org/2000/svg";
 
-        public static async Task BuildAndOutput(SvgOperation[] operations, string outputSvgPath, double width, double height, ShadowConfig? shadow = null)
+        public static async Task BuildAndOutput(SvgOperation[] operations, string outputSvgPath, double svgWidth, double svgHeight, ShadowConfig? shadow = null)
         {
-            var svgText = await Build(operations, width, height, shadow);
-
+            var svgText = await Build(operations, svgWidth, svgHeight, shadow);
             await WriteSvgToFile(svgText, outputSvgPath, "output");
         }
 
-        public static async Task<XElement> Build(SvgOperation[] operations, double width, double height, ShadowConfig? shadow = null)
+        public static async Task<XElement> Build(SvgOperation[] operations, double svgWidth, double svgHeight, ShadowConfig? shadow = null)
         {
-            var center = (cx: width / 2.0, cy: height / 2.0);
             var nodes = new List<XElement>();
-
-            Console.WriteLine($"[SvgBuilder] Build {operations.Length} operations at {width}x{height} shadow={shadow}");
 
             foreach (var op in operations)
             {
                 if (op == null) continue;
 
-                var (posX, posY) = op.Position.Resolve(width, height);
-                var operationWidth = op.Width != null ? op.Width.Resolve(width) : width;
-                var operationHeight = op.Height != null ? op.Height.Resolve(height) : height;
+                var (posX, posY) = op.Position.Resolve(svgWidth, svgHeight);
+
+                var opWidth = op.Width != null ? op.Width.Resolve(svgWidth) : svgWidth;
+                var opHeight = op.Height != null ? op.Height.Resolve(svgHeight) : svgHeight;
+
+                var (originX, originY) = op.Origin.Resolve(opWidth, opHeight);
+
+                XElement node;
 
                 switch (op)
                 {
                     case CircleSvgOperation circle:
-                        nodes.Add(CreateCircleNode(
-                            posX,
-                            posY,
+                        node = CreateCircleNode(
                             circle.Radius,
                             circle.Fill ?? "transparent",
                             circle.StrokeWidth,
                             circle.StrokeFill
-                        ));
+                        );
                         break;
 
                     case ArcSvgOperation arc:
-                        nodes.Add(CreateArcNode(
-                            center,
+                        node = CreateArcNode(
                             arc.Radius,
                             arc.DegreesStart,
                             arc.DegreesEnd,
                             arc.InnerThickness,
                             arc.Fill ?? "transparent"
-                        ));
+                        );
                         break;
 
                     case GaugeTicksSvgOperation gaugeTicks:
-                        nodes.Add(CreateGaugeTicksNode(
-                            center,
+                        node = CreateGaugeTicksNode(
                             gaugeTicks.Radius,
                             gaugeTicks.DegreesStart,
                             gaugeTicks.DegreesEnd,
@@ -62,12 +60,11 @@ namespace OpenGaugeClient.Editor
                             gaugeTicks.TickLength,
                             gaugeTicks.TickWidth,
                             gaugeTicks.TickFill
-                        ));
+                        );
                         break;
 
                     case GaugeTickLabelsSvgOperation gaugeTickLabels:
-                        nodes.Add(CreateGaugeTickLabelsNode(
-                            center,
+                        node = CreateGaugeTickLabelsNode(
                             gaugeTickLabels.Radius,
                             gaugeTickLabels.DegreesStart,
                             gaugeTickLabels.DegreesEnd,
@@ -76,54 +73,81 @@ namespace OpenGaugeClient.Editor
                             gaugeTickLabels.LabelFill,
                             gaugeTickLabels.LabelSize,
                             gaugeTickLabels.LabelFont
-                        ));
+                        );
                         break;
 
                     case TextSvgOperation text:
-                        nodes.Add(CreateTextNode(
-                            posX,
-                            posY,
+                        node = CreateTextNode(
                             text.Text,
                             text.Size,
                             text.Fill,
                             text.Font
-                        ));
+                        );
                         break;
 
                     case SquareSvgOperation square:
-                        nodes.Add(CreateSquareNode(
-                            posX,
-                            posY,
-                            operationWidth,
-                            operationHeight,
+                        node = CreateSquareNode(
+                            opWidth,
+                            opHeight,
                             square.Fill,
                             square.Round,
                             square.StrokeWidth
-                        ));
+                        );
                         break;
 
                     case TriangleSvgOperation triangle:
-                        nodes.Add(CreateTriangleNode(
-                            posX,
-                            posY,
-                            operationWidth,
-                            operationHeight,
+                        node = CreateTriangleNode(
+                            opWidth,
+                            opHeight,
                             triangle.Fill,
-                            triangle.StrokeWidth,
-                            width,
-                            height
-                        ));
+                            triangle.StrokeWidth
+                        );
                         break;
 
                     default:
-                        Console.WriteLine($"[DEBUG] Unknown operation type: {op.Type}");
-                        break;
+                        throw new Exception($"Unknown operation type: {op.Type}");
                 }
+
+                var wrapped = ApplyRotation(node, op.Type, op.Rotate ?? 0, posX, posY, originX, originY, opWidth, opHeight);
+
+                if (op.Name == "square")
+                    Console.WriteLine($"DRAW pos={posX},{posY} origin={originX},{originY} size={opWidth}x{opHeight} bounds={svgWidth},{svgHeight}");
+
+                nodes.Add(wrapped);
             }
 
-            var svgElement = ConvertNodesIntoSvg(nodes, width, height, shadow);
+            return ConvertNodesIntoSvg(nodes, svgWidth, svgHeight, shadow);
+        }
 
-            return svgElement;
+        private static XElement ApplyRotation(
+            XElement node,
+            SvgOperationType type,
+            double angle,
+            double posX,
+            double posY,
+            double originX,
+            double originY,
+            double opWidth,
+            double opHeight)
+        {
+            var localOriginX = originX - opWidth / 2.0;
+            var localOriginY = originY - opHeight / 2.0;
+
+            var translateX = posX - localOriginX;
+            var translateY = posY - localOriginY;
+
+            var transform =
+                $"translate({translateX},{translateY}) " +
+                $"translate({localOriginX},{localOriginY}) " +
+                $"rotate({angle}) " +
+                $"translate({-localOriginX},{-localOriginY})";
+
+            var g = new XElement(Ns + "g",
+                new XAttribute("transform", transform)
+            );
+
+            g.Add(node);
+            return g;
         }
 
         private static double DegToRad(double deg) => (deg - 90) * Math.PI / 180.0;
@@ -135,12 +159,15 @@ namespace OpenGaugeClient.Editor
                     cy + radius * Math.Sin(a));
         }
 
-        private static XElement CreateCircleNode(double x, double y, double? radius,
-            string fill, double? strokeWidth, string? strokeFill)
+        private static XElement CreateCircleNode(
+            double radius,
+            string fill,
+            double? strokeWidth,
+            string? strokeFill)
         {
             return new XElement(Ns + "circle",
-                new XAttribute("cx", x),
-                new XAttribute("cy", y),
+                new XAttribute("cx", 0),
+                new XAttribute("cy", 0),
                 new XAttribute("r", radius),
                 new XAttribute("fill", fill),
                 strokeWidth != null ? new XAttribute("stroke-width", strokeWidth) : null,
@@ -148,12 +175,15 @@ namespace OpenGaugeClient.Editor
             );
         }
 
-        private static XElement CreateArcNode((double cx, double cy) pos,
-            double radius, double degreesStart, double degreesEnd,
-            double innerThickness, string fill)
+        private static XElement CreateArcNode(
+            double radius,
+            double degreesStart,
+            double degreesEnd,
+            double innerThickness,
+            string fill)
         {
-            double cx = pos.cx;
-            double cy = pos.cy;
+            double cx = 0;
+            double cy = 0;
 
             var (sx, sy) = PolarToCartesian(cx, cy, radius, degreesStart);
             var (ex, ey) = PolarToCartesian(cx, cy, radius, degreesEnd);
@@ -176,17 +206,22 @@ namespace OpenGaugeClient.Editor
             );
         }
 
-        private static XElement CreateGaugeTicksNode((double cx, double cy) pos,
-            double radius, double startDeg, double endDeg, double gapDeg,
-            double tickLength, double tickWidth, string tickFill)
+        private static XElement CreateGaugeTicksNode(
+            double radius,
+            double startDeg,
+            double endDeg,
+            double gapDeg,
+            double tickLength,
+            double tickWidth,
+            string tickFill)
         {
-            double cx = pos.cx;
-            double cy = pos.cy;
-
             var group = new XElement(Ns + "g",
                 new XAttribute("stroke", tickFill),
                 new XAttribute("fill", "none")
             );
+
+            double cx = 0;
+            double cy = 0;
 
             int direction = endDeg >= startDeg ? 1 : -1;
             double angle = startDeg;
@@ -212,19 +247,18 @@ namespace OpenGaugeClient.Editor
         }
 
         private static XElement CreateGaugeTickLabelsNode(
-            (double cx, double cy) pos,
             double radius, double startDeg, double endDeg, double gapDeg,
             IList<string> labels, string fill, double size, string font)
         {
-            double cx = pos.cx;
-            double cy = pos.cy;
-
             var group = new XElement(Ns + "g",
                 new XAttribute("font-family", font),
                 new XAttribute("fill", fill),
                 new XAttribute("text-anchor", "middle"),
                 new XAttribute("dominant-baseline", "middle")
             );
+
+            double cx = 0;
+            double cy = 0;
 
             var angles = new List<double>();
             double totalLabels = labels.Count;
@@ -262,11 +296,11 @@ namespace OpenGaugeClient.Editor
         }
 
         private static XElement CreateTextNode(
-            double x, double y, string text, double size, string fill, string font)
+            string text, double size, string fill, string font)
         {
             return new XElement(Ns + "text",
-                new XAttribute("x", x),
-                new XAttribute("y", y),
+                new XAttribute("x", 0),
+                new XAttribute("y", 0),
                 new XAttribute("fill", fill),
                 new XAttribute("font-family", font),
                 new XAttribute("font-size", size),
@@ -278,16 +312,18 @@ namespace OpenGaugeClient.Editor
         }
 
         private static XElement CreateSquareNode(
-            double x, double y, double w, double h,
-            string fill, double? round, double? strokeWidth)
+            double w,
+            double h,
+            string fill,
+            double? round,
+            double? strokeWidth)
         {
             var node = new XElement(Ns + "rect",
-                new XAttribute("x", x),
-                new XAttribute("y", y),
+                new XAttribute("x", -w / 2),
+                new XAttribute("y", -h / 2),
                 new XAttribute("width", w),
                 new XAttribute("height", h),
-                new XAttribute("fill", fill),
-                new XAttribute("transform", $"translate(-{w / 2},{-h / 2})")
+                new XAttribute("fill", fill)
             );
 
             if (round != null) node.Add(new XAttribute("rx", round));
@@ -297,32 +333,48 @@ namespace OpenGaugeClient.Editor
         }
 
         private static XElement CreateTriangleNode(
-            double x, double y, double w, double h,
-            string fill, double? strokeWidth,
-            double svgWidth, double svgHeight)
+            double w,
+            double h,
+            string fill,
+            double? strokeWidth)
         {
-            double cx = x;
-            double cy = y;
-
             double halfW = w / 2;
             double hh = h;
 
             string points =
                 $"0,{-hh / 2} {-halfW},{hh / 2} {halfW},{hh / 2}";
 
-            var transform = $"translate({cx},{cy})";
-            // if (rotation != 0) transform += $" rotate({rotation})";
-
             var node = new XElement(Ns + "polygon",
                 new XAttribute("points", points),
-                new XAttribute("fill", fill),
-                new XAttribute("transform", transform)
+                new XAttribute("fill", fill)
             );
 
             if (strokeWidth != null)
                 node.Add(new XAttribute("stroke-width", strokeWidth));
 
             return node;
+        }
+
+        private static XElement ConvertNodesIntoSvg(List<XElement> nodes, double width, double height, ShadowConfig? shadow = null)
+        {
+            var svg = new XElement(Ns + "svg",
+                new XAttribute("width", width),
+                new XAttribute("height", height),
+                new XAttribute("viewBox", $"0 0 {width} {height}"),
+                new XAttribute("style", "background:none")
+            );
+
+            if (shadow != null)
+            {
+                WrapInShadow(svg, nodes, shadow);
+            }
+            else
+            {
+                foreach (var n in nodes)
+                    svg.Add(n);
+            }
+
+            return svg;
         }
 
         private static void WrapInShadow(XElement svg, List<XElement> nodes, ShadowConfig shadow)
@@ -390,48 +442,18 @@ namespace OpenGaugeClient.Editor
             );
 
             group.Add(nodes);
-
             svg.Add(group);
-        }
-
-        private static XElement ConvertNodesIntoSvg(List<XElement> nodes, double width, double height, ShadowConfig? shadow = null)
-        {
-            var svg = new XElement(Ns + "svg",
-                new XAttribute("width", width),
-                new XAttribute("height", height),
-                new XAttribute("viewBox", $"0 0 {width} {height}"),
-                new XAttribute("style", "background:none")
-            );
-
-            if (shadow != null)
-            {
-                WrapInShadow(svg, nodes, shadow);
-            }
-            else
-            {
-                foreach (var n in nodes)
-                    svg.Add(n);
-            }
-
-            return svg;
         }
 
         private static async Task WriteSvgToFile(XElement svg, string path, string name)
         {
-            Console.WriteLine($"[SvgBuilder] Write SVG path={path}");
-
             var doc = new XDocument(
                 new XDeclaration("1.0", "utf-8", "yes"),
                 svg
             );
 
             await using var fileStream = File.Create(path);
-
-            await doc.SaveAsync(
-                fileStream,
-                SaveOptions.None,
-                CancellationToken.None
-            );
+            await doc.SaveAsync(fileStream, SaveOptions.None, CancellationToken.None);
         }
     }
 }

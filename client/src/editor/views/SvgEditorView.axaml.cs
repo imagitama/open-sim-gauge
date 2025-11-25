@@ -147,7 +147,6 @@ namespace OpenGaugeClient.Editor
                     layers,
                     layer =>
                     {
-                        Console.WriteLine(layer.GetHashCode());
                         return layer.Changed.Select(_ => Unit.Default);
                     }
                 );
@@ -928,6 +927,8 @@ namespace OpenGaugeClient.Editor
             var snapEnabled = SettingsService.Instance.Snap;
             var snapAmount = Math.Max(SettingsService.Instance.SnapAmount, 1);
 
+            Console.WriteLine($"[SvgCreatorEditorViewViewModel] Transform SVG opration op={operation}");
+
             switch (type)
             {
                 case TransformActionType.Upsize:
@@ -1006,7 +1007,7 @@ namespace OpenGaugeClient.Editor
                 case TransformActionType.CW:
                 case TransformActionType.CCW:
                     var oldRotate = operation.Rotate;
-                    var newRotate = oldRotate;
+                    var newRotate = oldRotate ?? 0;
                     double rotateStep = snapEnabled ? snapAmount : 1.0;
 
                     switch (type)

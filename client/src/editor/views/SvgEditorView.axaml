@@ -13,7 +13,6 @@
     <UserControl.Resources>
         <conv:ObjectNullToggleConverter x:Key="ObjectNullToggleConverter" />
         <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
-
         <DataTemplate x:Key="LayerTemplate_List" DataType="local:ReactiveSvgLayer">
             <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom">
                 <components:PrimaryButton
@@ -143,6 +142,14 @@
                         FieldType="FlexibleVector2"
                         Label="Position"
                         OriginalObj="{Binding}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="80" />
+                        <components:PrimaryButton
+                            Command="{Binding ViewModel.CenterSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
+                            CommandParameter="{Binding}"
+                            Label="Center"
+                            Size="Small" />
+                    </StackPanel>
                     <components:EditableField
                         Content="{Binding Origin}"
                         EditCommittedCommand="{Binding ViewModel.EditSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
@@ -152,11 +159,7 @@
                         OriginalObj="{Binding}" />
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Width="80" />
-                        <components:PrimaryButton
-                            Command="{Binding ViewModel.CenterSvgOperationCommand, RelativeSource={RelativeSource AncestorType=editor:SvgCreatorEditorView}}"
-                            CommandParameter="{Binding}"
-                            Label="Center"
-                            Size="Small" />
+                        <TextBlock>*ignored for any round shapes</TextBlock>
                     </StackPanel>
                     <components:EditableField
                         Content="{Binding Rotate}"
