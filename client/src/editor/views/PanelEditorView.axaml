@@ -182,11 +182,6 @@
                                 </ItemsControl>
                             </StackPanel>
                             <components:EditableField
-                                Content="{Binding ViewModel.Panel.Skip, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
-                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
-                                FieldName="Skip"
-                                Label="Skip" />
-                            <components:EditableField
                                 Content="{Binding ViewModel.Panel.Width, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 FieldName="Width"
@@ -225,6 +220,13 @@
                                 FieldType="FlexibleVector2"
                                 Label="Origin" />
                             <components:EditableField
+                                Content="{Binding ViewModel.Panel.Fullscreen, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Fullscreen"
+                                FieldType="Bool"
+                                Hint="Ignores any position and dimensions"
+                                Label="Fullscreen" />
+                            <components:EditableField
                                 Content="{Binding ViewModel.Panel.Background, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 FieldName="Background"
@@ -244,17 +246,38 @@
                                 Hint="If to render this panel above all other desktop windows and apps."
                                 Label="On Top" />
                             <components:EditableField
+                                Content="{Binding ViewModel.Panel.Force, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Force"
+                                FieldType="Bool"
+                                Hint="If to always render this panel"
+                                Label="Force" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.KeepAlive, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="KeepAlive"
+                                FieldType="Bool"
+                                Hint="If to only hide this panel on change vehicle for faster re-load time"
+                                Label="Keep Alive" />
+                            <components:EditableField
+                                Content="{Binding ViewModel.Panel.Draggable, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                FieldName="Draggable"
+                                FieldType="Bool"
+                                Hint="If you can drag this panel at runtime"
+                                Label="Draggable" />
+                            <components:EditableField
                                 Content="{Binding ViewModel.Panel.Debug, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 FieldName="Debug"
                                 FieldType="Bool"
                                 Label="Debug" />
                             <components:EditableField
-                                Content="{Binding ViewModel.Panel.Fullscreen, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                Content="{Binding ViewModel.Panel.Skip, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                 EditCommittedCommand="{Binding ViewModel.EditPanelCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
-                                FieldName="Fullscreen"
+                                FieldName="Skip"
                                 FieldType="Bool"
-                                Label="Fullscreen" />
+                                Label="Skip" />
                         </StackPanel>
                     </components:ToolPanel>
                 </ScrollViewer>

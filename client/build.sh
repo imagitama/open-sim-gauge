@@ -31,7 +31,7 @@ build_project()
     local project_name=$2
     local platform=$3
 
-    echo "Building project '$project_name' path '$project_path' for '$platform'..."
+    echo "Building project '$project_name' path '$project_path' for '$platform' version $version..."
 
     out_dir="$SCRIPT_DIR/dist/$project_name-$platform"
 
@@ -44,7 +44,8 @@ build_project()
         -v:detailed \
         /p:PublishSingleFile=true \
         /p:PublishTrimmed=false \
-        /p:PublishDir=$out_dir
+        /p:PublishDir=$out_dir \
+        /p:AppVersion="$version"
 
     echo "Copying resources..."
 

@@ -22,6 +22,9 @@ namespace OpenGaugeClient
             Origin = panel.Origin;
             Background = panel.Background;
             Transparent = panel.Transparent;
+            Force = panel.Force;
+            Draggable = panel.Draggable;
+            KeepAlive = panel.KeepAlive;
             Debug = panel.Debug;
 
             Gauges.Edit(inner =>
@@ -124,11 +127,25 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _onTop, value);
         }
 
+        private bool? _force;
+        public bool? Force
+        {
+            get => _force;
+            set => this.RaiseAndSetIfChanged(ref _force, value);
+        }
+
         private bool? _draggable;
         public bool? Draggable
         {
             get => _draggable;
             set => this.RaiseAndSetIfChanged(ref _draggable, value);
+        }
+
+        private bool? _keepAlive;
+        public bool? KeepAlive
+        {
+            get => _keepAlive;
+            set => this.RaiseAndSetIfChanged(ref _keepAlive, value);
         }
 
         private bool? _debug = false;
@@ -157,6 +174,9 @@ namespace OpenGaugeClient
             Background = panel.Background;
             Transparent = panel.Transparent;
             OnTop = panel.OnTop;
+            Force = panel.Force;
+            Draggable = panel.Draggable;
+            KeepAlive = panel.KeepAlive;
             Debug = panel.Debug;
         }
 
@@ -177,6 +197,8 @@ namespace OpenGaugeClient
                 Background = Background,
                 Transparent = Transparent,
                 OnTop = OnTop,
+                Draggable = Draggable,
+                KeepAlive = KeepAlive,
                 Debug = Debug
             };
         }

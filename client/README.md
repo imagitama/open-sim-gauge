@@ -114,6 +114,8 @@ An object that describes a panel.
 | `clip` | `bool?` | `true` | If to clip all gauges. |
 | `skip` | `bool?` | `false` | If to skip rendering this panel. |
 | `force` | `bool?` | `false` | If to always render this panel. |
+| `draggable` | `bool?` | `true` | If this panel can always be dragged around by the user. |
+| `keepAlive` | `bool?` | `false` | If this panel should just be hidden instead of destroyed for faster re-load times. |
 | `debug` | `bool?` | `false` | Extra console logging for this panel. |
 
 ### TranslateConfig
@@ -143,12 +145,11 @@ How to transform a layer using a Var.
 | `to` | `double?` |  | The maximum to translate/rotate. If the value is 50% the from->to then it will render at 50% from->to. |
 | `min` | `double?` |  | The minimum possible value for the var. eg. for airspeed it would be 0 for 0 knots |
 | `max` | `double?` |  | The maximum possible value for the var. |
-| `invert` | `bool` | `false` | If to invert the resulting rotation/translation. |
+| `invert` | `bool?` |  | If to invert the resulting rotation/translation. |
 | `multiply` | `double?` |  | How much to multiply the value amount by. Useful to convert "feet per second" into "feet per minute". |
 | `calibration` | `List<CalibrationPoint>?` |  | How to "calibrate" raw values to specific angles because there is not a linear relationship.<br>Some gauges are not linear so require calibration (such as the C172 ASI). |
 | `skip` | `bool?` |  | If to skip applying this transform. |
 | `debug` | `bool?` |  | Extra logging. Beware of console spam! |
-| `override` | `double?` |  | Force a value for debugging purposes. |
 
 ### ClipConfig
 

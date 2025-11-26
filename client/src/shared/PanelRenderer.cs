@@ -128,6 +128,20 @@ namespace OpenGaugeClient
             _window.Show();
         }
 
+        public void Hide()
+        {
+            if (ConfigManager.Config.Debug)
+                Console.Write($"[PanelRenderer] Hiding panel={_panel}");
+            _window.Hide();
+        }
+
+        public void Show()
+        {
+            if (ConfigManager.Config.Debug)
+                Console.Write($"[PanelRenderer] Showing panel={_panel}");
+            _window.Show();
+        }
+
         public void ReplacePanel(Panel newPanel)
         {
             _panel = newPanel;

@@ -24,6 +24,8 @@ namespace OpenGaugeClient.Client
 
             foreach (var panel in config.Panels)
             {
+                var key = panel.Name;
+
                 if (!PanelHelper.GetIsPanelVisible(panel, vehicleName))
                 {
                     if (ConfigManager.Config.Debug)
@@ -42,8 +44,13 @@ namespace OpenGaugeClient.Client
                     continue;
                 }
 
-                if (_panelRenderers.ContainsKey(panel.Name))
-                    continue;
+                if (_panelRenderers.ContainsKey(key))
+                {
+                    _panelRenderers[key].Show();
+
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"[PanelManager] Show panel={panel}'");
+                }
 
                 Console.WriteLine($"Panel '{panel.Name}' (vehicle: {(panel.Vehicle != null ? string.Join(", ", panel.Vehicle) : "all")})");
 
@@ -58,7 +65,7 @@ namespace OpenGaugeClient.Client
                 if (ConfigManager.Config.Debug)
                     Console.WriteLine($"[PanelManager] Load panel={panel}");
 
-                _panelRenderers[panel.Name] = renderer;
+                _panelRenderers[key] = renderer;
             }
 
             if (_panelRenderers.Count == 0)
@@ -67,16 +74,28 @@ namespace OpenGaugeClient.Client
 
         private void UnrenderPanel(Panel panel)
         {
+            var key = panel.Name;
+
             if (ConfigManager.Config.Debug)
                 Console.WriteLine($"[PanelManager] Unrender panel={panel}");
 
-            if (_panelRenderers.ContainsKey(panel.Name))
+            if (_panelRenderers.ContainsKey(key))
             {
-                _panelRenderers[panel.Name].Dispose();
-                _panelRenderers.Remove(panel.Name);
+                if (panel.KeepAlive == true)
+                {
+                    _panelRenderers[key].Hide();
 
-                if (ConfigManager.Config.Debug)
-                    Console.WriteLine($"[PanelManager] Unrendered panel={panel}'");
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"[PanelManager] Hide panel={panel}'");
+                }
+                else
+                {
+                    _panelRenderers[key].Dispose();
+                    _panelRenderers.Remove(key);
+
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"[PanelManager] Unrendered panel={panel}'");
+                }
             }
         }
 

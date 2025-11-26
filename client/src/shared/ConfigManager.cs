@@ -4,6 +4,8 @@ namespace OpenGaugeClient
     {
         private static Config? _config;
         public static Config Config => _config ?? throw new InvalidOperationException("LoadConfig must be called first");
+        private static string? _configPath;
+        public static string ConfigPath => _configPath ?? throw new InvalidOperationException("LoadConfig must be called first");
 
         public static async Task SavePanel(int panelIndex, Panel panelToSave)
         {
@@ -103,6 +105,7 @@ namespace OpenGaugeClient
             }
 
             _config = newConfig;
+            _configPath = configPath;
 
             return newConfig;
         }

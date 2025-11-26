@@ -107,6 +107,10 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? Draggable { get; set; } = true;
         /// <summary>
+        /// If this panel should just be hidden instead of destroyed for faster re-load times.
+        /// </summary>
+        public bool? KeepAlive { get; set; } = false;
+        /// <summary>
         /// Extra console logging for this panel.
         /// </summary>
         public bool? Debug { get; set; } = false;

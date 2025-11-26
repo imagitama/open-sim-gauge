@@ -15,6 +15,9 @@
     <StartupObject>OpenGaugeClient.Client.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyMetadata Include="AppVersion" Value="$(AppVersion)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\shared\shared.csproj"  />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release'">

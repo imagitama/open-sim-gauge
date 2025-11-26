@@ -109,7 +109,7 @@ namespace OpenGaugeClient.Editor
                 window.Activate();
 
                 window.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
-                window.Background = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0));
+                window.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
             };
             DetachedFromVisualTree += (_, _) =>
             {

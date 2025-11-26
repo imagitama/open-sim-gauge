@@ -14,6 +14,9 @@
     <UseAvalonia>true</UseAvalonia>
   </PropertyGroup>
   <ItemGroup>
+    <AssemblyMetadata Include="AppVersion" Value="$(AppVersion)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\shared\shared.csproj"  />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
