@@ -56,11 +56,13 @@ namespace OpenGaugeClient.Editor
                         continue;
                     }
 
-                    Console.WriteLine($"[SvgCreatorRenderer] Build {ops.Count} operations at {_svgCreator.Width}x{_svgCreator.Height} shadow={layer.Shadow?.ToConfig()} orig={layer.Shadow}");
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"[SvgCreatorRenderer] Build {ops.Count} operations at {_svgCreator.Width}x{_svgCreator.Height} shadow={layer.Shadow?.ToConfig()} orig={layer.Shadow}");
 
                     var svgText = await SvgBuilder.Build([.. ops], _svgCreator.Width, _svgCreator.Height, layer.Shadow?.ToConfig());
 
-                    // Console.WriteLine($"[SvgCreatorRenderer] Built:\n{svgText}");
+                    if (ConfigManager.Config.Debug)
+                        Console.WriteLine($"[SvgCreatorRenderer] Built:\n{svgText}");
 
                     builtLayers[layer] =
                         new BuiltLayer()

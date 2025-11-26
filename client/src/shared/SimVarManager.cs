@@ -23,6 +23,12 @@ namespace OpenGaugeClient
         {
             var key = (name, unit);
 
+            if (value == null)
+            {
+                // assume we try and get it later and default to null
+                return;
+            }
+
             double? parsed = null;
 
             switch (value)

@@ -196,7 +196,6 @@ namespace OpenGaugeClient.Client
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to start: {ex.Message}");
-                throw;
             }
         }
     }

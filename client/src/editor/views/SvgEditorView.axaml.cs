@@ -215,7 +215,7 @@ namespace OpenGaugeClient.Editor
                 var dirPath = Path.GetDirectoryName(reactiveSvgCreator.Source);
                 var svgPath = Path.Combine(dirPath!, $"{layer.Name}.svg");
 
-                await SvgBuilder.BuildAndOutput(ops, svgPath, width, height);
+                await SvgBuilder.BuildAndOutput(ops, svgPath, width, height, layer.Shadow?.ToConfig());
             }
         }
 

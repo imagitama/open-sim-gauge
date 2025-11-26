@@ -10,16 +10,19 @@ namespace OpenGaugeClient.Editor
         public static async Task BuildAndOutput(SvgOperation[] operations, string outputSvgPath, double svgWidth, double svgHeight, ShadowConfig? shadow = null)
         {
             var svgText = await Build(operations, svgWidth, svgHeight, shadow);
-            await WriteSvgToFile(svgText, outputSvgPath, "output");
+            await WriteSvgToFile(svgText, outputSvgPath);
         }
 
         public static async Task<XElement> Build(SvgOperation[] operations, double svgWidth, double svgHeight, ShadowConfig? shadow = null)
         {
             var nodes = new List<XElement>();
 
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[SvgBuilder] Build {operations.Length} operations at {svgWidth}x{svgHeight} shadow={shadow}");
+
             foreach (var op in operations)
             {
-                if (op == null) continue;
+                if (op.Skip == true) continue;
 
                 var (posX, posY) = op.Position.Resolve(svgWidth, svgHeight);
 
@@ -29,6 +32,9 @@ namespace OpenGaugeClient.Editor
                 var (originX, originY) = op.Origin.Resolve(opWidth, opHeight);
 
                 XElement node;
+
+                if (ConfigManager.Config.Debug)
+                    Console.WriteLine($"[SvgBuilder] Create node for operation={op}");
 
                 switch (op)
                 {
@@ -109,9 +115,6 @@ namespace OpenGaugeClient.Editor
                 }
 
                 var wrapped = ApplyRotation(node, op.Type, op.Rotate ?? 0, posX, posY, originX, originY, opWidth, opHeight);
-
-                if (op.Name == "square")
-                    Console.WriteLine($"DRAW pos={posX},{posY} origin={originX},{originY} size={opWidth}x{opHeight} bounds={svgWidth},{svgHeight}");
 
                 nodes.Add(wrapped);
             }
@@ -366,7 +369,19 @@ namespace OpenGaugeClient.Editor
 
             if (shadow != null)
             {
-                WrapInShadow(svg, nodes, shadow);
+                if (ConfigManager.Config.Debug)
+                    Console.WriteLine("[SvgBuilder] Adding shadow");
+
+                var (defs, shadowGroup) = GetShadowNodes(shadow);
+
+                svg.Add(defs);
+
+                foreach (var n in nodes)
+                    shadowGroup.Add(n);
+
+                svg.Add(shadowGroup);
+
+                Console.WriteLine($"[SvgBuilder] Shadow done:\n{svg}");
             }
             else
             {
@@ -377,7 +392,7 @@ namespace OpenGaugeClient.Editor
             return svg;
         }
 
-        private static void WrapInShadow(XElement svg, List<XElement> nodes, ShadowConfig shadow)
+        private static (XElement defs, XElement group) GetShadowNodes(ShadowConfig shadow)
         {
             int size = 4;
             int dx = 3;
@@ -396,10 +411,10 @@ namespace OpenGaugeClient.Editor
             }
 
             var defs = new XElement(Ns + "defs");
-            svg.Add(defs);
 
             var filter = new XElement(Ns + "filter",
                 new XAttribute("id", "shadow"),
+                new XAttribute("filterUnits", "userSpaceOnUse"), // required for skiasharp to work
                 new XAttribute("x", "-20%"),
                 new XAttribute("y", "-20%"),
                 new XAttribute("width", "140%"),
@@ -441,16 +456,18 @@ namespace OpenGaugeClient.Editor
                 new XAttribute("filter", "url(#shadow)")
             );
 
-            group.Add(nodes);
-            svg.Add(group);
+            return (defs, group);
         }
 
-        private static async Task WriteSvgToFile(XElement svg, string path, string name)
+        private static async Task WriteSvgToFile(XElement svg, string path)
         {
             var doc = new XDocument(
                 new XDeclaration("1.0", "utf-8", "yes"),
                 svg
             );
+
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[SvgBuilder] Write SVG to path={path}\n{doc}");
 
             await using var fileStream = File.Create(path);
             await doc.SaveAsync(fileStream, SaveOptions.None, CancellationToken.None);
