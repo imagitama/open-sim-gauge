@@ -179,7 +179,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Label
                                         VerticalAlignment="Center"
-                                        Content="{Binding OutputPath}"
+                                        Content="{Binding Label}"
                                         ToolTip.Tip="{Binding Gauge.Source}" />
                                     <components:PrimaryButton
                                         Command="{Binding DataContext.OpenGaugeEditorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

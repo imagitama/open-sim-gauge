@@ -227,15 +227,22 @@ namespace OpenGaugeClient.Editor
         public class GaugeEntry
         {
             public int Index { get; }
-            public string? OutputPath { get; }
+            public string? Label { get; }
             public ReactiveGauge Gauge { get; }
+
+            static string GetLastTwoSegments(string outputPath)
+            {
+                var file = Path.GetFileName(outputPath);
+                var dir = Path.GetFileName(Path.GetDirectoryName(outputPath));
+                return $"{dir}/{file}";
+            }
 
             public GaugeEntry(int index, ReactiveGauge gauge, string? outputPath = null)
             {
                 Index = index;
                 Gauge = gauge;
                 // need replace as avalonia strips underscores
-                OutputPath = outputPath != null ? PathHelper.GetFileName(outputPath).Replace("_", "__") : null;
+                Label = outputPath != null ? GetLastTwoSegments(outputPath).Replace("_", "__") : null;
             }
         }
 

@@ -28,7 +28,7 @@ namespace OpenGaugeClient
                     var (name, path) = tuple;
 
                     if (!string.IsNullOrEmpty(name))
-                        return name!;
+                        return name;
                     if (!string.IsNullOrEmpty(path))
                         return $"File: {System.IO.Path.GetFileName(path)}".Replace("_", "__");
                     return "(unnamed)";
@@ -39,7 +39,7 @@ namespace OpenGaugeClient
 
         public void Dispose() => _cleanup.Dispose();
 
-        public Gauge Gauge;
+        public Gauge? Gauge;
 
         private string? _name;
         public string? Name

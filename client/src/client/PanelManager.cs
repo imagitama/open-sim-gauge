@@ -50,6 +50,8 @@ namespace OpenGaugeClient.Client
 
                     if (ConfigManager.Config.Debug)
                         Console.WriteLine($"[PanelManager] Show panel={panel}'");
+
+                    return;
                 }
 
                 Console.WriteLine($"Panel '{panel.Name}' (vehicle: {(panel.Vehicle != null ? string.Join(", ", panel.Vehicle) : "all")})");

@@ -1,7 +1,9 @@
 # 0.0.13
 
 - fixed SVG operation position/origin/rotation
-- added `panel.Draggable = boolean` (defaults: true)
+- added `panel.KeepAlive = boolean` (default: false) to just hide the panel
+  instead of closing
+- added `panel.Draggable = boolean` (default: true)
   - render panel debug while dragging to help position later
 - moved SimVar override into the var config for each transform:
   - moved `layer.Transform.Rotate.Override = number` to

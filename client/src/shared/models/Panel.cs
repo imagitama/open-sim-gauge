@@ -142,7 +142,7 @@ namespace OpenGaugeClient
         {
             return $"Panel(" +
                 $"Name={Name}," +
-                $"Vehicle={Vehicle}," +
+                $"Vehicle={(Vehicle != null ? string.Join(",", Vehicle) : "null")}," +
                 $"Gauges=\n{string.Join("\n", Gauges.Select(l => $"  {l}"))}\n," +
                 $"Skip={Skip}," +
                 $"Screen={Screen}," +

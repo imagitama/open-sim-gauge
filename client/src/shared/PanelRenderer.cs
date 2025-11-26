@@ -35,6 +35,7 @@ namespace OpenGaugeClient
         public Action<PixelPoint>? OnMove;
         private bool _isDisposed = false;
         private bool _isDragging = false;
+        private bool _isHiding = false;
 
         public PanelRenderer(
             Panel panel,
@@ -93,7 +94,8 @@ namespace OpenGaugeClient
                 {
                     if (e.GetCurrentPoint(_window).Properties.IsLeftButtonPressed)
                     {
-                        Console.WriteLine($"[PanelRenderer] Start dragging");
+                        if (ConfigManager.Config.Debug)
+                            Console.WriteLine($"[PanelRenderer] Start dragging");
                         _isDragging = true;
                         _window.Cursor = new Cursor(StandardCursorType.SizeAll);
                         _window.BeginMoveDrag(e);
@@ -105,7 +107,7 @@ namespace OpenGaugeClient
                 };
                 _window.PointerReleased += (_, e) =>
                 {
-                    if (_isDragging)
+                    if (_isDragging && ConfigManager.Config.Debug)
                         Console.WriteLine($"[PanelRenderer] Stop dragging");
                     _isDragging = false;
                     reset();
@@ -132,14 +134,20 @@ namespace OpenGaugeClient
         {
             if (ConfigManager.Config.Debug)
                 Console.Write($"[PanelRenderer] Hiding panel={_panel}");
+            if (_isHiding || _isDisposed)
+                return;
             _window.Hide();
+            _isHiding = true;
         }
 
         public void Show()
         {
             if (ConfigManager.Config.Debug)
                 Console.Write($"[PanelRenderer] Showing panel={_panel}");
+            if (!_isHiding || _isDisposed)
+                return;
             _window.Show();
+            _isHiding = false;
         }
 
         public void ReplacePanel(Panel newPanel)

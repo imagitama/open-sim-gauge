@@ -61,8 +61,8 @@ namespace OpenGaugeClient
 
         private readonly Gauge _gauge;
 
-        private string _name;
-        public string Name
+        private string? _name;
+        public string? Name
         {
             get => _name;
             set => this.RaiseAndSetIfChanged(ref _name, value);
