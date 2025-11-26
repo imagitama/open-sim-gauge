@@ -118,6 +118,10 @@
                                             Label="{Binding GaugeRef.Label}"
                                             Selected="{Binding IsSelected}" />
                                         <components:PrimaryButton
+                                            Command="{Binding ViewModel.DeleteGaugeRefCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
+                                            CommandParameter="{Binding}"
+                                            Label="🗑️" />
+                                        <components:PrimaryButton
                                             Command="{Binding ViewModel.MoveGaugeRefUpCommand, RelativeSource={RelativeSource AncestorType=editor:PanelEditorView}}"
                                             CommandParameter="{Binding}"
                                             Label="↑" />

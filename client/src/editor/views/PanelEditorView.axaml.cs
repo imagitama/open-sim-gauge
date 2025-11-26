@@ -382,6 +382,7 @@ namespace OpenGaugeClient.Editor
         public ReactiveCommand<(string name, object val, object), Unit> EditPanelCommand { get; }
         public ReactiveCommand<Unit, Unit> ResetCommand { get; }
         public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+        public ReactiveCommand<GaugeRefEntry, Unit> DeleteGaugeRefCommand { get; }
         public ReactiveCommand<Unit, Unit> AddGaugeRefCommand { get; }
         public ReactiveCommand<GaugeRefEntry, Unit> SelectGaugeRefCommand { get; }
         public ReactiveCommand<GaugeRefEntry, Unit> MoveGaugeRefUpCommand { get; }
@@ -409,6 +410,7 @@ namespace OpenGaugeClient.Editor
             ResetCommand = ReactiveCommand.Create(Reset);
             SaveCommand = ReactiveCommand.Create(Save);
             EditPanelCommand = ReactiveCommand.Create<(string, object, object)>(EditPanel);
+            DeleteGaugeRefCommand = ReactiveCommand.Create<GaugeRefEntry>(DeleteGaugeRef);
             AddGaugeRefCommand = ReactiveCommand.Create(AddGaugeRef);
             SelectGaugeRefCommand = ReactiveCommand.Create<GaugeRefEntry>(SelectGaugeRef);
             MoveGaugeRefUpCommand = ReactiveCommand.Create<GaugeRefEntry>(MoveGaugeRefUp);
@@ -430,6 +432,18 @@ namespace OpenGaugeClient.Editor
         public void Dispose()
         {
             _cleanup.Dispose();
+        }
+
+        private void DeleteGaugeRef(GaugeRefEntry gaugeRefEntry)
+        {
+            _panel.Gauges.Edit(list =>
+            {
+                var index = list.IndexOf(gaugeRefEntry.GaugeRef);
+
+                Console.WriteLine($"[PanelEditorViewViewModel] Delete index={index} entry={gaugeRefEntry}");
+
+                list.RemoveAt(index);
+            });
         }
 
         private void TransformGaugeRef(ReactiveGaugeRef gaugeRef, TransformActionType type)
