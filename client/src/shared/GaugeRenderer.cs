@@ -158,14 +158,17 @@ namespace OpenGaugeClient
                                 var varName = rotateConfig.Var.Name;
                                 var unit = rotateConfig.Var.Unit;
 
-                                var varValue = rotateConfig.Override != null ? rotateConfig.Override : _getSimVarValue(varName, unit);
+                                var varValue = rotateConfig.Var.Override != null ? rotateConfig.Var.Override : _getSimVarValue(varName, unit);
+
+                                if (rotateConfig.Var.Override != null)
+                                    DrawOverrideWarning(ctx, varName, unit, (double)rotateConfig.Var.Override);
 
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
                                 rotationAngle = GaugeHelper.MapSimVarValueToOffset(rotateConfig, varValue);
 
-                                if (rotateConfig.Debug == true || rotateConfig.Override != null)
+                                if (rotateConfig.Debug == true || rotateConfig.Var.Override != null)
                                     Console.WriteLine($"[GaugeRenderer] Rotate '{varName}' ({unit}) {varValue} => {rotationAngle}° pos={layerPosX},{layerPosY} origin={layerOriginX},{layerOriginY}");
                             }
 
@@ -174,14 +177,17 @@ namespace OpenGaugeClient
                                 var translateConfig = layer.Transform.TranslateX;
                                 var varName = translateConfig.Var.Name;
                                 var unit = translateConfig.Var.Unit;
-                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(varName, unit);
+                                var varValue = translateConfig.Var.Override != null ? translateConfig.Var.Override : _getSimVarValue(varName, unit);
+
+                                if (translateConfig.Var.Override != null)
+                                    DrawOverrideWarning(ctx, varName, unit, (double)translateConfig.Var.Override);
 
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
                                 offsetX = GaugeHelper.MapSimVarValueToOffset(translateConfig, varValue);
 
-                                if (translateConfig.Debug == true || translateConfig.Override != null)
+                                if (translateConfig.Debug == true || translateConfig.Var.Override != null)
                                     Console.WriteLine($"[GaugeRenderer] TranslateX '{varName}' ({unit}) {varValue} => {offsetX}°");
                             }
 
@@ -190,14 +196,17 @@ namespace OpenGaugeClient
                                 var translateConfig = layer.Transform.TranslateY;
                                 var varName = translateConfig.Var.Name;
                                 var unit = translateConfig.Var.Unit;
-                                var varValue = translateConfig.Override != null ? translateConfig.Override : _getSimVarValue(varName, unit);
+                                var varValue = translateConfig.Var.Override != null ? translateConfig.Var.Override : _getSimVarValue(varName, unit);
+
+                                if (translateConfig.Var.Override != null)
+                                    DrawOverrideWarning(ctx, varName, unit, (double)translateConfig.Var.Override);
 
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
 
                                 offsetY = GaugeHelper.MapSimVarValueToOffset(translateConfig, varValue);
 
-                                if (translateConfig.Debug == true || translateConfig.Override != null)
+                                if (translateConfig.Debug == true || translateConfig.Var.Override != null)
                                     Console.WriteLine($"[GaugeRenderer] TranslateY '{varName}' ({unit}) {varValue} => {offsetY}°");
                             }
 
@@ -208,7 +217,10 @@ namespace OpenGaugeClient
                                 var pathConfig = layer.Transform.Path;
                                 var varName = pathConfig.Var.Name;
                                 var unit = pathConfig.Var.Unit;
-                                var varValue = pathConfig.Override != null ? pathConfig.Override : _getSimVarValue(varName, unit);
+                                var varValue = pathConfig.Var.Override != null ? pathConfig.Var.Override : _getSimVarValue(varName, unit);
+
+                                if (pathConfig.Var.Override != null)
+                                    DrawOverrideWarning(ctx, varName, unit, (double)pathConfig.Var.Override);
 
                                 if (varValue == null && renderNoVarWarnings == true)
                                     DrawNoVarWarning(ctx, varName, unit);
@@ -224,7 +236,7 @@ namespace OpenGaugeClient
 
                                 pathPositionResult = SvgUtils.GetPathPosition(_svgCache, absolutePathImagePath, pathConfig, layerWidth, layerHeight, value, useCachedPositions);
 
-                                if (pathConfig.Debug == true || pathConfig.Override != null)
+                                if (pathConfig.Debug == true)
                                     Console.WriteLine($"[GaugeRenderer] Path '{varName}' ({unit}) {varValue} => {pathPositionResult}");
                             }
 
@@ -442,6 +454,11 @@ namespace OpenGaugeClient
         private void DrawNoVarWarning(DrawingContext ctx, string varName, string? unit)
         {
             DrawDebugText(ctx, $"Var '{varName}' ({unit}) is empty", Brushes.Orange);
+        }
+
+        private void DrawOverrideWarning(DrawingContext ctx, string varName, string? unit, double overrideValue)
+        {
+            DrawDebugText(ctx, $"Var '{varName}' ({unit}) override with {overrideValue}", Brushes.Orange);
         }
     }
 }

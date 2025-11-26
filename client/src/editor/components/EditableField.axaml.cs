@@ -242,25 +242,22 @@ namespace OpenGaugeClient.Editor.Components
                 case FieldType.SvgFile:
                 case FieldType.FontFile:
                     if (string.IsNullOrEmpty(Content as string))
-                        return "(nothing)";
+                        return "(no file)";
                     return PathHelper.GetShortFileName((Content as string)!);
                 case FieldType.SimVarConfig:
-                    if (Content is SimVarConfig a)
+                    if (Content is SimVarConfig varConfig)
                     {
-                        var name = a.Name;
-                        if (name.Length > 10)
-                            name = $"{name[..10]}...";
-                        return $"{name}\n{a.Unit}";
+                        return $"{varConfig.Name}\n{varConfig.Unit}{(varConfig.Override != null ? $"\n{varConfig.Override}" : "")}";
                     }
                     else
                     {
-                        return "-";
+                        return "(no SimVar)";
                     }
                 case FieldType.Bool:
                     if (Content is bool ischecked)
                         return ischecked ? "True" : "False";
                     else
-                        return "null";
+                        return "(undecided)";
                 case FieldType.TextList:
                     if (Content == null)
                         return "(none)";

@@ -2,15 +2,15 @@
     x:Class="OpenGaugeClient.Editor.Components.PrimaryButton"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:OpenGaugeClient.Editor.Components"
+    xmlns:components="clr-namespace:OpenGaugeClient.Editor.Components"
     Background="Transparent">
     <UserControl.Resources>
-        <local:IconOrLabelConverter x:Key="IconOrLabelConverter" />
+        <components:IconOrLabelConverter x:Key="IconOrLabelConverter" />
     </UserControl.Resources>
     <Button
         x:Name="PART_Button"
-        Command="{Binding Command, RelativeSource={RelativeSource AncestorType={x:Type local:PrimaryButton}}}"
-        CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType={x:Type local:PrimaryButton}}}"
+        Command="{Binding Command, RelativeSource={RelativeSource AncestorType={x:Type components:PrimaryButton}}}"
+        CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType={x:Type components:PrimaryButton}}}"
         Content="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}">
         <TextBlock>
             <TextBlock.Text>
@@ -29,12 +29,12 @@
                 <Setter Property="CornerRadius" Value="6" />
             </Style>
             <!--  Size-specific  -->
-            <Style Selector="local|PrimaryButton[Size=Small] Button#PART_Button">
+            <Style Selector="components|PrimaryButton[Size=Small] Button#PART_Button">
                 <Setter Property="Height" Value="24" />
                 <Setter Property="Padding" Value="5,0" />
                 <Setter Property="FontSize" Value="12" />
             </Style>
-            <Style Selector="local|PrimaryButton[Size=Standard] Button#PART_Button">
+            <Style Selector="components|PrimaryButton[Size=Standard] Button#PART_Button">
                 <Setter Property="Height" Value="30" />
             </Style>
             <!--  Neutral  -->
@@ -58,10 +58,10 @@
             <Style Selector="Button#PART_Button[Tag=Bad]:pointerover /template/ ContentPresenter">
                 <Setter Property="Background" Value="#640000" />
             </Style>
-            <Style Selector="local|PrimaryButton[Selected=True] Button#PART_Button">
+            <Style Selector="components|PrimaryButton[Selected=True] Button#PART_Button">
                 <Setter Property="Background" Value="#666" />
             </Style>
-            <Style Selector="local|PrimaryButton[Selected=True] Button#PART_Button:pointerover /template/ ContentPresenter">
+            <Style Selector="components|PrimaryButton[Selected=True] Button#PART_Button:pointerover /template/ ContentPresenter">
                 <Setter Property="Background" Value="#666" />
             </Style>
 

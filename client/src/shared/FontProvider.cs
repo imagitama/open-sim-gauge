@@ -49,7 +49,7 @@ public class CustomFontCollection : FontCollectionBase
     public override void Initialize(IFontManagerImpl fontManager)
     {
         if (ConfigManager.Config.Debug)
-            Console.WriteLine("[FontProvider] Initialize");
+            Console.WriteLine($"[CustomFontCollection] Initialize with manager={fontManager}");
     }
 
     public override bool TryGetGlyphTypeface(string familyName, FontStyle style, FontWeight weight, FontStretch stretch, [NotNullWhen(true)] out IGlyphTypeface? glyphTypeface)
@@ -121,6 +121,9 @@ namespace OpenGaugeClient
 
         public FontProvider()
         {
+            if (ConfigManager.Config.Debug)
+                Console.WriteLine($"[FontProvider] Construct");
+
             // TODO: iterate over each font file
             var gordonFontPath = PathHelper.GetFilePath("fonts/Gordon.ttf", forceToGitRoot: false);
             myCollection.RegisterFontFile(gordonFontPath);

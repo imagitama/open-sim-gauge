@@ -214,14 +214,6 @@
                                     FieldType="Bool"
                                     Label="Debug"
                                     OriginalObj="{Binding}" />
-                                <components:EditableField
-                                    Content="{Binding Transform.Rotate.Override}"
-                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
-                                    FieldName="Transform.Rotate.Override"
-                                    FieldType="Number"
-                                    Hint="Force the Var value for debugging."
-                                    Label="Override"
-                                    OriginalObj="{Binding}" />
                             </StackPanel>
                             <CheckBox Content="Translate X" IsChecked="{Binding Transform.HasTranslateX}" />
                             <StackPanel IsVisible="{Binding Transform.HasTranslateX}">
@@ -300,14 +292,6 @@
                                     FieldName="Debug"
                                     FieldType="Bool"
                                     Label="Debug"
-                                    OriginalObj="{Binding}" />
-                                <components:EditableField
-                                    Content="{Binding Transform.TranslateX.Override}"
-                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
-                                    FieldName="Override"
-                                    FieldType="Number"
-                                    Hint="Force the Var value for debugging."
-                                    Label="Override"
                                     OriginalObj="{Binding}" />
                             </StackPanel>
                             <CheckBox Content="Translate Y" IsChecked="{Binding Transform.HasTranslateY}" />
@@ -388,14 +372,6 @@
                                     FieldType="Bool"
                                     Label="Debug"
                                     OriginalObj="{Binding}" />
-                                <components:EditableField
-                                    Content="{Binding Transform.TranslateY.Override}"
-                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
-                                    FieldName="Override"
-                                    FieldType="Number"
-                                    Hint="Force the Var value for debugging."
-                                    Label="Override"
-                                    OriginalObj="{Binding}" />
                             </StackPanel>
                             <CheckBox Content="Follow Path" IsChecked="{Binding Transform.HasPath}" />
                             <StackPanel IsVisible="{Binding Transform.HasPath}">
@@ -467,14 +443,6 @@
                                     FieldName="Debug"
                                     FieldType="Bool"
                                     Label="Debug"
-                                    OriginalObj="{Binding}" />
-                                <components:EditableField
-                                    Content="{Binding Transform.Path.Override}"
-                                    EditCommittedCommand="{Binding ViewModel.EditLayerCommand, RelativeSource={RelativeSource AncestorType=editor:GaugeEditorView}}"
-                                    FieldName="Override"
-                                    FieldType="Number"
-                                    Hint="Force the Var value for debugging."
-                                    Label="Override"
                                     OriginalObj="{Binding}" />
                                 <!--  CUSTOM  -->
                                 <components:EditableField

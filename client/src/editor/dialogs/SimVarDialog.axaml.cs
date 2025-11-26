@@ -52,17 +52,23 @@ namespace OpenGaugeClient.Editor
     public class SimVarDialogViewModel : ReactiveObject
     {
         public Interaction<(bool, SimVarConfig), bool?> CloseRequested { get; }
-        private string _simVarName = "";
-        public string VarName
+        private string _varName = "";
+        public string Name
         {
-            get => _simVarName;
-            set => this.RaiseAndSetIfChanged(ref _simVarName, value);
+            get => _varName;
+            set => this.RaiseAndSetIfChanged(ref _varName, value);
         }
-        private string _simVarUnit = "";
-        public string VarUnit
+        private string _varUnit = "";
+        public string Unit
         {
-            get => _simVarUnit;
-            set => this.RaiseAndSetIfChanged(ref _simVarUnit, value);
+            get => _varUnit;
+            set => this.RaiseAndSetIfChanged(ref _varUnit, value);
+        }
+        private double? _override;
+        public double? Override
+        {
+            get => _override;
+            set => this.RaiseAndSetIfChanged(ref _override, value);
         }
         public ReactiveCommand<Unit, Unit> OkCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -76,21 +82,22 @@ namespace OpenGaugeClient.Editor
 
             if (initial != null)
             {
-                VarName = initial.Name;
-                VarUnit = initial.Unit;
+                Name = initial.Name;
+                Unit = initial.Unit;
+                Override = initial.Override;
             }
         }
 
         public void OnOk()
         {
-            Console.WriteLine($"[SimVarDialogViewModel] Clicked ok name='{VarName}' unit='{VarUnit}'");
+            Console.WriteLine($"[SimVarDialogViewModel] On click ok name={Name} unit={Unit} override={Override}");
 
             _ = CloseWindow(true);
         }
 
         public void OnCancel()
         {
-            Console.WriteLine($"[SimVarDialogViewModel] Clicked cancel");
+            Console.WriteLine($"[SimVarDialogViewModel] On click cancel");
 
             _ = CloseWindow(false);
         }
@@ -99,8 +106,9 @@ namespace OpenGaugeClient.Editor
         {
             var varConfig = new SimVarConfig()
             {
-                Name = VarName,
-                Unit = VarUnit
+                Name = Name,
+                Unit = Unit,
+                Override = Override
             };
 
             Console.WriteLine($"[SimVarDialogViewModel] Close window result={result} var={varConfig}");

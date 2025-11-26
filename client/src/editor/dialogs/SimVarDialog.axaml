@@ -2,11 +2,15 @@
     x:Class="OpenGaugeClient.Editor.SimVarDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:OpenGaugeClient.Editor.Converters"
     Title="Select SimVar"
     Width="350"
     Height="300"
     CanResize="False"
     WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <conv:DoubleNullableConverter x:Key="DoubleNullableConverter" />
+    </Window.Resources>
     <Border Margin="10">
         <StackPanel>
             <TextBlock FontSize="24" Text="Select SimVar" />
@@ -14,13 +18,18 @@
                 Margin="0,5"
                 FontSize="16"
                 Text="Name eg. 'AIRSPEED INDICATED'" />
-            <TextBox Text="{Binding VarName}" />
+            <TextBox Text="{Binding Name}" />
             <TextBlock
                 Margin="0,5"
                 FontSize="16"
                 Text="Unit eg. 'degrees' or 'knots' or 'feet' or 'kph'" />
-            <TextBox Text="{Binding VarUnit}" />
+            <TextBox Text="{Binding Unit}" />
             <Button Click="OpenWebsite_Click" Content="View SimConnect Website" />
+            <TextBlock
+                Margin="0,5"
+                FontSize="16"
+                Text="Override" />
+            <TextBox Text="{Binding Override, Converter={StaticResource DoubleNullableConverter}}" />
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"

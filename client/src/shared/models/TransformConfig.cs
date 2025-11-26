@@ -64,10 +64,6 @@ namespace OpenGaugeClient
         /// Extra logging. Beware of console spam!
         /// </summary>
         public bool? Debug { get; set; }
-        /// <summary>
-        /// Force a value for debugging purposes.
-        /// </summary>
-        public double? Override { get; set; }
         public override string ToString()
         {
             return $"Var={Var}," +
@@ -79,8 +75,7 @@ namespace OpenGaugeClient
                 $"Multiply={Multiply}," +
                 $"Calibration={Calibration}," +
                 $"Skip={Skip}," +
-                $"Debug={Debug}," +
-                $"Override={Override},";
+                $"Debug={Debug},";
         }
     }
 }

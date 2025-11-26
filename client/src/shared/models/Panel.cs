@@ -103,6 +103,10 @@ namespace OpenGaugeClient
         /// </summary>
         public bool? Force { get; set; } = false;
         /// <summary>
+        /// If this panel can always be dragged around by the user.
+        /// </summary>
+        public bool? Draggable { get; set; } = true;
+        /// <summary>
         /// Extra console logging for this panel.
         /// </summary>
         public bool? Debug { get; set; } = false;

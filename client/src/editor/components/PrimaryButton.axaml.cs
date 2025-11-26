@@ -25,7 +25,6 @@ namespace OpenGaugeClient.Editor.Components
         }
     }
 
-
     public partial class PrimaryButton : UserControl
     {
         public static readonly StyledProperty<string> IconProperty =

@@ -124,6 +124,13 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _onTop, value);
         }
 
+        private bool? _draggable;
+        public bool? Draggable
+        {
+            get => _draggable;
+            set => this.RaiseAndSetIfChanged(ref _draggable, value);
+        }
+
         private bool? _debug = false;
         public bool? Debug
         {

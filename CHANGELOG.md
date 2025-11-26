@@ -1,6 +1,18 @@
 # 0.0.13
 
 - fixed SVG operation position/origin/rotation
+- added `panel.Draggable = boolean` (defaults: true)
+  - render panel debug while dragging to help position later
+- moved SimVar override into the var config for each transform:
+  - moved `layer.Transform.Rotate.Override = number` to
+    `layer.Transform.Rotate.Var.Override`
+  - moved `layer.Transform.TranslateX.Override = number` to
+    `layer.Transform.TranslateX.Var.Override`
+  - moved `layer.Transform.TranslateY.Override = number` to
+    `layer.Transform.TranslateY.Var.Override`
+  - moved `layer.Transform.Path.Override = number` to
+    `layer.Transform.Path.Var.Override`
+- render warning message if using override to avoid hours of frustration :(
 
 # 0.0.12
 

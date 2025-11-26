@@ -34,6 +34,7 @@ namespace OpenGaugeClient
         private int? _debugGaugeIndex = null;
         public Action<PixelPoint>? OnMove;
         private bool _isDisposed = false;
+        private bool _isDragging = false;
 
         public PanelRenderer(
             Panel panel,
@@ -79,25 +80,35 @@ namespace OpenGaugeClient
             if (disableRenderOnTop == true)
                 _window.Topmost = false;
 
-            if (ConfigManager.Config.Debug || panel.Debug == true)
+            if (ConfigManager.Config.Debug || panel.Debug == true || panel.Draggable != false)
             {
+                void reset()
+                {
+                    _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+                }
+
                 _window.Cursor = new Cursor(StandardCursorType.SizeAll);
 
                 _window.PointerPressed += (sender, e) =>
                 {
                     if (e.GetCurrentPoint(_window).Properties.IsLeftButtonPressed)
                     {
+                        Console.WriteLine($"[PanelRenderer] Start dragging");
+                        _isDragging = true;
                         _window.Cursor = new Cursor(StandardCursorType.SizeAll);
                         _window.BeginMoveDrag(e);
                     }
                 };
                 _window.PointerEntered += (_, e) =>
                 {
-                    _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+                    reset();
                 };
                 _window.PointerReleased += (_, e) =>
                 {
-                    _window.Cursor = new Cursor(StandardCursorType.SizeAll);
+                    if (_isDragging)
+                        Console.WriteLine($"[PanelRenderer] Stop dragging");
+                    _isDragging = false;
+                    reset();
                 };
 
                 _window.PositionChanged += (_, _) =>
@@ -201,7 +212,7 @@ namespace OpenGaugeClient
             if (gridSize != null)
                 RenderingHelper.DrawGrid(ctx, (int)_window.Width, (int)_window.Height, (double)gridSize);
 
-            if (_panel.Debug == true || ConfigManager.Config.Debug == true)
+            if (_panel.Debug == true || ConfigManager.Config.Debug == true || _isDragging)
                 DrawPanelDebugInfo(ctx);
 
             if (_isConnected == false)

@@ -218,7 +218,6 @@ namespace OpenGaugeClient
             Calibration = cfg.Calibration;
             Skip = cfg.Skip;
             Debug = cfg.Debug;
-            Override = cfg.Override;
         }
 
         private SimVarConfig _var;
@@ -291,13 +290,6 @@ namespace OpenGaugeClient
             set => this.RaiseAndSetIfChanged(ref _debug, value);
         }
 
-        private double? _override;
-        public double? Override
-        {
-            get => _override;
-            set => this.RaiseAndSetIfChanged(ref _override, value);
-        }
-
         public virtual TransformConfig ToModel() => new TransformConfig
         {
             Var = Var,
@@ -309,8 +301,7 @@ namespace OpenGaugeClient
             Multiply = Multiply,
             Calibration = Calibration,
             Skip = Skip,
-            Debug = Debug,
-            Override = Override
+            Debug = Debug
         };
     }
 
@@ -344,7 +335,6 @@ namespace OpenGaugeClient
             Calibration = Calibration,
             Skip = Skip,
             Debug = Debug,
-            Override = Override,
             Wrap = Wrap
         };
     }
@@ -368,8 +358,7 @@ namespace OpenGaugeClient
             Multiply = Multiply,
             Calibration = Calibration,
             Skip = Skip,
-            Debug = Debug,
-            Override = Override
+            Debug = Debug
         };
     }
 
@@ -434,7 +423,6 @@ namespace OpenGaugeClient
             Calibration = Calibration,
             Skip = Skip,
             Debug = Debug,
-            Override = Override,
             Image = Image,
             Width = Width,
             Height = Height,

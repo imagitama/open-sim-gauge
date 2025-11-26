@@ -12,9 +12,13 @@ namespace OpenGaugeClient
         /// Full list of SimConnect units: https://docs.flightsimulator.com/html/Programming_Tools/SimVars/Simulation_Variable_Units.htm
         /// </summary>
         public required string Unit { get; set; }
+        /// <summary>
+        /// Force a value for debugging purposes.
+        /// </summary>
+        public double? Override { get; set; }
         public override string ToString()
         {
-            return $"SimVarConfig(Name={Name ?? "null"},Unit={Unit ?? "null"})";
+            return $"SimVarConfig(Name={Name},Unit={Unit ?? "null"},Override={(Override != null ? Override : "null")})";
         }
     }
 }
