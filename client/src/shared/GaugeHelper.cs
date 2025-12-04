@@ -64,8 +64,8 @@ namespace OpenGaugeClient
             if (config.Multiply != null)
                 value *= (double)config.Multiply;
 
-            if (config.Invert == true)
-                value *= -1;
+            if (config.Invert == true && config.Max != null && config.Min != null)
+                value = (double)config.Max - (value - (double)config.Min);
 
             var varConfig = config.Var;
             string unit = varConfig.Unit;

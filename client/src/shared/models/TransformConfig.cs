@@ -44,7 +44,7 @@ namespace OpenGaugeClient
         /// </summary>
         public double? Max { get; set; }
         /// <summary>
-        /// If to invert the resulting rotation/translation.
+        /// If to invert the resulting rotation/translation. Min and max must be set.
         /// </summary>
         public bool? Invert { get; set; }
         /// <summary>

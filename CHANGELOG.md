@@ -1,3 +1,8 @@
+# 0.0.14
+
+- fixed `TransformConfig.Invert` not respecting `TransformConfig.Min` and `TransformConfig.Max`
+  - both min and max are now required for invert to work
+
 # 0.0.13
 
 - fixed SVG operation position/origin/rotation
